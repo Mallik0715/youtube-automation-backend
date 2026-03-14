@@ -13,6 +13,7 @@ name: Daily YouTube Upload
 on:
   schedule:
     - cron: '30 13 * * *'   # 7:00 PM IST
+    - cron: '50 13 * * *'   # 7:20 PM IST (test)
   workflow_dispatch:      #comment line
 jobs:
   upload:
