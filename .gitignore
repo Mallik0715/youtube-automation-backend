@@ -1,0 +1,10 @@
+node_modules/
+.env
+storage/clips/
+storage/audio/
+storage/music/
+storage/finalVideo.mp4
+storage/thumbnail.jpg
+storage/subtitles.srt
+storage/usedTopics.json
+storage/temp_bg.jpg
