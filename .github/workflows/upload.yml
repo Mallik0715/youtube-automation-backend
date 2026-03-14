@@ -4,11 +4,15 @@ name: Daily YouTube Upload
 #   schedule:
 #     - cron: '30 3 * * *' 
 #   workflow_dispatch:        
+# on:
+#   schedule:
+#     - cron: '30 1 * * *'   # 7:00 AM IST
+#     - cron: '30 6 * * *'   # 12:00 PM IST
+#     - cron: '30 12 * * *'  # 6:00 PM IST
+#   workflow_dispatch:
 on:
   schedule:
-    - cron: '30 1 * * *'   # 7:00 AM IST
-    - cron: '30 6 * * *'   # 12:00 PM IST
-    - cron: '30 12 * * *'  # 6:00 PM IST
+    - cron: '30 13 * * *'   # 7:00 PM IST
   workflow_dispatch:
 jobs:
   upload:
