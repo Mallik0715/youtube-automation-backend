@@ -84,8 +84,13 @@ jobs:
       - name: Install Python dependencies
         run: pip install edge-tts
       - name: Install FFmpeg
-        # run: sudo apt-get install -y ffmpeg
-        run: sudo apt-get install -y ffmpeg --fix-missing
+        run: |
+             wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+             tar xf ffmpeg-release-amd64-static.tar.xz
+             sudo mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/
+             sudo mv ffmpeg-*-amd64-static/ffprobe /usr/local/bin/
+             ffmpeg -version
+
 
       - name: Run video pipeline
         env:
