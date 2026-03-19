@@ -4,12 +4,10 @@
 // const path = require("path");
 // const fs = require("fs");
 
-// // const FFMPEG = `"C:\\Users\\malli\\Downloads\\ffmpeg-8.0.1-essentials_build\\ffmpeg-8.0.1-essentials_build\\bin\\ffmpeg.exe"`;
-
 // const FFMPEG = process.platform === "win32"
 //   ? `"C:\\Users\\malli\\Downloads\\ffmpeg-8.0.1-essentials_build\\ffmpeg-8.0.1-essentials_build\\bin\\ffmpeg.exe"`
 //   : "ffmpeg";
-  
+
 // async function buildVideo(clips, voicePath, subtitlePath) {
 
 //   const clipsListPath = path.join(__dirname, "../storage/clips/clips.txt");
@@ -33,23 +31,20 @@
 //     .replace(/\\/g, "/")
 //     .replace(/^([A-Z]):/, "$1\\:");
 
-//   // ✅ Check if background music exists
 //   const hasMusic = fs.existsSync(musicPath);
 //   console.log(hasMusic ? "🎵 Background music found!" : "⚠️ No background music found, skipping...");
 
 //   let command;
 
 //   if (hasMusic) {
-//     // ✅ Mix voice + background music
-//     // Voice at 100% volume, music at 15% volume
 //     command = [
 //       FFMPEG,
 //       `-y`,
-//       `-f concat -safe 0`,
-//       `-i "${clipsListPath}"`,           // input 0: video clips
-//       `-i "${voicePath}"`,               // input 1: voice
-//       `-stream_loop -1 -i "${musicPath}"`, // input 2: music (looped)
-//       `-vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,subtitles='${ffmpegSubtitlePath}'"`,
+//       `-f concat -safe 0 -r 30`,
+//       `-i "${clipsListPath}"`,
+//       `-i "${voicePath}"`,
+//       `-stream_loop -1 -i "${musicPath}"`,
+//       `-vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,subtitles='${ffmpegSubtitlePath}'"`,
 //       `-filter_complex "[1:a]volume=1.0[voice];[2:a]volume=0.15[music];[voice][music]amix=inputs=2:duration=first[aout]"`,
 //       `-map 0:v:0`,
 //       `-map "[aout]"`,
@@ -58,14 +53,13 @@
 //       `"${outputVideo}"`
 //     ].join(" ");
 //   } else {
-//     // Fallback: no music
 //     command = [
 //       FFMPEG,
 //       `-y`,
-//       `-f concat -safe 0`,
+//       `-f concat -safe 0 -r 30`,
 //       `-i "${clipsListPath}"`,
 //       `-i "${voicePath}"`,
-//       `-vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,subtitles='${ffmpegSubtitlePath}'"`,
+//       `-vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,subtitles='${ffmpegSubtitlePath}'"`,
 //       `-map 0:v:0 -map 1:a:0`,
 //       `-c:v libx264 -c:a aac`,
 //       `-shortest`,
@@ -77,7 +71,7 @@
 
 //   return new Promise((resolve, reject) => {
 
-//     const ffmpegProcess = exec(command, { timeout: 300000 });
+//     const ffmpegProcess = exec(command, { timeout: 600000 }); // ✅ 10 minutes
 
 //     ffmpegProcess.stderr.on("data", (data) => {
 //       process.stdout.write(`[ffmpeg] ${data}`);
@@ -105,8 +99,6 @@
 // }
 
 // module.exports = { buildVideo };
-
-
 const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -133,11 +125,6 @@ async function buildVideo(clips, voicePath, subtitlePath) {
     console.log("🗑️ Deleted old finalVideo.mp4");
   }
 
-  const subtitleAbsolute = path.join(__dirname, "../storage/subtitles.srt");
-  const ffmpegSubtitlePath = subtitleAbsolute
-    .replace(/\\/g, "/")
-    .replace(/^([A-Z]):/, "$1\\:");
-
   const hasMusic = fs.existsSync(musicPath);
   console.log(hasMusic ? "🎵 Background music found!" : "⚠️ No background music found, skipping...");
 
@@ -151,7 +138,7 @@ async function buildVideo(clips, voicePath, subtitlePath) {
       `-i "${clipsListPath}"`,
       `-i "${voicePath}"`,
       `-stream_loop -1 -i "${musicPath}"`,
-      `-vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,subtitles='${ffmpegSubtitlePath}'"`,
+      `-vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920"`,
       `-filter_complex "[1:a]volume=1.0[voice];[2:a]volume=0.15[music];[voice][music]amix=inputs=2:duration=first[aout]"`,
       `-map 0:v:0`,
       `-map "[aout]"`,
@@ -166,7 +153,7 @@ async function buildVideo(clips, voicePath, subtitlePath) {
       `-f concat -safe 0 -r 30`,
       `-i "${clipsListPath}"`,
       `-i "${voicePath}"`,
-      `-vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,subtitles='${ffmpegSubtitlePath}'"`,
+      `-vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920"`,
       `-map 0:v:0 -map 1:a:0`,
       `-c:v libx264 -c:a aac`,
       `-shortest`,
@@ -178,7 +165,7 @@ async function buildVideo(clips, voicePath, subtitlePath) {
 
   return new Promise((resolve, reject) => {
 
-    const ffmpegProcess = exec(command, { timeout: 600000 }); // ✅ 10 minutes
+    const ffmpegProcess = exec(command, { timeout: 600000 });
 
     ffmpegProcess.stderr.on("data", (data) => {
       process.stdout.write(`[ffmpeg] ${data}`);
