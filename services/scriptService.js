@@ -1,21 +1,20 @@
 
+// const Groq = require("groq-sdk");
 
-// const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const groq = new Groq({
+//   apiKey: process.env.GROQ_API_KEY,
+// });
 
 // async function generateScript(topic) {
 //   try {
 //     console.log("🤖 Generating AI script for:", topic);
 
-//     // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-//     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-//     // const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-//     const prompt = `
-// You are a YouTube script writer for a facts channel.
-// Write a short, engaging YouTube video script about: "${topic}"
-
+//     const response = await groq.chat.completions.create({
+//       model: "llama-3.3-70b-versatile", // free + high quality
+//       messages: [
+//         {
+//           role: "system",
+//           content: `You are a YouTube script writer for a facts channel.
 // Rules:
 // - Exactly 5 sentences
 // - Each sentence is one amazing, specific, real fact
@@ -23,24 +22,24 @@
 // - No outro like "Subscribe" or "Like"
 // - Each fact must be surprising and specific with real numbers or details
 // - Write in simple, clear English
-// - Return ONLY the 5 sentences, one per line, no numbering, no bullet points
+// - Return ONLY the 5 sentences, one per line, no numbering, no bullet points`,
+//         },
+//         {
+//           role: "user",
+//           content: `Write a short YouTube script about: "${topic}"`,
+//         },
+//       ],
+//       max_tokens: 500,
+//       temperature: 0.8,
+//     });
 
-// Example format:
-// The human brain contains 86 billion neurons that can form over 100 trillion connections.
-// Your brain is 73% water and losing just 2% of that water causes memory problems.
-// ...
-// `;
-
-//     const result = await model.generateContent(prompt);
-//     const script = result.response.text().trim();
-
+//     const script = response.choices[0].message.content.trim();
 //     console.log("✅ AI Script generated");
 //     return script;
 
 //   } catch (error) {
-//     console.error("❌ Gemini error:", error.message);
+//     console.error("❌ Groq error:", error.message);
 
-//     // Fallback script if API fails
 //     return `${topic} is one of the most fascinating subjects in the world.
 // Scientists continue to make incredible discoveries about ${topic} every year.
 // Many of these discoveries completely change how we understand our universe.
@@ -50,7 +49,6 @@
 // }
 
 // module.exports = { generateScript };
-
 
 const Groq = require("groq-sdk");
 
@@ -63,27 +61,29 @@ async function generateScript(topic) {
     console.log("🤖 Generating AI script for:", topic);
 
     const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // free + high quality
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
-          content: `You are a YouTube script writer for a facts channel.
+          content: `You are a viral YouTube Shorts script writer.
 Rules:
 - Exactly 5 sentences
-- Each sentence is one amazing, specific, real fact
+- ALWAYS start with "Did you know..." as the first sentence hook
+- Each sentence is one shocking, surprising, specific real fact
+- Use real numbers, percentages, and specific details
+- Make it sound unbelievable but true
 - No intro like "In this video" or "Welcome"
 - No outro like "Subscribe" or "Like"
-- Each fact must be surprising and specific with real numbers or details
-- Write in simple, clear English
+- Write in simple, clear conversational English
 - Return ONLY the 5 sentences, one per line, no numbering, no bullet points`,
         },
         {
           role: "user",
-          content: `Write a short YouTube script about: "${topic}"`,
+          content: `Write a viral YouTube Shorts script about: "${topic}"`,
         },
       ],
       max_tokens: 500,
-      temperature: 0.8,
+      temperature: 0.9,
     });
 
     const script = response.choices[0].message.content.trim();
@@ -92,12 +92,11 @@ Rules:
 
   } catch (error) {
     console.error("❌ Groq error:", error.message);
-
-    return `${topic} is one of the most fascinating subjects in the world.
-Scientists continue to make incredible discoveries about ${topic} every year.
-Many of these discoveries completely change how we understand our universe.
-Researchers have found surprising connections between ${topic} and everyday life.
-These amazing facts about ${topic} will completely change the way you see the world.`;
+    return `Did you know ${topic} is one of the most shocking things ever discovered?
+Scientists found something completely unexpected about ${topic} that changes everything.
+The numbers behind ${topic} will absolutely blow your mind.
+Researchers discovered a surprising connection between ${topic} and everyday life.
+These facts about ${topic} will completely change the way you see the world.`;
   }
 }
 
