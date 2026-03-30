@@ -195,206 +195,266 @@ Main Pipeline
 -------------------------------------------------------
 */
 
+// async function runPipeline() {
+//   try {
+//     console.log("🚀 Starting video pipeline...");
+
+//     /*
+//     ---------------------------------------
+//     Topic
+//     ---------------------------------------
+//     */
+
+//     const topic = getRandomTopic();
+//     console.log("🎯 Topic:", topic);
+
+//     /*
+//     ---------------------------------------
+//     Script
+//     ---------------------------------------
+//     */
+
+//     const script = await withTimeout(
+//       generateScript(topic),
+//       5 * 60 * 1000,
+//       "Script generation"
+//     );
+
+//     console.log("📝 Script generated");
+
+//     /*
+//     ---------------------------------------
+//     SEO
+//     ---------------------------------------
+//     */
+
+//     const seo = await withTimeout(
+//       generateSEO(topic, script),
+//       2 * 60 * 1000,
+//       "SEO generation"
+//     );
+
+//     console.log("🔍 SEO generated:", seo.title);
+
+//     /*
+//     ---------------------------------------
+//     Sentences
+//     ---------------------------------------
+//     */
+
+//     const sentences = splitIntoSentences(script);
+//     console.log("📄 Sentences:", sentences.length);
+
+//     /*
+//     ---------------------------------------
+//     Search Clips
+//     ---------------------------------------
+//     */
+
+//     const clips = await withTimeout(
+//       searchClips(topic),
+//       3 * 60 * 1000,
+//       "Clip search"
+//     );
+
+//     console.log("🎥 Clips found:", clips.length);
+
+//     /*
+//     ---------------------------------------
+//     Download Clips
+//     ---------------------------------------
+//     */
+
+//     const downloadedClips = [];
+
+//     for (let i = 0; i < clips.length; i++) {
+//       try {
+//         console.log(`⬇️ Downloading clip ${i + 1}...`);
+
+//         const savedPath = await withTimeout(
+//           downloadClip(clips[i], i + 1),
+//           3 * 60 * 1000,
+//           "Clip download"
+//         );
+
+//         downloadedClips.push(savedPath);
+
+//       } catch (err) {
+//         console.error("⚠️ Clip download failed:", err.message);
+//       }
+//     }
+
+//     console.log(
+//       "⬇️ Clips downloaded:",
+//       downloadedClips.length
+//     );
+
+//     /*
+//     ---------------------------------------
+//     Voice Generation
+//     ---------------------------------------
+//     */
+
+//     const voicePath = await withTimeout(
+//       generateVoice(script),
+//       5 * 60 * 1000,
+//       "Voice generation"
+//     );
+
+//     console.log("🔊 Voice generated:", voicePath);
+
+//     /*
+//     ---------------------------------------
+//     Subtitles
+//     ---------------------------------------
+//     */
+
+//     const subtitlePath = await withTimeout(
+//       generateSubtitles(sentences),
+//       3 * 60 * 1000,
+//       "Subtitle generation"
+//     );
+
+//     console.log(
+//       "🎬 Subtitles generated:",
+//       subtitlePath
+//     );
+
+//     /*
+//     ---------------------------------------
+//     Video Build
+//     ---------------------------------------
+//     */
+
+//     const finalVideo = await withTimeout(
+//       buildVideo(
+//         downloadedClips,
+//         voicePath,
+//         subtitlePath
+//       ),
+//       15 * 60 * 1000,
+//       "Video build"
+//     );
+
+//     console.log("✅ Final video:", finalVideo);
+
+//     /*
+//     ---------------------------------------
+//     Thumbnail
+//     ---------------------------------------
+//     */
+
+//     const thumbnailPath = await withTimeout(
+//       generateThumbnail(topic),
+//       2 * 60 * 1000,
+//       "Thumbnail generation"
+//     );
+
+//     console.log(
+//       "🖼️ Thumbnail generated:",
+//       thumbnailPath
+//     );
+
+//     /*
+//     ---------------------------------------
+//     Upload to YouTube
+//     ---------------------------------------
+//     */
+
+//     const youtubeUrl = await withTimeout(
+//       uploadToYouTube(
+//         finalVideo,
+//         seo.title,
+//         seo.description,
+//         seo.tags,
+//         thumbnailPath
+//       ),
+//       30 * 60 * 1000,
+//       "YouTube upload"
+//     );
+
+//     console.log(
+//       "🎉 SUCCESS! Video uploaded:",
+//       youtubeUrl
+//     );
+
+//     console.log(
+//       "========== PIPELINE COMPLETE =========="
+//     );
+
+//   } catch (error) {
+//     console.error("❌ PIPELINE FAILED");
+//     console.error(error.message);
+//     console.error(error.stack);
+
+//     process.exit(1);
+//   }
+// }
+
 async function runPipeline() {
   try {
-    console.log("🚀 Starting video pipeline...");
-
-    /*
-    ---------------------------------------
-    Topic
-    ---------------------------------------
-    */
+    console.log("========== PIPELINE START ==========");
 
     const topic = getRandomTopic();
     console.log("🎯 Topic:", topic);
 
-    /*
-    ---------------------------------------
-    Script
-    ---------------------------------------
-    */
-
-    const script = await withTimeout(
-      generateScript(topic),
-      5 * 60 * 1000,
-      "Script generation"
-    );
-
+    const script = await generateScript(topic);
     console.log("📝 Script generated");
 
-    /*
-    ---------------------------------------
-    SEO
-    ---------------------------------------
-    */
-
-    const seo = await withTimeout(
-      generateSEO(topic, script),
-      2 * 60 * 1000,
-      "SEO generation"
-    );
-
+    const seo = await generateSEO(topic, script);
     console.log("🔍 SEO generated:", seo.title);
-
-    /*
-    ---------------------------------------
-    Sentences
-    ---------------------------------------
-    */
 
     const sentences = splitIntoSentences(script);
     console.log("📄 Sentences:", sentences.length);
 
-    /*
-    ---------------------------------------
-    Search Clips
-    ---------------------------------------
-    */
-
-    const clips = await withTimeout(
-      searchClips(topic),
-      3 * 60 * 1000,
-      "Clip search"
-    );
-
+    const clips = await searchClips(topic);
     console.log("🎥 Clips found:", clips.length);
 
-    /*
-    ---------------------------------------
-    Download Clips
-    ---------------------------------------
-    */
-
     const downloadedClips = [];
-
     for (let i = 0; i < clips.length; i++) {
-      try {
-        console.log(`⬇️ Downloading clip ${i + 1}...`);
-
-        const savedPath = await withTimeout(
-          downloadClip(clips[i], i + 1),
-          3 * 60 * 1000,
-          "Clip download"
-        );
-
-        downloadedClips.push(savedPath);
-
-      } catch (err) {
-        console.error("⚠️ Clip download failed:", err.message);
-      }
+      const savedPath = await downloadClip(clips[i], i + 1);
+      downloadedClips.push(savedPath);
     }
 
-    console.log(
-      "⬇️ Clips downloaded:",
-      downloadedClips.length
-    );
-
-    /*
-    ---------------------------------------
-    Voice Generation
-    ---------------------------------------
-    */
-
-    const voicePath = await withTimeout(
-      generateVoice(script),
-      5 * 60 * 1000,
-      "Voice generation"
-    );
-
+    const voicePath = await generateVoice(script);
     console.log("🔊 Voice generated:", voicePath);
 
-    /*
-    ---------------------------------------
-    Subtitles
-    ---------------------------------------
-    */
+    const subtitlePath = await generateSubtitles(sentences);
 
-    const subtitlePath = await withTimeout(
-      generateSubtitles(sentences),
-      3 * 60 * 1000,
-      "Subtitle generation"
-    );
-
-    console.log(
-      "🎬 Subtitles generated:",
+    const finalVideo = await buildVideo(
+      downloadedClips,
+      voicePath,
       subtitlePath
-    );
-
-    /*
-    ---------------------------------------
-    Video Build
-    ---------------------------------------
-    */
-
-    const finalVideo = await withTimeout(
-      buildVideo(
-        downloadedClips,
-        voicePath,
-        subtitlePath
-      ),
-      15 * 60 * 1000,
-      "Video build"
     );
 
     console.log("✅ Final video:", finalVideo);
 
-    /*
-    ---------------------------------------
-    Thumbnail
-    ---------------------------------------
-    */
+    const thumbnailPath = await generateThumbnail(topic);
 
-    const thumbnailPath = await withTimeout(
-      generateThumbnail(topic),
-      2 * 60 * 1000,
-      "Thumbnail generation"
-    );
-
-    console.log(
-      "🖼️ Thumbnail generated:",
+    const youtubeUrl = await uploadToYouTube(
+      finalVideo,
+      seo.title,
+      seo.description,
+      seo.tags,
       thumbnailPath
     );
 
-    /*
-    ---------------------------------------
-    Upload to YouTube
-    ---------------------------------------
-    */
+    console.log("🎉 SUCCESS! Video uploaded:", youtubeUrl);
+    console.log("========== PIPELINE COMPLETE ==========");
 
-    const youtubeUrl = await withTimeout(
-      uploadToYouTube(
-        finalVideo,
-        seo.title,
-        seo.description,
-        seo.tags,
-        thumbnailPath
-      ),
-      30 * 60 * 1000,
-      "YouTube upload"
-    );
-
-    console.log(
-      "🎉 SUCCESS! Video uploaded:",
-      youtubeUrl
-    );
-
-    console.log(
-      "========== PIPELINE COMPLETE =========="
-    );
+    process.exit(0);   // ← THIS FIXES THE HANG
 
   } catch (error) {
-    console.error("❌ PIPELINE FAILED");
-    console.error(error.message);
-    console.error(error.stack);
+    console.error("❌ Pipeline error:", error);
 
-    process.exit(1);
+    process.exit(1);   // ← also required
   }
 }
 
+runPipeline();
 /*
 -------------------------------------------------------
 Run
 -------------------------------------------------------
 */
 
-runPipeline();
