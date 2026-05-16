@@ -71,7 +71,7 @@ async function generateVoice(script) {
     .trim();
 
   // ✅ Also generate word boundaries file for subtitle timing
-  const command = `python -m edge_tts --voice en-US-AriaNeural --text "${cleanScript}" --write-media "${outputPath}" --write-subtitles "${wordsPath.replace(".json", ".vtt")}"`;
+  const command = `python -m edge_tts --voice en-US-ChristopherNeural --rate=+5% --text "${cleanScript}" --write-media "${outputPath}" --write-subtitles "${wordsPath.replace(".json", ".vtt")}"`;
 
   console.log("Generating voice...");
   console.log(command);

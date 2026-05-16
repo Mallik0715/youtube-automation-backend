@@ -48,9 +48,8 @@ function secondsToSrtTimestamp(sec) {
   return `${h}:${m}:${s},${ms}`;
 }
 
-// Parse VTT timestamp to seconds
-function vttTimeToSeconds(time) {
-  const parts = time.split(":");
+function timeToSeconds(time) {
+  const parts = time.replace(",", ".").split(":");
   let seconds = 0;
   if (parts.length === 3) {
     seconds = parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
@@ -60,14 +59,13 @@ function vttTimeToSeconds(time) {
   return seconds;
 }
 
-// Parse edge-tts VTT file into word timings
-function parseVTT(vttPath) {
-  if (!fs.existsSync(vttPath)) return null;
+function parseSubtitles(filePath) {
+  if (!fs.existsSync(filePath)) return null;
 
-  const content = fs.readFileSync(vttPath, "utf8");
+  const content = fs.readFileSync(filePath, "utf8");
   const blocks = content.split("\n\n").filter(b => b.trim() && !b.startsWith("WEBVTT"));
 
-  const words = [];
+  const sentences = [];
   for (const block of blocks) {
     const lines = block.trim().split("\n");
     const timeLine = lines.find(l => l.includes("-->"));
@@ -75,52 +73,14 @@ function parseVTT(vttPath) {
 
     if (timeLine && textLine) {
       const [startStr, endStr] = timeLine.split("-->").map(t => t.trim());
-      words.push({
-        start: vttTimeToSeconds(startStr),
-        end: vttTimeToSeconds(endStr),
-        word: textLine.trim()
+      sentences.push({
+        start: timeToSeconds(startStr),
+        end: timeToSeconds(endStr),
+        text: textLine.trim()
       });
     }
   }
-  return words;
-}
-
-// Match sentences to word timings
-function matchSentencesToTimings(sentences, words) {
-  if (!words || words.length === 0) return null;
-
-  const result = [];
-  let wordIndex = 0;
-
-  for (const sentence of sentences) {
-    const sentenceWords = sentence
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, "")
-      .split(/\s+/)
-      .filter(Boolean);
-
-    let startTime = null;
-    let endTime = null;
-    let matched = 0;
-
-    for (let i = wordIndex; i < words.length && matched < sentenceWords.length; i++) {
-      const vttWord = words[i].word.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const sentWord = sentenceWords[matched].replace(/[^a-z0-9]/g, "");
-
-      if (vttWord === sentWord || vttWord.includes(sentWord) || sentWord.includes(vttWord)) {
-        if (startTime === null) startTime = words[i].start;
-        endTime = words[i].end;
-        matched++;
-        wordIndex = i + 1;
-      }
-    }
-
-    if (startTime !== null) {
-      result.push({ sentence, start: startTime, end: endTime });
-    }
-  }
-
-  return result;
+  return sentences;
 }
 
 async function generateSubtitles(sentences) {
@@ -128,35 +88,55 @@ async function generateSubtitles(sentences) {
   const vttPath = path.join(__dirname, "../storage/audio/words.vtt");
 
   let content = "";
+  const audioSentences = parseSubtitles(vttPath);
 
-  // ✅ Try to use real word timings from edge-tts VTT
-  const words = parseVTT(vttPath);
-  const timings = words ? matchSentencesToTimings(sentences, words) : null;
+  let chunkCount = 1;
+  const WORDS_PER_CHUNK = 7;
 
-  if (timings && timings.length === sentences.length) {
-    console.log("✅ Using real audio timings for subtitles");
+  if (audioSentences && audioSentences.length > 0) {
+    console.log(`✅ Using real audio timings to interpolate ${WORDS_PER_CHUNK}-word stylish subtitles`);
+    
+    for (const audioSentence of audioSentences) {
+      const words = audioSentence.text.split(" ").filter(w => w.trim());
+      if (words.length === 0) continue;
 
-    timings.forEach((item, i) => {
-      content += `${i + 1}\n`;
-      content += `${secondsToSrtTimestamp(item.start)} --> ${secondsToSrtTimestamp(item.end)}\n`;
-      content += `${item.sentence}\n\n`;
-    });
+      const duration = audioSentence.end - audioSentence.start;
+      const timePerWord = duration / words.length;
 
+      for (let i = 0; i < words.length; i += WORDS_PER_CHUNK) {
+        const chunkWords = words.slice(i, i + WORDS_PER_CHUNK);
+        const text = chunkWords.join(" ");
+        
+        const chunkStart = audioSentence.start + (i * timePerWord);
+        const chunkEnd = chunkStart + (timePerWord * chunkWords.length);
+
+        content += `${chunkCount}\n`;
+        content += `${secondsToSrtTimestamp(chunkStart)} --> ${secondsToSrtTimestamp(chunkEnd)}\n`;
+        content += `${text.toUpperCase()}\n\n`;
+        chunkCount++;
+      }
+    }
   } else {
-    // Fallback: estimate based on word count
-    console.log("⚠️ Using estimated timings for subtitles");
-
+    console.log(`⚠️ Using purely estimated timings for ${WORDS_PER_CHUNK}-word stylish subtitles`);
     let start = 0;
-    sentences.forEach((sentence, i) => {
-      const wordCount = sentence.split(" ").length;
-      const duration = Math.max(2, wordCount * 0.4); // ~0.4 seconds per word
-      const end = start + duration;
+    
+    sentences.forEach((sentence) => {
+      const sentenceWords = sentence.split(" ").filter(w => w.trim());
+      for (let i = 0; i < sentenceWords.length; i += WORDS_PER_CHUNK) {
+        const chunkWords = sentenceWords.slice(i, i + WORDS_PER_CHUNK);
+        const text = chunkWords.join(" ");
+        
+        // Estimate 0.35s per word
+        const duration = chunkWords.length * 0.35; 
+        const end = start + duration;
 
-      content += `${i + 1}\n`;
-      content += `${secondsToSrtTimestamp(start)} --> ${secondsToSrtTimestamp(end)}\n`;
-      content += `${sentence}\n\n`;
-
-      start = end;
+        content += `${chunkCount}\n`;
+        content += `${secondsToSrtTimestamp(start)} --> ${secondsToSrtTimestamp(end)}\n`;
+        content += `${text.toUpperCase()}\n\n`;
+        
+        start = end;
+        chunkCount++;
+      }
     });
   }
 
