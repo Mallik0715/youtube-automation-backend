@@ -162,7 +162,7 @@ Import Services
 */
 
 // const { getRandomTopic } = require("./services/topicService");
-const { getNextTopic } = require("./topicsManager");
+const { getNextTopic } = require("./topicService");
 const { generateScript } = require("./services/scriptService");
 const { splitIntoSentences } = require("./services/sentenceService");
 const { searchClips } = require("./services/clipSearchService");
