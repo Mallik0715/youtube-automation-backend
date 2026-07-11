@@ -111,7 +111,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add topic_progress.json
+          git add services/topic_progress.json
           git diff --staged --quiet || git commit -m "Update topic progress [skip ci]"
           git push
  
