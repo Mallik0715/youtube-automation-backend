@@ -119,7 +119,9 @@ async function buildVideo(clipPaths, voicePath, subtitlePath, options = {}) {
   filters.push(`[cut]eq=contrast=1.05:saturation=1.1,vignette=PI/6,subtitles='${ffmpegSubtitlePath}'[vout]`);
 
   const musicVolume = musicTrack ? 0.12 : 0.06;
-  filters.push(`[${musicIdx}:a]lowpass=f=1200,volume=${musicVolume}[music]`);
+  // Only the generated pad gets softened; real tracks keep their full sound
+  const musicTone = musicTrack ? "" : "lowpass=f=1200,";
+  filters.push(`[${musicIdx}:a]${musicTone}volume=${musicVolume}[music]`);
   filters.push(`[${voiceIdx}:a][music]amix=inputs=2:duration=first:normalize=0[aout]`);
 
   args.push(
