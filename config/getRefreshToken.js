@@ -1,12 +1,13 @@
+// CLI alternative to the server: node config/getRefreshToken.js
+require("dotenv").config();
 const { google } = require("googleapis");
 const readline = require("readline");
-const CLIENT_ID = env.YOUTUBE_CLIENT_ID;
-const CLIENT_SECRET = env.YOUTUBE_CLIENT_SECRET;
-const REDIRECT_URI= "http://localhost:5000/callback"
-console.log("Redirect URI:", REDIRECT_URI);
+
+const REDIRECT_URI = "http://localhost:5000/callback";
+
 const oauth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  CLIENT_SECRET,
+  process.env.YOUTUBE_CLIENT_ID,
+  process.env.YOUTUBE_CLIENT_SECRET,
   REDIRECT_URI
 );
 
@@ -18,15 +19,21 @@ const authUrl = oauth2Client.generateAuthUrl({
 
 console.log("👉 Open this URL in your browser:");
 console.log(authUrl);
+console.log("\nAfter approving, copy the `code` parameter from the redirected URL.");
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-rl.question("\n🔑 Enter the code from the browser: ", async (code) => {
-  const { tokens } = await oauth2Client.getToken(code);
-  console.log("\n✅ Your Refresh Token:");
-  console.log(tokens.refresh_token);
-  rl.close();
+rl.question("\n🔑 Enter the code: ", async (code) => {
+  try {
+    const { tokens } = await oauth2Client.getToken(code.trim());
+    console.log("\n✅ Your Refresh Token (store it as the YOUTUBE_REFRESH_TOKEN secret):");
+    console.log(tokens.refresh_token);
+  } catch (err) {
+    console.error("❌ Token exchange failed:", err.message);
+  } finally {
+    rl.close();
+  }
 });

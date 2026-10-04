@@ -1,31 +1,10 @@
-// function splitIntoSentences(script) {
-
-//   const sentences = script
-//     .replace(/\n/g, " ")
-//     .split(".")
-//     .map(s => s.trim())
-//     .filter(s => s.length > 0);
-
-//   return sentences;
-// }
-
-// module.exports = {
-//   splitIntoSentences
-// };
-
-
-
-
-
+// Split on sentence-ending punctuation followed by whitespace (or on line breaks),
+// so decimals like "3.5%" stay intact.
 function splitIntoSentences(script) {
-
-  const sentences = script
-    .replace(/\n/g, " ")
-    .split(".")
-    .map(s => s.trim())
+  return script
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map(s => s.trim().replace(/[.!?]+$/, ""))
     .filter(s => s.length > 0);
-
-  return sentences;
 }
 
 module.exports = { splitIntoSentences };

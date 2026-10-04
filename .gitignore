@@ -8,4 +8,10 @@ storage/thumbnail.jpg
 storage/subtitles.srt
 storage/usedTopics.json
 storage/temp_bg.jpg
-config/token.json
+config/token.jsonconfig/oauth_credentials.json
+config/client_secret*.json
+storage/clips/clips.txt
+storage/finalVideo.mp4
+
+# Generated media and run artifacts
+storage/

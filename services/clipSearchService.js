@@ -1,89 +1,58 @@
-
-// const axios = require("axios");
-
-// const API_KEY = process.env.PIXABAY_API_KEY;
-
-// async function searchClips(topic) {
-
-//   try {
-
-//     const query = topic.split(" ").pop().toLowerCase();
-
-//     const response = await axios.get(
-//       `https://pixabay.com/api/videos/?key=${API_KEY}&q=${query}&per_page=5`
-//     );
-
-//     const videos = response.data.hits;
-
-//     if (!videos || videos.length === 0) return [];
-
-//     const clips = videos.map(video => video.videos.medium.url);
-
-//     return clips;
-
-//   } catch (error) {
-
-//     console.log("Pixabay error:", error.message);
-//     return [];
-
-//   }
-
-// }
-
-// module.exports = { searchClips };
-
-
-
-
-
 const axios = require("axios");
-const { extractKeyword } = require("./keywordService");
 
 const API_KEY = process.env.PIXABAY_API_KEY;
 
-// Generic, always-safe visual fallback terms - broad enough that Pixabay
-// almost always has matching stock footage, used only if everything else fails.
-const FALLBACK_QUERIES = ["brain", "science", "thinking", "people", "abstract"];
+// Broad, always-available footage for this channel's niche, used only if the
+// script-specific searches come back thin
+const FALLBACK_QUERIES = ["couple talking", "woman thinking", "man thinking", "people city", "brain"];
+const MIN_CLIPS = 6;
+const MAX_CLIPS = 10;
 
-async function pixabaySearch(query) {
+async function pixabaySearch(query, perPage = 3) {
   try {
-    const response = await axios.get(
-      `https://pixabay.com/api/videos/?key=${API_KEY}&q=${encodeURIComponent(query)}&per_page=5`
-    );
-    const videos = response.data.hits;
-    if (!videos || videos.length === 0) return [];
-    return videos.map(video => video.videos.medium.url);
+    const response = await axios.get("https://pixabay.com/api/videos/", {
+      params: { key: API_KEY, q: query, per_page: perPage, safesearch: true },
+      timeout: 15000,
+    });
+    return (response.data.hits || [])
+      .map(video => video.videos.medium?.url || video.videos.small?.url)
+      .filter(Boolean);
   } catch (error) {
-    console.log(`Pixabay error for query "${query}":`, error.message);
+    console.log(`Pixabay error for "${query}":`, error.message);
     return [];
   }
 }
 
-async function searchClips(topic) {
-  // 1st attempt: clean keyword extracted from the topic (e.g. "psychology procrastinate")
-  const primaryQuery = extractKeyword(topic);
-  console.log(`🔍 Searching clips for: "${primaryQuery}"`);
-  let clips = await pixabaySearch(primaryQuery);
-  if (clips.length > 0) return clips;
-
-  // 2nd attempt: try just the single most meaningful word (last non-stopword)
-  const words = primaryQuery.split(" ").filter(Boolean);
-  if (words.length > 1) {
-    const singleWordQuery = words[0]; // first extracted keyword, usually the stronger noun
-    console.log(`⚠️ No results, retrying with: "${singleWordQuery}"`);
-    clips = await pixabaySearch(singleWordQuery);
-    if (clips.length > 0) return clips;
+/**
+ * @param {string[]} queries - script-specific searches from visualService, in script order
+ * @param {{maxClips?: number, perQuery?: number, fallbackQueries?: string[]}} [options]
+ */
+async function searchClips(queries, options = {}) {
+  const { maxClips = MAX_CLIPS, perQuery = 3, fallbackQueries = FALLBACK_QUERIES } = options;
+  const minClips = Math.min(MIN_CLIPS * 2, Math.max(MIN_CLIPS, Math.ceil(maxClips / 2)));
+  const groups = [];
+  for (const query of queries) {
+    const found = await pixabaySearch(query, perQuery);
+    console.log(`🔍 "${query}": ${found.length} clips`);
+    groups.push(found);
   }
 
-  // 3rd attempt: generic safe fallback terms, so the pipeline never gets 0 clips
-  for (const fallback of FALLBACK_QUERIES) {
-    console.log(`⚠️ Still no results, trying fallback: "${fallback}"`);
-    clips = await pixabaySearch(fallback);
-    if (clips.length > 0) return clips;
+  for (const query of fallbackQueries) {
+    if (groups.flat().length >= minClips) break;
+    console.log(`⚠️ Not enough clips yet, trying fallback: "${query}"`);
+    groups.push(await pixabaySearch(query, perQuery));
   }
 
-  console.log("❌ No clips found after all fallback attempts.");
-  return [];
+  // Round-robin so footage follows the script order instead of 3 near-identical clips in a row
+  const picked = [];
+  const longest = Math.max(0, ...groups.map(g => g.length));
+  for (let i = 0; i < longest && picked.length < maxClips; i++) {
+    for (const group of groups) {
+      const url = group[i];
+      if (url && !picked.includes(url) && picked.length < maxClips) picked.push(url);
+    }
+  }
+  return picked;
 }
 
-module.exports = { searchClips };
+module.exports = { searchClips, FALLBACK_QUERIES };
