@@ -2,10 +2,10 @@ name: Daily YouTube Upload
 
 on:
   schedule:
-    # Timed for US viewers (most English Shorts traffic)
-    - cron: '0 13 * * *'   # 9:00 AM ET  / 6:30 PM IST
-    - cron: '0 18 * * *'   # 2:00 PM ET  / 11:30 PM IST
-    - cron: '30 23 * * *'  # 7:30 PM ET  / 5:00 AM IST
+    # Timed for Indian viewers (IST = UTC+5:30)
+    - cron: '30 3 * * *'   # 9:00 AM IST
+    - cron: '30 7 * * *'   # 1:00 PM IST
+    - cron: '30 14 * * *'  # 8:00 PM IST
   workflow_dispatch:
 
 # Never run two uploads at once (they'd race on topic_progress.json)
