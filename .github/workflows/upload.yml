@@ -1,11 +1,12 @@
 name: Daily YouTube Upload
 
 on:
-  schedule:
-    # Timed for Indian viewers (IST = UTC+5:30)
-    - cron: '30 3 * * *'   # 9:00 AM IST
-    - cron: '30 7 * * *'   # 1:00 PM IST
-    - cron: '30 14 * * *'  # 8:00 PM IST
+  # Paused: the channel now runs the story series (see series.yml).
+  # Uncomment to bring back the stock-footage topic videos.
+  # schedule:
+  #   - cron: '30 3 * * *'   # 9:00 AM IST
+  #   - cron: '30 7 * * *'   # 1:00 PM IST
+  #   - cron: '30 14 * * *'  # 8:00 PM IST
   workflow_dispatch:
 
 # Never run two uploads at once (they'd race on topic_progress.json)

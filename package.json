@@ -7,18 +7,27 @@
     "start": "node pipeline.js",
     "auth": "node server.js",
     "auth:cli": "node config/getRefreshToken.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "skit": "node skit.js",
+    "studio": "remotion studio remotion/index.jsx",
+    "series": "node skit.js --series"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@remotion/bundler": "^4.0.542",
+    "@remotion/cli": "^4.0.542",
+    "@remotion/renderer": "^4.0.542",
     "axios": "^1.13.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "googleapis": "^171.4.0",
-    "groq-sdk": "^1.1.1"
+    "groq-sdk": "^1.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.542"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

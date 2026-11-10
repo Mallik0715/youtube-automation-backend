@@ -257,4 +257,10 @@ function getNextTopic() {
   return topic;
 }
 
-module.exports = { getNextTopic };
+// Same topic getNextTopic() would return, without advancing progress (for local test runs)
+function peekNextTopic() {
+  const index = loadIndex();
+  return topics[index >= topics.length ? 0 : index];
+}
+
+module.exports = { getNextTopic, peekNextTopic };

@@ -167,4 +167,4 @@ async function buildVideo(clipPaths, voicePath, subtitlePath, options = {}) {
   });
 }
 
-module.exports = { buildVideo };
+module.exports = { buildVideo, probeDuration, pickMusicTrack, FFMPEG };

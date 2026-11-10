@@ -1,0 +1,66 @@
+name: Story Series Upload
+
+on:
+  schedule:
+    # Two parts a day, timed for a worldwide audience
+    - cron: '30 14 * * *'  # 14:30 UTC = 8:00 PM India, 3:30 PM UK, 10:30 AM New York
+    - cron: '0 23 * * *'   # 23:00 UTC = 7:00 PM New York, 4:30 AM India (next day), 12:00 AM UK
+  workflow_dispatch:
+
+# Never run two uploads at once (they'd race on series_progress.json)
+concurrency:
+  group: youtube-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install edge-tts
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Remotion browser
+        run: npx remotion browser ensure
+
+      - name: Render and upload next series part
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: npm run series -- --upload
+
+      # Only runs if the upload succeeded, so a failed part is retried next time
+      - name: Commit updated series progress
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add services/series_progress.json
+          git diff --staged --quiet && exit 0
+          git commit -m "Update series progress [skip ci]"
+          git pull --rebase
+          git push

@@ -57,4 +57,4 @@ async function generateVoice(script) {
   }
 }
 
-module.exports = { generateVoice };
+module.exports = { generateVoice, runEdgeTTS };
