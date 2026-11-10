@@ -59,6 +59,44 @@ function isHooded(lines, who, t) {
   return !!next?.hooded;
 }
 
+// Slower ease for arm gestures than for the mouth, so arms glide instead of snapping
+const GESTURE_EASE = 0.3;
+function gestureAmount(lines, who, t) {
+  for (const l of lines) {
+    if (l.speaker === who && t >= l.start - GESTURE_EASE && t <= l.end + GESTURE_EASE) {
+      const k = Math.min(1, (t - (l.start - GESTURE_EASE)) / GESTURE_EASE, (l.end + GESTURE_EASE - t) / GESTURE_EASE);
+      return 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, k)); // smoothstep-like
+    }
+  }
+  return 0;
+}
+
+const castOf = (l) => l.cast || DEFAULT_CAST;
+// Same background and lighting
+const samePlace = (a, b) => !!a && !!b && a.scene === b.scene && !!a.night === !!b.night;
+// Same place and same people on screen -> the camera can glide; otherwise it's a new scene
+const sameSetting = (a, b, scene) =>
+  !!a && !!b && (a.scene || scene) === (b.scene || scene) && !!a.night === !!b.night && castOf(a).join() === castOf(b).join();
+
+// First line index of the run of lines sharing line i's setting
+function settingStart(lines, i, scene) {
+  let j = i;
+  while (j > 0 && sameSetting(lines[j - 1], lines[j], scene)) j--;
+  return j;
+}
+
+// Camera target for a line as {s, tx, ty}: screen = s * point + (tx, ty).
+// Odd lines are close-ups on the speaker, even lines are wide shots.
+function shotFor(lines, i) {
+  const line = lines[i];
+  const spot = layoutFor(castOf(line)).find(p => p.who === line.speaker);
+  if (!spot || i % 2 === 0) return { s: 1, tx: 0, ty: 0 };
+  const s = 1.45;
+  const h = spot.head;
+  const dx = (540 - h.x) * 0.7;
+  return { s, tx: (1 - s) * h.x + dx, ty: (1 - s) * h.y };
+}
+
 function currentLineIndex(lines, t) {
   let idx = 0;
   lines.forEach((l, i) => { if (l.start <= t) idx = i; });
@@ -205,24 +243,45 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
   const cast = line.cast || DEFAULT_CAST;
   const people = layoutFor(cast);
 
-  // "Camera": a hard cut per line, alternating wide shots with close-ups on whoever is talking,
-  // plus a slow push-in during each shot so nothing is ever completely still
+  // "Camera": glides (eased) between a wide shot and close-ups on whoever is talking.
+  // Hard cut only on a scene change or a shock line (fx "shake"). Plus a slow push-in so it's never still.
   const next = lines[idx + 1];
   const shotEnd = next ? next.start : line.end + 1;
   const progress = Math.max(0, Math.min(1, (t - line.start) / Math.max(0.1, shotEnd - line.start)));
-  const speakerSpot = people.find(p => p.who === line.speaker);
-  const closeUp = !!speakerSpot && idx % 2 === 1;
-  const scale = (closeUp ? 1.45 : 1) * (1 + 0.04 * progress);
-  let dx = 0;
-  let origin = "540px 1100px";
-  if (closeUp) {
-    const head = speakerSpot.head;
-    // Shift toward centring the speaker, but never so far that the scene's edge shows
-    const dxMin = (1080 - head.x) * (1 - scale);
-    const dxMax = head.x * (scale - 1);
-    dx = Math.max(dxMin, Math.min(dxMax, (540 - head.x) * 0.7));
-    origin = `${head.x}px ${head.y}px`;
-  }
+  const target = shotFor(lines, idx);
+  const canGlide = idx > 0 && sameSetting(lines[idx - 1], line, scene) && line.fx !== "shake";
+  const from = canGlide ? shotFor(lines, idx - 1) : target;
+  const k = canGlide
+    ? spring({ frame: frame - Math.round(line.start * fps), fps, config: { damping: 200, mass: 0.9 }, durationInFrames: 20 })
+    : 1;
+  const cs = from.s + (target.s - from.s) * k;
+  const ctx = from.tx + (target.tx - from.tx) * k;
+  const cty = from.ty + (target.ty - from.ty) * k;
+  // Push-in around the screen centre
+  const z = 1 + 0.03 * progress;
+  const scale = cs * z;
+  // Never let the scene's edge show
+  const camX = Math.max(1080 * (1 - scale), Math.min(0, z * (ctx - 540) + 540));
+  const camY = Math.max(1920 * (1 - scale), Math.min(0, z * (cty - 960) + 960));
+
+  // Fade through black when the place or cast changes
+  const runStart = settingStart(lines, idx, scene);
+  let nextRun = idx + 1;
+  while (nextRun < lines.length && sameSetting(lines[nextRun - 1], lines[nextRun], scene)) nextRun++;
+  const fadeIn = runStart > 0 && !samePlace(lines[runStart - 1], line)
+    ? interpolate(t - lines[runStart].start, [0, 0.3], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 0;
+  const fadeOut = nextRun < lines.length && !samePlace(lines[nextRun], line)
+    ? interpolate(lines[nextRun].start - t, [0, 0.2], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 0;
+  const blackout = Math.max(fadeIn, fadeOut);
+
+  // Same place, new cast: everyone glides to their new spot and newcomers walk in from the side
+  const prevRun = runStart > 0 && samePlace(lines[runStart - 1], line) ? lines[runStart - 1] : null;
+  const prevPeople = prevRun ? layoutFor(castOf(prevRun)) : [];
+  const enter = prevRun
+    ? spring({ frame: frame - Math.round(lines[runStart].start * fps), fps, config: { damping: 16, mass: 0.8 }, durationInFrames: 24 })
+    : 1;
   const shake = shakeOffset(line, t);
 
   // Facing: left half looks right, right half looks left; the middle one looks at whoever spoke last
@@ -240,22 +299,38 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `translate(${dx + shake.x}px, ${shake.y}px) scale(${scale})`, transformOrigin: origin }}>
+      <AbsoluteFill style={{ transform: `translate(${camX + shake.x}px, ${camY + shake.y}px) scale(${scale})`, transformOrigin: "0 0" }}>
         <Background scene={sceneName} frame={frame} night={night} />
-        {people.map((p, i) => (
+        {people.map((p, i) => {
+          const before = prevPeople.find(q => q.who === p.who);
+          // Newcomers on the edges walk in from their side; a newcomer in the middle fades in and
+          // steps up into place (so they never walk across anyone). Everyone else slides to their new spot.
+          const isNew = !before && !!prevRun;
+          const middle = cast.length === 3 && i === 1;
+          const startLeft = before ? before.left : isNew && !middle ? (i === 0 ? -p.w - 40 : 1080 + 40) : p.left;
+          const rise = isNew && middle ? (1 - enter) * 120 : 0;
+          const opacity = isNew && middle ? Math.min(1, enter * 1.4) : 1;
+          const startW = before ? before.w : p.w;
+          const left = startLeft + (p.left - startLeft) * enter;
+          const w = startW + (p.w - startW) * enter;
+          const top = (before ? before.top : p.top) + (p.top - (before ? before.top : p.top)) * enter;
+          const h = (before ? before.h : p.h) + (p.h - (before ? before.h : p.h)) * enter;
+          return (
           <div key={p.who} style={{
-            position: "absolute", left: p.left, top: p.top, width: p.w, height: p.h,
+            position: "absolute", left, top: top + rise, width: w, height: h, opacity,
             transform: facesLeft(p, i) ? "scaleX(-1)" : undefined,
           }}>
             <Character
               who={p.who}
               frame={frame}
               talk={talkAmount(lines, p.who, t)}
+              gesture={gestureAmount(lines, p.who, t)}
               emotion={stateLine(lines, p.who, t)?.emotion || "neutral"}
               hooded={isHooded(lines, p.who, t)}
             />
           </div>
-        ))}
+          );
+        })}
         {night && (
           <AbsoluteFill style={{
             background: `radial-gradient(ellipse at 50% 60%, rgba(30,40,90,${overlay * 0.6}) 0%, rgba(8,10,30,${Math.min(0.9, overlay * 1.5)}) 100%)`,
@@ -263,6 +338,7 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
           }} />
         )}
       </AbsoluteFill>
+      {blackout > 0 && <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${blackout})` }} />}
       <Captions lines={lines} t={t} frame={frame} fps={fps} />
       {line.speaker === "CARD" && t <= line.end + 0.3 && <TitleCard line={line} t={t} frame={frame} fps={fps} />}
       {hook && line.speaker !== "CARD" && <HookBanner text={hook} frame={frame} fps={fps} />}

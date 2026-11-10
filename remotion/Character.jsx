@@ -85,13 +85,14 @@ function OpenMouth({ emotion, open }) {
  * @param {{who: "A"|"B"|"C"|"D", frame: number, talk: number, emotion: string, hooded?: boolean}} props
  *   talk: 0..1, how much the character is currently speaking (eased in/out at line edges)
  */
-export function Character({ who, frame, talk, emotion, hooded = false }) {
+export function Character({ who, frame, talk, emotion, hooded = false, gesture = talk }) {
   const look = LOOKS[who];
   const phase = PHASE[who] || 0;
   const sleeve = hooded ? CLOAK : look.sleeve;
 
   // Idle breathing + extra bounce while talking
-  const bob = Math.sin(frame / 14 + phase) * 5 + talk * Math.abs(Math.sin(frame * 0.42)) * -10;
+  // (sin^2 instead of |sin| - same rhythm, no sharp kick at the bottom of each bounce)
+  const bob = Math.sin(frame / 14 + phase) * 5 - talk * Math.sin(frame * 0.42) ** 2 * 10;
   const headTilt = Math.sin(frame / 22 + phase) * 2 + talk * Math.sin(frame * 0.3) * 4;
 
   // Mouth flaps with irregular rhythm so it reads as speech, not a metronome
@@ -103,7 +104,7 @@ export function Character({ who, frame, talk, emotion, hooded = false }) {
   const eyeScale = emotion === "surprised" ? 1.2 : 1;
 
   // Front arm gestures toward the other character while talking
-  const armRaise = talk * (55 + Math.sin(frame * 0.22 + phase) * 15);
+  const armRaise = gesture * (55 + Math.sin(frame * 0.22 + phase) * 15);
   // Worried: back hand goes up to the side of the head (drawn in front of the head)
   const worried = emotion === "worried";
   const backArmEl = (
