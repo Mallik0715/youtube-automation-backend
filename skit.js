@@ -20,7 +20,7 @@ const UPLOAD = argv.includes("--upload");
 const DEMO = argv.includes("--demo") && !UPLOAD;
 const SERIES_MODE = argv.includes("--series") || argv.includes("--part");
 const flagValue = (name) => {
-  const i = argv.indexOf(name);
+  const i = argv.lastIndexOf(name); // last: "npm run series" already passes a bare --series
   const v = i !== -1 ? argv[i + 1] : null;
   return v && !v.startsWith("--") ? v : null;
 };

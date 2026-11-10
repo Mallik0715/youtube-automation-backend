@@ -136,14 +136,21 @@ function HookBanner({ text, frame, fps }) {
       fontFamily: FONT, fontWeight: 900, fontSize: 64, lineHeight: 1.12, textTransform: "uppercase",
       WebkitTextStroke: "10px #000", paintOrder: "stroke fill", textShadow: "0 6px 0 rgba(0,0,0,0.4)",
     }}>
-      {words.map((w, i) => {
-        const hot = /^\*.*\*[.,!?…]*$/.test(w);
-        return (
-          <span key={i} style={{ color: hot ? "#FFD84A" : "#fff" }}>
-            {w.replace(/\*/g, "")}{i < words.length - 1 ? " " : ""}
-          </span>
-        );
-      })}
+      {(() => {
+        // *stars* can wrap one word or several: "*same Tuesday*"
+        let inside = false;
+        return words.map((w, i) => {
+          const opens = w.startsWith("*");
+          if (opens) inside = true;
+          const hot = inside;
+          if (w.replace(/[.,!?'"…]+$/, "").endsWith("*")) inside = false;
+          return (
+            <span key={i} style={{ color: hot ? "#FFD84A" : "#fff" }}>
+              {w.replace(/\*/g, "")}{i < words.length - 1 ? " " : ""}
+            </span>
+          );
+        });
+      })()}
     </div>
   );
 }
