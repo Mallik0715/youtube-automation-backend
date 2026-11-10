@@ -10,7 +10,8 @@
     "dev": "nodemon server.js",
     "skit": "node skit.js",
     "studio": "remotion studio remotion/index.jsx",
-    "series": "node skit.js --series"
+    "series": "node skit.js --series",
+    "check:series": "node scripts/checkSeries.js"
   },
   "keywords": [],
   "author": "",

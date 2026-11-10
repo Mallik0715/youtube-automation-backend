@@ -11,7 +11,21 @@ const VOICES = {
   B: { voice: process.env.TTS_VOICE_B || "en-US-EricNeural", rate: "+18%", pitch: "+6Hz" }, // Leo
   C: { voice: "en-GB-SoniaNeural", rate: "+2%", pitch: "-10Hz" },                           // Mira
   D: { voice: "en-GB-RyanNeural", rate: "+8%", pitch: "-12Hz" },                             // Bruno
-  child: { voice: "en-US-AnaNeural", rate: "-25%", pitch: "-4Hz" },                          // final whisper
+  E: { voice: "en-US-AvaNeural", rate: "+14%", pitch: "+0Hz" },                             // Zara
+  F: { voice: "en-GB-ThomasNeural", rate: "+6%", pitch: "-4Hz" },                            // Victor
+  child: { voice: "en-US-AnaNeural", rate: "-25%", pitch: "-4Hz" },                          // creepy child whisper
+  radio: { voice: "en-US-RogerNeural", rate: "+0%", pitch: "-2Hz" },                         // old radio broadcast
+  robot: { voice: "en-US-EmmaNeural", rate: "+5%", pitch: "-6Hz" },                          // app / AI voice
+};
+
+// Post-processing per offscreen-voice effect
+const VOICE_FX = {
+  // Ghostly: echoes trailing off, thin and distant
+  echo: "apad=pad_dur=0.8,aecho=0.8:0.85:180|360|540:0.5|0.3|0.18,highpass=f=250,volume=1.6",
+  // Old radio: narrow band, slightly overdriven
+  radio: "highpass=f=500,lowpass=f=2800,acompressor=threshold=0.1:ratio=6,volume=2.2",
+  // App / AI: tight metallic comb echo
+  robot: "aecho=0.8:0.9:8|16:0.5|0.3,volume=1.2",
 };
 
 const GAP_SECONDS = 0.15; // pause between lines so the back-and-forth breathes
@@ -28,12 +42,13 @@ function runFfmpeg(args) {
 }
 
 async function speakLine(line, outFile) {
-  // Offscreen voices (speaker "V") borrow someone's voice, slowed and lowered
+  // Offscreen voices (speaker "V") borrow someone's voice; ghosts are slowed and lowered
+  const filter = VOICE_FX[line.fx] || null;
   const eerie = line.fx === "echo";
   const v = VOICES[line.voiceOf || line.speaker] || VOICES.A;
   const rate = eerie ? "-15%" : v.rate;
   const pitch = eerie ? "-18Hz" : v.pitch;
-  const rawFile = eerie ? outFile.replace(/\.mp3$/, "_raw.mp3") : outFile;
+  const rawFile = filter ? outFile.replace(/\.mp3$/, "_raw.mp3") : outFile;
 
   const args = ["-m", "edge_tts", "--voice", v.voice, `--rate=${rate}`, `--pitch=${pitch}`, "--text", line.text, "--write-media", rawFile];
 
@@ -51,11 +66,8 @@ async function speakLine(line, outFile) {
     }
   }
 
-  if (eerie) {
-    // Ghostly: echoes trailing off, thin and distant
-    await runFfmpeg(["-y", "-i", rawFile, "-af",
-      "apad=pad_dur=0.8,aecho=0.8:0.85:180|360|540:0.5|0.3|0.18,highpass=f=250,volume=1.6",
-      outFile]);
+  if (filter) {
+    await runFfmpeg(["-y", "-i", rawFile, "-af", filter, outFile]);
     fs.unlinkSync(rawFile);
   }
 }

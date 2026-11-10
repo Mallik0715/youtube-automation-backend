@@ -80,7 +80,7 @@ async function runSeries() {
 
   const outputName = `series_${part.seriesId}_part${part.number}.mp4`;
   const video = await renderSkit(timed, voicePath, duration, {
-    outputName, badge: part.badge, endCard: part.endCard, music: part.music,
+    outputName, hook: part.hook, endCard: part.endCard, music: part.music,
   });
 
   if (!UPLOAD) {

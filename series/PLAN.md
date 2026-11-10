@@ -11,8 +11,8 @@ At 2 uploads a day (`.github/workflows/series.yml`), 50 parts last 25 days.
 | B | Leo | glasses, teal shirt | curious, dramatic, drags Max into trouble |
 | C | Mira | grey bun, shawl | the wise elder who knows the secret |
 | D | Bruno | red cap, moustache, overalls | the gruff worker — suspect or helper |
-| E | Zara | *to draw* — curly hair, yellow jacket | the smart one: scientist, curator, insider |
-| F | Victor | *to draw* — slick hair, purple suit | the rich, charming one — usually hiding something |
+| E | Zara | curly hair, yellow jacket | the smart one: scientist, curator, insider |
+| F | Victor | slick hair, purple suit, red tie | the rich, charming one — usually hiding something |
 | V | (offscreen voice) | — | ghosts, radios, phones, whispers |
 
 ## Order of release
@@ -21,15 +21,15 @@ Series that reuse existing scenes come early so they can ship fast while new bac
 | # | Series | Genre | Scenes needed | Status |
 |---|---|---|---|---|
 | 1 | Don't Answer After 9 | village mystery | gate, village, room, well, tunnel, temple | ✅ scripted |
-| 2 | The Tuesday That Won't End | time loop | home, cafe, street, office (existing) | outline |
-| 3 | The App That Knows Too Much | tech thriller | home, cafe, street, office (existing) | outline |
-| 4 | The Missing Diamond of Room 7 | whodunit | **museum**, office, street | outline |
-| 5 | The Creature of Blackwood | creature mystery | **forest, cabin, cave** | outline |
-| 6 | The Lighthouse That Lights Itself | ghost mystery | **shore, lighthouse room**, boat deck | outline |
-| 7 | The Last Radio Message | mystery / time | **desert, radio station** | outline |
-| 8 | The Night Train | thriller / twist | **train carriage, platform** | outline |
-| 9 | The Frozen Station | survival + creature | **snow mountain, ice cave**, cabin | outline |
-| 10 | Lost in the Deep | ocean survival | **boat deck, underwater, shipwreck** | outline |
+| 2 | The Tuesday That Won't End | time loop | home, cafe, street, office (existing) | ✅ scripted |
+| 3 | The App That Knows Too Much | tech thriller | home, cafe, street, office (existing) | ✅ scripted |
+| 4 | The Missing Diamond of Room 7 | whodunit | **museum**, office, street | ✅ scripted |
+| 5 | The Creature of Blackwood | creature mystery | **forest, cabin, cave** | ✅ scripted |
+| 6 | The Lighthouse That Lights Itself | ghost mystery | **shore, lighthouse room**, boat deck | ✅ scripted |
+| 7 | The Last Radio Message | mystery / time | **desert, radio station** | ✅ scripted |
+| 8 | The Night Train | thriller / twist | **train carriage, platform** | ✅ scripted |
+| 9 | The Frozen Station | survival + creature | **snow mountain, ice cave**, cabin | ✅ scripted |
+| 10 | Lost in the Deep | ocean survival | **boat deck, underwater, shipwreck** | ✅ scripted |
 
 ---
 
@@ -97,6 +97,19 @@ Series that reuse existing scenes come early so they can ship fast while new bac
 5. **The Surface** — they escape; the real treasure is the letter that solves the wreck's mystery. **Sting:** on the boat, wet footprints that aren't theirs.
 
 ---
+
+## What makes each part shareable (checked with `npm run check:series`)
+- **Hook headline on screen** for the whole video (not "Part 1/5") — it also leads the YouTube title.
+  Curiosity first, series name and part number last: `Never answer if someone calls your name after 9 PM | Don't Answer After 9 Pt 1`.
+- **First line lands in ~1 second** — mid-action, no greetings, no recap longer than one line.
+- **Under a minute** — most parts are 25–50s; short parts get rewatched, which Shorts rewards.
+- **A cut every line** (wide / close-up), shake on shocks, title cards for time jumps.
+- **Cliffhanger last line + "WHAT HAPPENS NEXT?" end card** — pushes follows and next-part views.
+- **Comment bait** — mysteries invite guesses ("who is the grey coat?"), finales ask "Season 2?".
+- **One real psychology idea per part** — the reason to watch even if you skip the story.
+
+Honest limits: no script can promise views. What decides it is the first 2 seconds and how many people
+watch to the end — check YouTube Studio's "stayed to watch" for the first few parts and rewrite hooks that lose people.
 
 ## Writing rules (every part)
 - 12–16 lines, 45–60 seconds; first line is a hook, not a greeting. Part 2+ opens with a one-line recap.

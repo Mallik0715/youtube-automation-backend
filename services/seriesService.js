@@ -2,8 +2,18 @@ const fs = require("fs");
 const path = require("path");
 
 // Add new series here; they play in this order, one part per upload
+// (10 series x 5 parts = 50 videos; plan in series/PLAN.md)
 const SERIES = [
   require("../series/dontAnswerAfter9"),
+  require("../series/tuesdayLoop"),
+  require("../series/appKnowsTooMuch"),
+  require("../series/missingDiamond"),
+  require("../series/creatureBlackwood"),
+  require("../series/lighthouse"),
+  require("../series/lastRadioMessage"),
+  require("../series/nightTrain"),
+  require("../series/frozenStation"),
+  require("../series/lostInTheDeep"),
 ];
 
 // Committed back by the workflow, like topic_progress.json
@@ -78,7 +88,10 @@ function buildPart(series, partIndex) {
     }
   }
 
-  const seoTitle = `${series.title} | Part ${number}/${total}: ${part.title}`;
+  // The hook headline sits on screen the whole video and leads the YouTube title:
+  // curiosity first, series + part number last (people who want Part 1 can still find it)
+  const hook = part.hook || part.title;
+  const seoTitle = `${hook} | ${series.title} Pt ${number}`;
   return {
     seriesId: series.id,
     seriesTitle: series.title,
@@ -87,12 +100,12 @@ function buildPart(series, partIndex) {
     partTitle: part.title,
     music: series.music || null,
     dialogue: { scene: part.segments[0].scene, lines },
-    badge: `${series.title.toUpperCase()} · PART ${number}/${total}`,
+    hook,
     endCard: isLast
-      ? { title: "SEASON 2?", subtitle: "Comment if you want it" }
-      : { title: `PART ${number + 1} →`, subtitle: "Follow so you don't miss it" },
+      ? { title: "SEASON 2?", subtitle: "Comment \"YES\" if you want it" }
+      : { title: "WHAT HAPPENS NEXT?", subtitle: `Part ${number + 1} is up next. Follow so you don't miss it` },
     seo: {
-      title: `${seoTitle} ${series.hashtags.slice(0, 2).join(" ")}`.slice(0, 100),
+      title: `${seoTitle} #shorts`.slice(0, 100),
       description:
         `${series.description}\n\nPart ${number} of ${total}: ${part.title}` +
         (isLast ? "\n\nThe end... or is it?" : `\nPart ${number + 1} is coming next - follow so you don't miss it.`) +

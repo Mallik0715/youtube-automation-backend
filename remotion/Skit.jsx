@@ -14,6 +14,9 @@ const LAYOUTS = {
 const EASE = 0.12; // seconds for the mouth/gesture to ease in and out at line edges
 const WORDS_PER_CAPTION = 3;
 const GHOST_RED = "#FF4D4D";
+// Offscreen voice caption colours: ghosts red, radios green, apps/AI cyan
+const VOICE_COLORS = { radio: "#7CFF6B", robot: "#5CE1E6" };
+const FONT = '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif';
 const DEFAULT_CAST = ["A", "B"];
 
 function layoutFor(cast) {
@@ -78,8 +81,10 @@ function Captions({ lines, t, frame, fps }) {
 
   const chunkFrame = Math.round((line.start + chunkStart * perWord) * fps);
   const pop = spring({ frame: frame - chunkFrame, fps, config: { damping: 12, stiffness: 220 }, durationInFrames: 8 });
-  const ghost = line.speaker === "V";
-  const accent = ghost ? GHOST_RED : LOOKS[line.speaker]?.accent || "#FFC93C";
+  const offscreen = line.speaker === "V";
+  const ghostColor = VOICE_COLORS[line.voiceOf] || GHOST_RED;
+  const ghost = offscreen && line.fx === "echo";
+  const accent = offscreen ? ghostColor : LOOKS[line.speaker]?.accent || "#FFC93C";
   // The offscreen voice trembles
   const tremble = ghost ? `translate(${Math.sin(frame * 1.3) * 4}px, ${Math.cos(frame * 1.7) * 3}px)` : "";
 
@@ -89,12 +94,12 @@ function Captions({ lines, t, frame, fps }) {
       transform: `${tremble} scale(${0.75 + 0.25 * pop})`,
       fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif',
       fontWeight: 900, fontSize: 108, lineHeight: 1.1, textTransform: "uppercase",
-      fontStyle: ghost ? "italic" : "normal",
+      fontStyle: offscreen ? "italic" : "normal",
       WebkitTextStroke: "14px #000", paintOrder: "stroke fill",
-      textShadow: ghost ? `0 0 30px ${GHOST_RED}` : "0 8px 0 rgba(0,0,0,0.35)",
+      textShadow: offscreen ? `0 0 30px ${ghostColor}` : "0 8px 0 rgba(0,0,0,0.35)",
     }}>
       {chunk.map((w, i) => (
-        <span key={i} style={{ color: ghost ? (chunkStart + i === wordIdx ? "#fff" : GHOST_RED) : chunkStart + i === wordIdx ? accent : "#fff" }}>
+        <span key={i} style={{ color: offscreen ? (chunkStart + i === wordIdx ? "#fff" : ghostColor) : chunkStart + i === wordIdx ? accent : "#fff" }}>
           {w}{i < chunk.length - 1 ? " " : ""}
         </span>
       ))}
@@ -119,16 +124,26 @@ function TitleCard({ line, t, frame, fps }) {
   );
 }
 
-function Badge({ text }) {
+// The hook headline: stays on screen so anyone scrolling past mid-video knows why to stay.
+// Wrap a word in *stars* to highlight it in yellow.
+function HookBanner({ text, frame, fps }) {
+  const pop = spring({ frame, fps, config: { damping: 11, stiffness: 180 } });
+  const words = text.split(/\s+/).filter(Boolean);
   return (
-    <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
-      <div style={{
-        background: "rgba(0,0,0,0.6)", color: "#fff", padding: "14px 30px", borderRadius: 40,
-        fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif', fontWeight: 900, fontSize: 36, letterSpacing: 2,
-        border: "3px solid rgba(255,255,255,0.25)",
-      }}>
-        {text}
-      </div>
+    <div style={{
+      position: "absolute", top: 110, left: 50, right: 50, textAlign: "center",
+      transform: `scale(${0.6 + 0.4 * pop})`, transformOrigin: "50% 0%",
+      fontFamily: FONT, fontWeight: 900, fontSize: 64, lineHeight: 1.12, textTransform: "uppercase",
+      WebkitTextStroke: "10px #000", paintOrder: "stroke fill", textShadow: "0 6px 0 rgba(0,0,0,0.4)",
+    }}>
+      {words.map((w, i) => {
+        const hot = /^\*.*\*[.,!?…]*$/.test(w);
+        return (
+          <span key={i} style={{ color: hot ? "#FFD84A" : "#fff" }}>
+            {w.replace(/\*/g, "")}{i < words.length - 1 ? " " : ""}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -143,7 +158,7 @@ function EndCard({ card, t, frame, fps }) {
     <AbsoluteFill style={{ backgroundColor: `rgba(5,5,10,${0.88 * fade})`, alignItems: "center", justifyContent: "center", gap: 30 }}>
       <div style={{
         transform: `scale(${(0.5 + 0.5 * pop) * pulse})`,
-        fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif', fontWeight: 900, fontSize: 150,
+        fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif', fontWeight: 900, fontSize: 118, lineHeight: 1.05, padding: "0 50px",
         color: "#FFC93C", WebkitTextStroke: "12px #000", paintOrder: "stroke fill", textAlign: "center",
       }}>
         {card.title}
@@ -161,13 +176,13 @@ function EndCard({ card, t, frame, fps }) {
 }
 
 /**
- * @param {{scene: string, lines: object[], durationSeconds: number, badge?: string|null,
+ * @param {{scene: string, lines: object[], durationSeconds: number, hook?: string|null,
  *          endCard?: {title: string, subtitle?: string, start: number}|null, audio?: string|null}} props
  *   Each line: speaker (A-D, V = offscreen voice, CARD = title card), text, emotion, start, end,
  *   and optionally scene / night / cast / fx ("shake" | "echo") / hooded.
  *   audio: optional file in the public dir, for previewing with sound in Remotion Studio
  */
-export function Skit({ scene, lines, badge, endCard, audio }) {
+export function Skit({ scene, lines, hook, endCard, audio }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -239,7 +254,7 @@ export function Skit({ scene, lines, badge, endCard, audio }) {
       </AbsoluteFill>
       <Captions lines={lines} t={t} frame={frame} fps={fps} />
       {line.speaker === "CARD" && t <= line.end + 0.3 && <TitleCard line={line} t={t} frame={frame} fps={fps} />}
-      {badge && <Badge text={badge} />}
+      {hook && line.speaker !== "CARD" && <HookBanner text={hook} frame={frame} fps={fps} />}
       {endCard && <EndCard card={endCard} t={t} frame={frame} fps={fps} />}
       {audio ? <Audio src={staticFile(audio)} /> : null}
     </AbsoluteFill>

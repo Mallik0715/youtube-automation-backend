@@ -27,11 +27,21 @@ export const LOOKS = {
     cap: "#B23A3A", mustache: true,
     hairPath: "M62 190 Q60 80 200 66 Q340 80 338 190 Q300 130 200 126 Q100 130 62 190 Z",
   },
+  E: { // Zara - big curly hair, yellow jacket over a white top
+    name: "Zara", skin: "#B9784F", hair: "#2A1A12", shirt: "#F2C14E", shirtDark: "#D9A532", sleeve: "#F2C14E",
+    pants: "#34405E", shoes: "#2a2a2a", accent: "#FF9EDB", top: "jacket", bottom: "pants", earrings: true,
+    hairPath: "M40 250 Q10 200 40 150 Q20 90 80 70 Q100 20 160 30 Q200 0 240 30 Q300 20 320 70 Q380 90 360 150 Q390 200 360 250 Q340 160 290 130 Q200 100 110 130 Q60 160 40 250 Z",
+  },
+  F: { // Victor - slick side-parted hair, purple suit, red tie
+    name: "Victor", skin: "#F0C8A8", hair: "#1C1C24", shirt: "#5B3F8C", shirtDark: "#47306E", sleeve: "#5B3F8C",
+    pants: "#47306E", shoes: "#111", accent: "#C9A7FF", top: "suit", bottom: "pants",
+    hairPath: "M60 200 Q52 70 190 56 Q330 52 344 190 Q330 120 260 104 Q170 96 120 130 Q80 150 60 200 Z",
+  },
 };
 
 const CLOAK = "#1E1E28";
-const PHASE = { A: 0, B: 2.1, C: 4.2, D: 1.3 };
-const BLINK = { A: [97, 20], B: [118, 61], C: [131, 7], D: [109, 44] };
+const PHASE = { A: 0, B: 2.1, C: 4.2, D: 1.3, E: 3.3, F: 5.1 };
+const BLINK = { A: [97, 20], B: [118, 61], C: [131, 7], D: [109, 44], E: [103, 33], F: [127, 90] };
 
 const BROWS = {
   neutral:   [[125, 162, 182, 162], [228, 162, 285, 162]],
@@ -154,6 +164,24 @@ export function Character({ who, frame, talk, emotion, hooded = false }) {
             <rect x="176" y="470" width="50" height="40" rx="6" fill="none" stroke="#2C4363" strokeWidth="5" />
           </g>
         )}
+        {look.top === "jacket" && (
+          <g>
+            <path d="M168 345 L200 600 L232 345 Z" fill="#fff" stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <path d="M168 345 L150 420 L196 470 Z" fill={look.shirtDark} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <path d="M232 345 L250 420 L204 470 Z" fill={look.shirtDark} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <circle cx="150" cy="520" r="7" fill={INK} />
+          </g>
+        )}
+        {look.top === "suit" && (
+          <g>
+            <path d="M162 345 L200 470 L238 345 Z" fill="#fff" stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <path d="M192 360 L208 360 L216 450 L200 480 L184 450 Z" fill="#C0392B" stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <path d="M162 345 L140 440 L190 500 Z" fill={look.shirtDark} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <path d="M238 345 L260 440 L210 500 Z" fill={look.shirtDark} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+            <path d="M240 420 L268 412 L262 426 Z" fill="#fff" />
+            <circle cx="200" cy="540" r="7" fill={INK} />
+          </g>
+        )}
         {hooded && (
           <path d="M96 330 L306 330 L346 860 L56 860 Z" fill={CLOAK} stroke={INK} strokeWidth="5" strokeLinejoin="round" />
         )}
@@ -201,6 +229,8 @@ export function Character({ who, frame, talk, emotion, hooded = false }) {
               <path d="M150 112 Q200 102 250 112" />
             </g>
           )}
+          {look.earrings && <circle cx="52" cy="262" r="12" fill="#F2C14E" stroke={INK} strokeWidth="4" />}
+          {who === "F" && <path d="M150 84 Q220 70 290 100" fill="none" stroke="#fff" strokeOpacity="0.35" strokeWidth="8" strokeLinecap="round" />}
           {look.mustache && (
             <path d="M162 276 Q186 256 205 272 Q224 256 248 276 Q236 292 205 284 Q174 292 162 276 Z" fill={look.hair} stroke={INK} strokeWidth="4" />
           )}

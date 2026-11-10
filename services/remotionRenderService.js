@@ -26,11 +26,11 @@ const GENERATED_SUSPENSE =
  * @param {{scene: string, lines: object[]}} timedDialogue - lines with start/end from dialogueVoiceService
  * @param {string} voicePath
  * @param {number} voiceDuration - seconds
- * @param {{outputName?: string, badge?: string, endCard?: {title: string, subtitle?: string}, music?: string}} [options]
+ * @param {{outputName?: string, hook?: string, endCard?: {title: string, subtitle?: string}, music?: string}} [options]
  *   music: a mood folder under assets/music (e.g. "suspense"); omitted = any track in assets/music
  */
 async function renderSkit(timedDialogue, voicePath, voiceDuration, options = {}) {
-  const { outputName = "skitVideo.mp4", badge = null, endCard = null, music = null } = options;
+  const { outputName = "skitVideo.mp4", hook = null, endCard = null, music = null } = options;
   const storage = path.join(__dirname, "../storage");
   const silentVideo = path.join(storage, "skit", "skit_silent.mp4");
   const outputVideo = path.join(storage, outputName);
@@ -41,7 +41,7 @@ async function renderSkit(timedDialogue, voicePath, voiceDuration, options = {})
     scene: timedDialogue.scene,
     lines: timedDialogue.lines,
     durationSeconds: totalSeconds,
-    badge,
+    hook,
     endCard: endCard ? { ...endCard, start: voiceDuration } : null,
     audio: null,
   };

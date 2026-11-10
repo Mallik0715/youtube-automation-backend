@@ -470,12 +470,437 @@ function Temple({ frame }) {
   );
 }
 
+/* ===================== Scenes for series 4-10 ===================== */
+
+function Museum({ frame, night }) {
+  const glint = Math.max(0, Math.sin(frame / 9));
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill={night ? "#3B3446" : "#E9E2D3"} />
+      {[40, 860].map(x => (
+        <g key={x} stroke={INK} strokeWidth="6">
+          <rect x={x} y="200" width="180" height={FLOOR_Y - 200} fill={night ? "#4F475C" : "#F5F0E6"} />
+          <rect x={x - 20} y="180" width="220" height="40" fill={night ? "#5A5168" : "#DDD5C4"} />
+        </g>
+      ))}
+      {/* paintings */}
+      {[[300, 330, "#5B8C85"], [600, 300, "#C06C4B"]].map(([x, y, c], i) => (
+        <g key={i}>
+          <rect x={x} y={y} width="200" height="250" fill="#C9A646" stroke={INK} strokeWidth="6" />
+          <rect x={x + 22} y={y + 22} width="156" height="206" fill={c} />
+          <circle cx={x + 100} cy={y + 110} r="44" fill="#F2D7A0" opacity="0.8" />
+        </g>
+      ))}
+      {/* glass case with the diamond */}
+      <g stroke={INK} strokeWidth="6">
+        <rect x="430" y="1080" width="220" height="300" fill={night ? "#2E2838" : "#B9B1A2"} />
+        <rect x="410" y="1060" width="260" height="30" fill={night ? "#3A3346" : "#CFC6B5"} />
+        <rect x="440" y="860" width="200" height="200" fill="rgba(190,230,255,0.25)" />
+      </g>
+      <path d="M540 930 L580 975 L540 1030 L500 975 Z" fill="#BFF3FF" stroke={INK} strokeWidth="5" />
+      <path d="M540 900 L540 880 M575 915 L590 900 M505 915 L490 900" stroke="#fff" strokeWidth="6" strokeLinecap="round" opacity={glint} />
+      {/* rope barriers */}
+      <path d="M300 1250 Q420 1300 430 1250 M650 1250 Q760 1300 780 1250" fill="none" stroke="#B22222" strokeWidth="12" />
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill={night ? "#2A2530" : "#CFC8BA"} />
+      {Array.from({ length: 6 }).map((_, r) => Array.from({ length: 8 }).map((_, c) => (
+        (r + c) % 2 === 0 ? <rect key={`${r}-${c}`} x={c * 135} y={FLOOR_Y + r * 90} width="135" height="90" fill={night ? "#332D3A" : "#BDB5A6"} /> : null
+      )))}
+    </g>
+  );
+}
+
+function PineTree({ x, y, s = 1, night }) {
+  const c1 = night ? "#16301F" : "#2F6B3E";
+  const c2 = night ? "#1B3A26" : "#3A7D4A";
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} stroke={INK} strokeWidth="5" strokeLinejoin="round">
+      <rect x="-18" y="-60" width="36" height="80" fill="#4A3424" />
+      <path d="M-150 -40 L0 -300 L150 -40 Z" fill={c1} />
+      <path d="M-120 -200 L0 -420 L120 -200 Z" fill={c2} />
+      <path d="M-90 -340 L0 -520 L90 -340 Z" fill={c1} />
+    </g>
+  );
+}
+
+function Forest({ frame, night }) {
+  const fogX = Math.sin(frame / 60) * 40;
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill={night ? "#0F1A22" : "#A9D3C2"} />
+      {night && <circle cx="820" cy="240" r="80" fill="#EDEBD7" />}
+      {[[60, 1.0], [300, 0.8], [520, 0.9], [760, 0.75], [980, 1.05]].map(([x, s], i) => (
+        <PineTree key={i} x={x} y={FLOOR_Y - 40} s={s * 1.4} night={night} />
+      ))}
+      <rect y={FLOOR_Y - 60} width={W} height={H} fill={night ? "#1A2A1E" : "#4F7A44"} />
+      {[[120, 1500], [420, 1620], [820, 1560], [980, 1750]].map(([x, y], i) => (
+        <path key={i} d={`M${x - 60} ${y} Q${x} ${y - 90} ${x + 60} ${y}`} fill={night ? "#203826" : "#5E9150"} stroke={INK} strokeWidth="4" />
+      ))}
+      <ellipse cx={540 + fogX} cy={FLOOR_Y - 40} rx="700" ry="90" fill="#fff" opacity={night ? 0.12 : 0.2} />
+    </g>
+  );
+}
+
+function Cabin({ frame, night }) {
+  const f = 0.8 + 0.2 * Math.sin(frame * 0.8) * Math.sin(frame * 0.33);
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill="#7A5236" />
+      {Array.from({ length: 14 }).map((_, i) => (
+        <rect key={i} x="0" y={i * 100} width={W} height="88" rx="40" fill="#8C6040" stroke="#5E3E28" strokeWidth="5" />
+      ))}
+      {/* window */}
+      <rect x="120" y="330" width="300" height="300" fill={night ? "#141B3A" : "#CFE8F5"} stroke="#4A3020" strokeWidth="18" />
+      {night && Array.from({ length: 8 }).map((_, i) => (
+        <circle key={i} cx={150 + (i * 41) % 260} cy={350 + ((frame * 2 + i * 70) % 260)} r="5" fill="#fff" />
+      ))}
+      {/* fireplace */}
+      <g stroke={INK} strokeWidth="6">
+        <rect x="620" y="760" width="380" height="620" fill="#7D7C80" />
+        <rect x="690" y="1040" width="240" height="340" fill="#1B1414" />
+      </g>
+      <circle cx="810" cy="1250" r={200 * f} fill="#FF8A2E" opacity="0.15" />
+      <path d={`M740 1380 Q760 ${1250 - 40 * f} 810 ${1180 - 50 * f} Q860 ${1250 - 40 * f} 880 1380 Z`} fill="#FF9A2E" />
+      <path d={`M780 1380 Q790 ${1290 - 30 * f} 810 ${1250 - 30 * f} Q830 ${1290 - 30 * f} 840 1380 Z`} fill="#FFE08A" />
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill="#5E3E28" />
+      {Array.from({ length: 6 }).map((_, i) => <line key={i} x1="0" y1={FLOOR_Y + 90 * (i + 1)} x2={W} y2={FLOOR_Y + 90 * (i + 1)} stroke="#4A3020" strokeWidth="5" />)}
+    </g>
+  );
+}
+
+function Cave({ frame }) {
+  return (
+    <g>
+      <rect width={W} height={H} fill="#16120F" />
+      {/* light from the entrance behind */}
+      <path d="M380 1380 Q380 700 540 640 Q700 700 700 1380 Z" fill="#6B7F8F" opacity="0.6" />
+      <path d="M0 0 L1080 0 L1080 1380 L760 1380 Q760 600 540 560 Q320 600 320 1380 L0 1380 Z" fill="#2B231D" stroke={INK} strokeWidth="8" />
+      {/* stalactites */}
+      {[80, 220, 400, 640, 820, 980].map((x, i) => (
+        <path key={x} d={`M${x - 40} 0 L${x} ${160 + (i % 3) * 70} L${x + 40} 0 Z`} fill="#3A2F27" stroke={INK} strokeWidth="5" />
+      ))}
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill="#231C17" />
+      {/* nest of branches + bones */}
+      <ellipse cx="540" cy={FLOOR_Y + 160} rx="260" ry="70" fill="#5A4430" stroke={INK} strokeWidth="5" />
+      {Array.from({ length: 10 }).map((_, i) => (
+        <line key={i} x1={320 + i * 45} y1={FLOOR_Y + 120 + (i % 3) * 20} x2={380 + i * 45} y2={FLOOR_Y + 190 - (i % 2) * 30} stroke="#7A5C3E" strokeWidth="10" strokeLinecap="round" />
+      ))}
+      <path d={`M180 ${FLOOR_Y + 300} L300 ${FLOOR_Y + 280}`} stroke="#E8E2D0" strokeWidth="16" strokeLinecap="round" />
+      <circle cx="176" cy={FLOOR_Y + 300} r="14" fill="#E8E2D0" />
+      <circle cx="304" cy={FLOOR_Y + 280} r="14" fill="#E8E2D0" />
+      <ellipse cx="540" cy={FLOOR_Y + 130} rx="200" ry="30" fill="#FF9A2E" opacity={0.05 + 0.03 * Math.sin(frame / 10)} />
+    </g>
+  );
+}
+
+function Sea({ y, frame, night, storm }) {
+  const amp = storm ? 26 : 12;
+  const waves = [0, 1, 2].map(i => {
+    const yy = y + i * 70;
+    const ph = frame / (storm ? 6 : 12) + i * 1.7;
+    let d = `M0 ${yy}`;
+    for (let x = 0; x <= W; x += 60) d += ` L${x} ${yy + Math.sin(x / 90 + ph) * amp}`;
+    return <path key={i} d={`${d} L${W} ${H} L0 ${H} Z`} fill={night ? ["#13243F", "#102038", "#0C1A30"][i] : ["#3E8DBF", "#357FB0", "#2C6F9E"][i]} />;
+  });
+  return <g>{waves}</g>;
+}
+
+function Rain({ frame }) {
+  return (
+    <g stroke="#AFC6E8" strokeWidth="4" opacity="0.6">
+      {Array.from({ length: 40 }).map((_, i) => {
+        const x = (i * 97 + frame * 9) % (W + 200) - 100;
+        const y = (i * 211 + frame * 38) % H;
+        return <line key={i} x1={x} y1={y} x2={x - 18} y2={y + 60} />;
+      })}
+    </g>
+  );
+}
+
+function LighthouseTower({ x, y, s, frame, night }) {
+  const beam = (frame * 3) % 360;
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      {night && (
+        <g transform={`rotate(${beam} 0 -520)`}>
+          <path d="M0 -520 L900 -640 L900 -400 Z" fill="#FFF3B0" opacity="0.25" />
+        </g>
+      )}
+      <path d="M-90 0 L-60 -480 L60 -480 L90 0 Z" fill="#F4F1EA" stroke={INK} strokeWidth="6" />
+      <path d="M-82 -130 L82 -130 L77 -220 L-77 -220 Z M-71 -320 L71 -320 L66 -400 L-66 -400 Z" fill="#C0392B" />
+      <rect x="-70" y="-560" width="140" height="80" fill={night ? "#FFE58A" : "#BFE3F2"} stroke={INK} strokeWidth="6" />
+      <path d="M-90 -560 L0 -640 L90 -560 Z" fill="#2E2E2E" stroke={INK} strokeWidth="6" />
+    </g>
+  );
+}
+
+function Shore({ frame, night }) {
+  return (
+    <g>
+      <Sky night={night} frame={frame} dusk={false} />
+      <Sea y={900} frame={frame} night={night} />
+      <path d="M560 1000 Q700 860 900 880 Q1040 900 1080 1000 Z" fill={night ? "#2A2A30" : "#6B6A70"} stroke={INK} strokeWidth="6" />
+      <LighthouseTower x={790} y={900} s={0.7} frame={frame} night={night} />
+      <path d={`M0 ${FLOOR_Y - 120} Q300 ${FLOOR_Y - 220} 600 ${FLOOR_Y - 140} T1080 ${FLOOR_Y - 120} L1080 ${H} L0 ${H} Z`} fill={night ? "#3A3428" : "#D8C49A"} />
+      {/* rowboat */}
+      <g transform={`translate(120 ${FLOOR_Y - 150 + Math.sin(frame / 15) * 4})`} stroke={INK} strokeWidth="6">
+        <path d="M0 0 L300 0 L260 70 L40 70 Z" fill="#8C5A3C" />
+        <line x1="60" y1="20" x2="240" y2="20" stroke="#6E4630" />
+      </g>
+      {[[700, 1600], [300, 1750], [950, 1700]].map(([x, y], i) => (
+        <ellipse key={i} cx={x} cy={y} rx="70" ry="34" fill={night ? "#45403A" : "#9C968C"} stroke={INK} strokeWidth="5" />
+      ))}
+    </g>
+  );
+}
+
+function LighthouseRoom({ frame, night }) {
+  const spin = (frame * 4) % 360;
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill="#2C3440" />
+      {/* round windows to the sea */}
+      {[200, 880].map(x => (
+        <g key={x}>
+          <circle cx={x} cy="520" r="130" fill={night ? "#101A2E" : "#8EC5E8"} stroke="#55606E" strokeWidth="22" />
+          <line x1={x - 130} y1="520" x2={x + 130} y2="520" stroke="#55606E" strokeWidth="10" />
+        </g>
+      ))}
+      {/* the great lens */}
+      <g transform="translate(540 700)">
+        <circle r="230" fill="#FFE58A" opacity={night ? 0.18 : 0.08} />
+        <rect x="-120" y="-200" width="240" height="380" rx="40" fill="#BFE9F2" stroke={INK} strokeWidth="7" opacity="0.9" />
+        {[-140, -80, -20, 40, 100].map(y => <line key={y} x1="-120" y1={y} x2="120" y2={y} stroke="#8FC8D6" strokeWidth="6" />)}
+        <circle r="50" fill={night ? "#FFF3B0" : "#F6E3A0"} />
+        {night && <path d={`M0 0 L${Math.cos(spin * Math.PI / 180) * 600} ${Math.sin(spin * Math.PI / 180) * 120 - 60} L${Math.cos(spin * Math.PI / 180) * 600} ${Math.sin(spin * Math.PI / 180) * 120 + 60} Z`} fill="#FFF3B0" opacity="0.3" />}
+        <rect x="-150" y="180" width="300" height="60" fill="#3E4652" stroke={INK} strokeWidth="6" />
+      </g>
+      {/* logbook desk */}
+      <g stroke={INK} strokeWidth="6">
+        <rect x="60" y="1150" width="300" height="30" fill="#6E4A34" />
+        <rect x="80" y="1180" width="24" height="200" fill="#5B3A29" />
+        <rect x="316" y="1180" width="24" height="200" fill="#5B3A29" />
+        <rect x="140" y="1110" width="150" height="40" fill="#7A2E2E" />
+      </g>
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill="#3A3F48" />
+      {Array.from({ length: 8 }).map((_, i) => <line key={i} x1={i * 140} y1={FLOOR_Y} x2={i * 140 - 80} y2={H} stroke="#2E333B" strokeWidth="6" />)}
+    </g>
+  );
+}
+
+function BoatDeck({ frame, night }) {
+  const rock = Math.sin(frame / 20) * 1.5;
+  return (
+    <g>
+      <Sky night={night} frame={frame} dusk={false} />
+      <g transform={`rotate(${rock} 540 1100)`}>
+        <Sea y={950} frame={frame} night={night} storm={night} />
+        {/* mast + rigging */}
+        <rect x="860" y="200" width="30" height={FLOOR_Y - 200} fill="#6E4A34" stroke={INK} strokeWidth="5" />
+        <path d="M875 230 L520 1180 M875 230 L1080 1180" stroke="#C8B48A" strokeWidth="5" />
+        <path d="M890 260 Q1040 500 890 760 Z" fill={night ? "#8F8A80" : "#F4EFE4"} stroke={INK} strokeWidth="5" />
+        {/* railing */}
+        <rect y="1180" width={W} height="20" fill="#7A5236" stroke={INK} strokeWidth="5" />
+        {Array.from({ length: 10 }).map((_, i) => <rect key={i} x={i * 120 + 20} y="1180" width="16" height="200" fill="#7A5236" />)}
+        <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill={night ? "#4A3424" : "#A87A52"} />
+        {Array.from({ length: 9 }).map((_, i) => <line key={i} x1={i * 130} y1={FLOOR_Y} x2={i * 130} y2={H} stroke={night ? "#3A281B" : "#8C6440"} strokeWidth="6" />)}
+      </g>
+      {night && <Rain frame={frame} />}
+    </g>
+  );
+}
+
+function Desert({ frame, night }) {
+  const shimmer = Math.sin(frame / 8) * 3;
+  return (
+    <g>
+      {night ? <Sky night frame={frame} /> : (
+        <g>
+          <rect width={W} height={FLOOR_Y} fill="#F7D9A0" />
+          <circle cx="800" cy="330" r="110" fill="#FFF1C2" />
+        </g>
+      )}
+      <path d={`M0 1050 Q270 900 540 1010 T1080 960 L1080 ${FLOOR_Y} L0 ${FLOOR_Y} Z`} fill={night ? "#3C3046" : "#E8B46A"} />
+      {/* old radio tower */}
+      <g stroke={night ? "#9A8FA8" : "#5A4A3A"} strokeWidth="7" fill="none">
+        <path d="M720 1040 L800 420 L880 1040 M745 850 L855 850 M762 700 L838 700 M778 560 L822 560 M745 850 L838 700 M855 850 L762 700" />
+      </g>
+      <circle cx="800" cy="410" r="12" fill="#FF4D4D" opacity={0.4 + 0.6 * Math.max(0, Math.sin(frame / 6))} />
+      <path d={`M0 1220 Q300 1120 620 1200 T1080 1180 L1080 ${H} L0 ${H} Z`} fill={night ? "#4A3C52" : "#F0C27E"} />
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill={night ? "#4F4157" : "#EDBD75"} />
+      {/* cactus */}
+      <g transform={`translate(150 ${FLOOR_Y - 20})`} stroke={INK} strokeWidth="6" fill="#4F8A4A">
+        <rect x="-30" y="-300" width="60" height="320" rx="30" />
+        <path d="M-30 -160 L-90 -160 L-90 -240" strokeLinecap="round" fill="none" strokeWidth="40" stroke="#4F8A4A" />
+      </g>
+      {!night && <ellipse cx={540 + shimmer} cy={FLOOR_Y - 10} rx="400" ry="12" fill="#fff" opacity="0.25" />}
+    </g>
+  );
+}
+
+function RadioStation({ frame, night }) {
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill={night ? "#2C3530" : "#8A9A8C"} />
+      {/* map + clock on the wall */}
+      <rect x="80" y="260" width="420" height="300" fill="#E8DCB8" stroke={INK} strokeWidth="6" />
+      <path d="M120 420 Q200 330 300 400 T470 360" fill="none" stroke="#B5543C" strokeWidth="6" />
+      <circle cx="330" cy="400" r="14" fill="#C0392B" />
+      <circle cx="820" cy="360" r="90" fill="#F4F1EA" stroke={INK} strokeWidth="7" />
+      <line x1="820" y1="360" x2="820" y2="300" stroke={INK} strokeWidth="7" />
+      <line x1="820" y1="360" x2={820 + Math.cos(frame / 30) * 60} y2={360 + Math.sin(frame / 30) * 60} stroke="#C0392B" strokeWidth="5" />
+      {/* consoles with dials + blinking lights */}
+      <g stroke={INK} strokeWidth="6">
+        <rect x="40" y="820" width="1000" height="420" rx="16" fill="#5A6560" />
+        <rect x="40" y="800" width="1000" height="40" fill="#6E7A74" />
+      </g>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <g key={i}>
+          <circle cx={120 + i * 170} cy="930" r="44" fill="#E8E2D0" stroke={INK} strokeWidth="5" />
+          <line x1={120 + i * 170} y1="930" x2={120 + i * 170 + Math.cos(i + frame / 40) * 34} y2={930 + Math.sin(i + frame / 40) * 34} stroke={INK} strokeWidth="5" />
+          <circle cx={120 + i * 170} cy="1060" r="14" fill={(Math.floor(frame / 8) + i) % 3 === 0 ? "#7CFF6B" : "#2E3A33"} />
+        </g>
+      ))}
+      {/* reel-to-reel tape */}
+      {[420, 640].map((x, i) => (
+        <g key={x} transform={`rotate(${frame * 4} ${x} 1150)`}>
+          <circle cx={x} cy="1150" r="60" fill="#2E2E2E" />
+          <line x1={x - 50} y1="1150" x2={x + 50} y2="1150" stroke="#888" strokeWidth="8" />
+        </g>
+      ))}
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill={night ? "#2A2622" : "#6E665C"} />
+    </g>
+  );
+}
+
+function TrainCarriage({ frame, night }) {
+  // Lights flicker past the windows; every few seconds a tunnel blacks them out
+  const tunnel = Math.floor(frame / 90) % 3 === 2;
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill="#5B2E2E" />
+      <rect y="0" width={W} height="160" fill="#4A2424" />
+      {[60, 400, 740].map((x, i) => (
+        <g key={x}>
+          <rect x={x} y="330" width="280" height="330" rx="30" fill={tunnel ? "#050505" : night ? "#0E1428" : "#9ACBE8"} stroke="#C9A646" strokeWidth="14" />
+          {!tunnel && (
+            <rect x={x + 20 + ((frame * 25 + i * 120) % 260)} y="380" width="14" height="230" fill={night ? "#FFE58A" : "#fff"} opacity="0.6" />
+          )}
+        </g>
+      ))}
+      {/* luggage rack */}
+      <rect x="40" y="250" width="1000" height="16" fill="#C9A646" />
+      <rect x="120" y="190" width="160" height="60" rx="8" fill="#6B4F3A" stroke={INK} strokeWidth="5" />
+      {/* seats */}
+      {[40, 380, 720].map(x => (
+        <g key={x} stroke={INK} strokeWidth="6">
+          <rect x={x} y="780" width="320" height="380" rx="40" fill="#8E3B3B" />
+          <rect x={x} y="1100" width="320" height="120" rx="30" fill="#A64848" />
+        </g>
+      ))}
+      <rect y={FLOOR_Y - 160} width={W} height="160" fill="#3A1E1E" />
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill="#2E2A28" />
+      <rect x="420" y={FLOOR_Y} width="240" height={H - FLOOR_Y} fill="#7A2E2E" />
+    </g>
+  );
+}
+
+function SnowMountain({ frame, night }) {
+  return (
+    <g>
+      <rect width={W} height={FLOOR_Y} fill={night ? "#1A2238" : "#BFD3E6"} />
+      <path d="M0 1000 L250 520 L420 760 L620 380 L860 800 L1080 560 L1080 1380 L0 1380 Z" fill={night ? "#3A4560" : "#E8EEF5"} stroke={INK} strokeWidth="6" />
+      <path d="M250 520 L300 620 L210 600 Z M620 380 L680 500 L560 480 Z" fill="#fff" />
+      {/* research hut with antenna */}
+      <g stroke={INK} strokeWidth="6">
+        <rect x="620" y="930" width="340" height="240" fill="#C0392B" />
+        <path d="M600 930 L790 830 L980 930 Z" fill="#E8EEF5" />
+        <rect x="690" y="990" width="80" height="80" fill={night ? "#FFE08A" : "#BFE3F2"} />
+        <rect x="830" y="1030" width="90" height="140" fill="#7A2420" />
+        <line x1="900" y1="860" x2="900" y2="700" />
+      </g>
+      <rect y={FLOOR_Y - 140} width={W} height={H} fill={night ? "#4A5470" : "#F4F7FB"} />
+      {/* blowing snow */}
+      {Array.from({ length: 50 }).map((_, i) => {
+        const x = (i * 73 + frame * (6 + (i % 4))) % (W + 100) - 50;
+        const y = (i * 151 + frame * (3 + (i % 3))) % H;
+        return <circle key={i} cx={x} cy={y} r={3 + (i % 4)} fill="#fff" opacity="0.85" />;
+      })}
+    </g>
+  );
+}
+
+function IceCave({ frame }) {
+  const blink = Math.floor(frame / 75) % 4 === 3 && frame % 75 < 6;
+  return (
+    <g>
+      <rect width={W} height={H} fill="#0E2A40" />
+      <path d="M0 0 L1080 0 L1080 1380 L0 1380 Z" fill="#1C4A6A" />
+      {Array.from({ length: 9 }).map((_, i) => (
+        <path key={i} d={`M${i * 130 - 40} 0 L${i * 130 + 20} ${220 + (i % 3) * 90} L${i * 130 + 80} 0 Z`} fill="#9FD8F0" stroke="#0E2A40" strokeWidth="4" opacity="0.9" />
+      ))}
+      {/* the giant frozen shape */}
+      <g transform="translate(540 760)">
+        <ellipse rx="380" ry="330" fill="#6FB4D6" opacity="0.5" stroke="#BFEAFF" strokeWidth="8" />
+        <path d="M-220 120 Q-260 -180 0 -230 Q260 -180 220 120 Q120 220 0 200 Q-120 220 -220 120 Z" fill="#2F4F62" opacity="0.85" />
+        <path d="M-160 -150 Q-230 -280 -120 -300 M160 -150 Q230 -280 120 -300" stroke="#2F4F62" strokeWidth="30" strokeLinecap="round" opacity="0.85" />
+        <ellipse cx="-70" cy="-60" rx="34" ry={blink ? 4 : 26} fill="#F2D24A" />
+        <circle cx="-70" cy="-60" r={blink ? 0 : 9} fill="#111" />
+        <path d="M-260 -60 L-140 20 L-200 120 M150 -200 L230 -120" stroke="#E6F7FF" strokeWidth="6" fill="none" />
+      </g>
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill="#BFE3F2" />
+      <rect y={FLOOR_Y} width={W} height="30" fill="#E6F7FF" />
+    </g>
+  );
+}
+
+function Underwater({ frame }) {
+  return (
+    <g>
+      <defs>
+        <linearGradient id="deep" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#1F6E9A" />
+          <stop offset="1" stopColor="#06233A" />
+        </linearGradient>
+      </defs>
+      <rect width={W} height={H} fill="url(#deep)" />
+      {/* light rays */}
+      {[200, 520, 860].map((x, i) => (
+        <path key={x} d={`M${x - 40} 0 L${x + 40} 0 L${x + 160 + Math.sin(frame / 30 + i) * 30} 1300 L${x - 80} 1300 Z`} fill="#BFF3FF" opacity="0.07" />
+      ))}
+      {/* shipwreck */}
+      <g transform="translate(540 1080) rotate(-8)" stroke={INK} strokeWidth="7">
+        <path d="M-460 0 L460 0 L380 260 L-380 260 Z" fill="#4A3A2E" />
+        <rect x="-300" y="-220" width="320" height="220" fill="#3E3128" />
+        <rect x="-150" y="-140" width="90" height="140" fill="#1A1410" />
+        <line x1="200" y1="0" x2="260" y2="-520" stroke="#3E3128" strokeWidth="26" />
+        {[-380, -240, -100, 40, 180, 320].map(x => <circle key={x} cx={x} cy="120" r="22" fill="#1A1410" />)}
+      </g>
+      {/* seaweed */}
+      {[80, 160, 900, 1000].map((x, i) => (
+        <path key={x} d={`M${x} ${FLOOR_Y + 100} Q${x + 30 * Math.sin(frame / 20 + i)} ${FLOOR_Y - 100} ${x + 10} ${FLOOR_Y - 300}`} fill="none" stroke="#2F7A4A" strokeWidth="16" strokeLinecap="round" />
+      ))}
+      <rect y={FLOOR_Y} width={W} height={H - FLOOR_Y} fill="#C2A878" />
+      <path d={`M0 ${FLOOR_Y} Q270 ${FLOOR_Y - 40} 540 ${FLOOR_Y} T1080 ${FLOOR_Y} L1080 ${FLOOR_Y + 60} L0 ${FLOOR_Y + 60} Z`} fill="#D4BC8C" />
+      {/* bubbles */}
+      {Array.from({ length: 18 }).map((_, i) => {
+        const x = (i * 131) % W + Math.sin(frame / 15 + i) * 12;
+        const y = H - ((frame * (2 + (i % 3)) + i * 140) % H);
+        return <circle key={i} cx={x} cy={y} r={5 + (i % 4) * 3} fill="none" stroke="#DFF8FF" strokeWidth="3" opacity="0.6" />;
+      })}
+    </g>
+  );
+}
+
 const SCENES = {
   office: Office, street: Street, home: Home, cafe: Cafe, park: Park,
   gate: Gate, village: VillageStreet, room: GuestRoom, well: Well, tunnel: Tunnel, temple: Temple,
+  museum: Museum, forest: Forest, cabin: Cabin, cave: Cave, shore: Shore, lighthouse: LighthouseRoom,
+  deck: BoatDeck, desert: Desert, radio: RadioStation, train: TrainCarriage, snow: SnowMountain,
+  icecave: IceCave, underwater: Underwater,
 };
+export const SCENE_NAMES = Object.keys(SCENES);
 // Scenes that bring their own darkness and light get a lighter night overlay
-export const NIGHT_OVERLAY = { tunnel: 0.15, temple: 0.1 };
+export const NIGHT_OVERLAY = { tunnel: 0.15, temple: 0.1, cave: 0.15, icecave: 0.1, underwater: 0.1, lighthouse: 0.2, cabin: 0.2, train: 0.2 };
 
 export function Background({ scene, frame, night = false }) {
   const Scene = SCENES[scene] || Cafe;
