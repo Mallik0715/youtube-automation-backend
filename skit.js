@@ -38,7 +38,7 @@ for (const key of required) {
 }
 
 const { getNextTopic, peekNextTopic } = require("./services/topicService");
-const { generateDialogue, dialogueToScript } = require("./services/dialogueScriptService");
+// dialogueScriptService is loaded lazily below: it creates a Groq client, which throws without GROQ_API_KEY (not needed for series)
 const { generateDialogueVoices } = require("./services/dialogueVoiceService");
 const { renderSkit } = require("./services/remotionRenderService");
 
@@ -99,6 +99,7 @@ async function run() {
   const topic = TOPIC_ARG || (UPLOAD ? getNextTopic() : peekNextTopic());
   console.log("🎯 Topic:", topic);
 
+  const { generateDialogue } = require("./services/dialogueScriptService");
   const dialogue = DEMO ? DEMO_DIALOGUE : await generateDialogue(topic);
 
   const workDir = freshWorkDir();
@@ -115,6 +116,7 @@ async function run() {
   }
 
   const { generateSEO } = require("./services/seoService");
+  const { dialogueToScript } = require("./services/dialogueScriptService");
   const { uploadToYouTube } = require("./services/uploadService");
   const seo = await generateSEO(topic, dialogueToScript(dialogue));
   const url = await uploadToYouTube(video, seo.title, seo.description, seo.tags);
