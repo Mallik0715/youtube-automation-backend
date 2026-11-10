@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Background, FLOOR_Y, NIGHT_OVERLAY } from "./Background";
 import { Character, LOOKS } from "./Character";
+import { loadFont } from "@remotion/google-fonts/Montserrat";
 
 // Character placement (px on the 1080x1920 canvas). The SVG is 400x900 units, feet at y=868.
 const FEET_Y = FLOOR_Y + 330;
@@ -16,7 +17,10 @@ const WORDS_PER_CAPTION = 3;
 const GHOST_RED = "#FF4D4D";
 // Offscreen voice caption colours: ghosts red, radios green, apps/AI cyan
 const VOICE_COLORS = { radio: "#7CFF6B", robot: "#5CE1E6" };
-const FONT = '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif';
+// Bundled Google font so captions look identical on Windows and on GitHub's Linux runners
+// (Linux has no Arial Black and fell back to a thin font)
+const { fontFamily: MONTSERRAT } = loadFont("normal", { weights: ["900"], subsets: ["latin"] });
+const FONT = `${MONTSERRAT}, "Arial Black", "Segoe UI Black", sans-serif`;
 const DEFAULT_CAST = ["A", "B"];
 
 function layoutFor(cast) {
@@ -92,7 +96,7 @@ function Captions({ lines, t, frame, fps }) {
     <div style={{
       position: "absolute", top: 430, left: 70, right: 70, textAlign: "center",
       transform: `${tremble} scale(${0.75 + 0.25 * pop})`,
-      fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif',
+      fontFamily: FONT,
       fontWeight: 900, fontSize: 108, lineHeight: 1.1, textTransform: "uppercase",
       fontStyle: offscreen ? "italic" : "normal",
       WebkitTextStroke: "14px #000", paintOrder: "stroke fill",
@@ -115,7 +119,7 @@ function TitleCard({ line, t, frame, fps }) {
     <AbsoluteFill style={{ backgroundColor: "#050508", alignItems: "center", justifyContent: "center" }}>
       <div style={{
         transform: `translate(${s.x}px, ${s.y}px) scale(${0.6 + 0.4 * pop})`,
-        fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif', fontWeight: 900,
+        fontFamily: FONT, fontWeight: 900,
         fontSize: 170, color: "#fff", letterSpacing: 6, textShadow: `0 0 50px ${GHOST_RED}, 0 0 12px ${GHOST_RED}`,
       }}>
         {line.text}
@@ -165,14 +169,14 @@ function EndCard({ card, t, frame, fps }) {
     <AbsoluteFill style={{ backgroundColor: `rgba(5,5,10,${0.88 * fade})`, alignItems: "center", justifyContent: "center", gap: 30 }}>
       <div style={{
         transform: `scale(${(0.5 + 0.5 * pop) * pulse})`,
-        fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif', fontWeight: 900, fontSize: 118, lineHeight: 1.05, padding: "0 50px",
+        fontFamily: FONT, fontWeight: 900, fontSize: 118, lineHeight: 1.05, padding: "0 50px",
         color: "#FFC93C", WebkitTextStroke: "12px #000", paintOrder: "stroke fill", textAlign: "center",
       }}>
         {card.title}
       </div>
       {card.subtitle && (
         <div style={{
-          opacity: fade, fontFamily: '"Arial Black", "Segoe UI Black", "DejaVu Sans", sans-serif', fontWeight: 900,
+          opacity: fade, fontFamily: FONT, fontWeight: 900,
           fontSize: 56, color: "#fff", textAlign: "center", padding: "0 60px",
         }}>
           {card.subtitle}

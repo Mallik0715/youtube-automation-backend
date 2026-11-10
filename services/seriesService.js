@@ -91,7 +91,8 @@ function buildPart(series, partIndex) {
   // The hook headline sits on screen the whole video and leads the YouTube title:
   // curiosity first, series + part number last (people who want Part 1 can still find it)
   const hook = part.hook || part.title;
-  const seoTitle = `${hook} | ${series.title} Pt ${number}`;
+  // *stars* only mark the on-screen yellow highlight - never let them reach YouTube
+  const seoTitle = `${hook.replace(/\*/g, "")} | ${series.title} Pt ${number}`;
   return {
     seriesId: series.id,
     seriesTitle: series.title,
@@ -105,7 +106,8 @@ function buildPart(series, partIndex) {
       ? { title: "SEASON 2?", subtitle: "Comment \"YES\" if you want it" }
       : { title: "WHAT HAPPENS NEXT?", subtitle: `Part ${number + 1} is up next. Follow so you don't miss it` },
     seo: {
-      title: `${seoTitle} #shorts`.slice(0, 100),
+      // YouTube caps titles at 100 chars: drop the #shorts tag (it is in the description too) before cutting words
+      title: `${seoTitle} #shorts`.length <= 100 ? `${seoTitle} #shorts` : seoTitle.slice(0, 100),
       description:
         `${series.description}\n\nPart ${number} of ${total}: ${part.title}` +
         (isLast ? "\n\nThe end... or is it?" : `\nPart ${number + 1} is coming next - follow so you don't miss it.`) +
