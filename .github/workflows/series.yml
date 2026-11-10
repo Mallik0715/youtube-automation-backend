@@ -65,5 +65,5 @@ jobs:
           git add services/series_progress.json
           git diff --staged --quiet && exit 0
           git commit -m "Update series progress [skip ci]"
-          git pull --rebase
+          git pull --rebase --autostash
           git push
