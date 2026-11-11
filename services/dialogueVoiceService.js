@@ -32,7 +32,10 @@ const VOICE_FX = {
 };
 
 const GAP_SECONDS = 0.15; // pause between lines so the back-and-forth breathes
-const ATTEMPTS = 3;
+// Microsoft's free TTS endpoint sometimes refuses requests for a minute or two (more often from
+// GitHub's servers), so keep trying with growing waits: 5s, 10s, 20s, 40s, 60s, 60s
+const ATTEMPTS = 7;
+const retryWait = (attempt) => Math.min(60, 5 * 2 ** (attempt - 1)) * 1000;
 
 function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
@@ -65,7 +68,7 @@ async function speakLine(line, outFile) {
     } catch (err) {
       if (attempt === ATTEMPTS) throw err;
       console.warn(`⚠️ ${err.message} - retrying line (${attempt}/${ATTEMPTS - 1})...`);
-      await new Promise(res => setTimeout(res, attempt * 5000));
+      await new Promise(res => setTimeout(res, retryWait(attempt)));
     }
   }
 
