@@ -2,7 +2,8 @@ name: Story Series Upload
 
 on:
   schedule:
-    # Two parts a day, timed for a worldwide audience
+    # Three parts a day, timed for a worldwide audience (YouTube's daily API quota allows ~6 uploads)
+    - cron: '30 6 * * *'   # 06:30 UTC = 12:00 PM India, 7:30 AM UK, 2:30 AM New York
     - cron: '30 14 * * *'  # 14:30 UTC = 8:00 PM India, 3:30 PM UK, 10:30 AM New York
     - cron: '0 23 * * *'   # 23:00 UTC = 7:00 PM New York, 4:30 AM India (next day), 12:00 AM UK
   workflow_dispatch:
