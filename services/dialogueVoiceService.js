@@ -14,6 +14,8 @@ const VOICES = {
   D: { voice: "en-GB-RyanNeural", rate: "+8%", pitch: "-12Hz" },                                          // Bruno
   E: { voice: "en-US-AvaMultilingualNeural", rate: "+10%", pitch: "+0Hz" },                               // Zara
   F: { voice: "en-GB-ThomasNeural", rate: "+6%", pitch: "-4Hz" },                                         // Victor
+  // Storyteller for narrated series: warm, calm, a touch deeper than Max
+  N: { voice: process.env.TTS_VOICE_N || "en-US-AndrewMultilingualNeural", rate: "+6%", pitch: "-3Hz" },
   child: { voice: "en-US-AnaNeural", rate: "-25%", pitch: "-4Hz" },                                       // creepy child whisper
   radio: { voice: "en-US-RogerNeural", rate: "+0%", pitch: "-2Hz" },                                      // old radio broadcast
   robot: { voice: "en-US-EmmaMultilingualNeural", rate: "+5%", pitch: "-6Hz" },                           // app / AI voice

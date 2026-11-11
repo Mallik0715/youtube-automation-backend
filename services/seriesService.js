@@ -3,13 +3,16 @@ const path = require("path");
 
 // Add new series here; they play in this order, one part per upload
 // (10 series x 5 parts = 50 videos; plan in series/PLAN.md)
+// Only insert new series AFTER the one currently uploading (series_progress.json "series" index),
+// or already-uploaded parts would repeat.
 const SERIES = [
   require("../series/dontAnswerAfter9"),
-  // Comedy series alternate with the mysteries. Only insert new series AFTER the one currently
-  // uploading (series_progress.json "series" index), or already-uploaded parts would repeat.
-  require("../series/officeLife"),
+  // Narrated, viewers pick A or B at the end of every part
+  require("../series/hundredMillion"),
   require("../series/tuesdayLoop"),
-  require("../series/friends"),
+  // Comedy is off for now (files kept in series/ in case it comes back):
+  // require("../series/officeLife"),
+  // require("../series/friends"),
   require("../series/appKnowsTooMuch"),
   require("../series/missingDiamond"),
   require("../series/creatureBlackwood"),
@@ -86,12 +89,26 @@ function buildPart(series, partIndex) {
           emotion: line.emotion || "neutral",
           fx: line.fx || null,
           voiceOf: line.voiceOf || null,
+          focus: line.focus || null, // narrator lines: who the camera shows acting it out
           hooded: !!line.hooded,
           pose: line.pose || null, // neutral | point | hips | crossed | shrug | shock | worried
           sfx: line.sfx || null,   // knock | thunder | footsteps | boom | whoosh (plays as the line starts)
         });
       }
     }
+  }
+
+  // Interactive series: the narrator asks viewers to choose, and the A/B card stays up to the end
+  const choice = part.choice || null;
+  if (choice) {
+    const last = lines[lines.length - 1];
+    lines.push({
+      scene: last.scene, night: last.night, cast: last.cast, seated: last.seated,
+      speaker: "N", emotion: "neutral", fx: null, voiceOf: null, hooded: false, pose: null, focus: null,
+      sfx: "stinger",
+      text: `${choice.question} A: ${choice.a}. Or B: ${choice.b}. Comment A or B.`,
+      choice,
+    });
   }
 
   // The hook headline sits on screen the whole video and leads the YouTube title:
@@ -109,7 +126,9 @@ function buildPart(series, partIndex) {
     dialogue: { scene: part.segments[0].scene, lines },
     hook,
     // Mysteries end on a cliffhanger card + stinger; comedy sketches ask viewers to tag a friend (shares)
-    endCard: series.kind === "comedy"
+    endCard: choice
+      ? { choice, title: "", sfx: null } // the choice card is already on screen; this just holds it a moment longer
+      : series.kind === "comedy"
       ? { title: "TAG SOMEONE WHO DOES THIS", subtitle: "Follow for more", sfx: null }
       : isLast
         ? { title: "SEASON 2?", subtitle: "Comment \"YES\" if you want it", sfx: "stinger" }
@@ -121,7 +140,7 @@ function buildPart(series, partIndex) {
         `${series.description}\n\nPart ${number} of ${total}: ${part.title}` +
         (isLast ? "\n\nThe end... or is it?" : `\nPart ${number + 1} is coming next - follow so you don't miss it.`) +
         `\n\n${series.hashtags.join(" ")}`,
-      tags: ["mystery", "animated story", "cartoon", "short story", "psychology", series.title, `part ${number}`],
+      tags: [...(series.tags || []), "mystery", "animated story", "cartoon", "short story", "psychology", series.title, `part ${number}`],
     },
   };
 }

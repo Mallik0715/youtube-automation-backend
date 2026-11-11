@@ -37,6 +37,9 @@ function layoutFor(cast) {
   }));
 }
 
+// Who acts out a line: the speaker, or for narrator lines ("N") the character the camera focuses on
+const actorOf = (l) => (l.speaker === "N" ? l.focus || null : l.speaker);
+
 function talkAmount(lines, who, t) {
   for (const l of lines) {
     if (l.speaker === who && t >= l.start && t <= l.end) {
@@ -48,14 +51,14 @@ function talkAmount(lines, who, t) {
 
 // Latest line this character has started, or their first upcoming one
 function stateLine(lines, who, t) {
-  const own = lines.filter(l => l.speaker === who);
+  const own = lines.filter(l => actorOf(l) === who);
   const started = own.filter(l => l.start <= t);
   return started.length ? started[started.length - 1] : own[0];
 }
 
 // Hooded until the hooded line (current or next one of theirs) is over
 function isHooded(lines, who, t) {
-  const next = lines.find(l => l.speaker === who && l.end >= t);
+  const next = lines.find(l => actorOf(l) === who && l.end >= t);
   return !!next?.hooded;
 }
 
@@ -63,7 +66,7 @@ function isHooded(lines, who, t) {
 const GESTURE_EASE = 0.3;
 function gestureAmount(lines, who, t) {
   for (const l of lines) {
-    if (l.speaker === who && t >= l.start - GESTURE_EASE && t <= l.end + GESTURE_EASE) {
+    if (actorOf(l) === who && t >= l.start - GESTURE_EASE && t <= l.end + GESTURE_EASE) {
       const k = Math.min(1, (t - (l.start - GESTURE_EASE)) / GESTURE_EASE, (l.end + GESTURE_EASE - t) / GESTURE_EASE);
       return 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, k)); // smoothstep-like
     }
@@ -90,7 +93,7 @@ function settingStart(lines, i, scene) {
 // Offscreen voices and title cards use the wide shot.
 function shotType(lines, i, scene) {
   const line = lines[i];
-  if (!castOf(line).includes(line.speaker)) return "wide";
+  if (!castOf(line).includes(actorOf(line))) return "wide";
   const k = i - settingStart(lines, i, scene);
   return k === 0 || k % 4 === 3 ? "wide" : "single";
 }
@@ -99,6 +102,8 @@ function shotType(lines, i, scene) {
 function autoPose(line, i) {
   if (!line) return "neutral";
   if (line.pose) return line.pose;
+  // Narration: characters react quietly rather than gesturing as if talking
+  if (line.speaker === "N" && (line.emotion || "neutral") === "neutral") return "neutral";
   switch (line.emotion) {
     case "smug": return i % 2 ? "crossed" : "hips";
     case "surprised": return line.fx === "shake" ? "shock" : "shrug";
@@ -110,7 +115,7 @@ function autoPose(line, i) {
 
 function poseState(lines, who, t) {
   const own = [];
-  lines.forEach((l, i) => { if (l.speaker === who) own.push(i); });
+  lines.forEach((l, i) => { if (actorOf(l) === who) own.push(i); });
   const started = own.filter(i => lines[i].start <= t);
   const cur = started.length ? started[started.length - 1] : own[0];
   if (cur === undefined) return { pose: "neutral", prevPose: "neutral", poseK: 1 };
@@ -138,7 +143,7 @@ function shakeOffset(line, t, strength = 22) {
 }
 
 function Captions({ lines, t, frame, fps }) {
-  const line = lines.find(l => l.speaker !== "CARD" && t >= l.start && t <= l.end + 0.15);
+  const line = lines.find(l => l.speaker !== "CARD" && !l.choice && t >= l.start && t <= l.end + 0.15);
   if (!line) return null;
 
   const words = line.text.split(/\s+/).filter(Boolean);
@@ -150,7 +155,7 @@ function Captions({ lines, t, frame, fps }) {
   const chunkFrame = Math.round((line.start + chunkStart * perWord) * fps);
   const pop = spring({ frame: frame - chunkFrame, fps, config: { damping: 12, stiffness: 220 }, durationInFrames: 8 });
   const offscreen = line.speaker === "V";
-  const ghostColor = VOICE_COLORS[line.voiceOf] || GHOST_RED;
+  const ghostColor = VOICE_COLORS[line.voiceOf] || VOICE_COLORS[line.fx] || GHOST_RED;
   const ghost = offscreen && line.fx === "echo";
   const accent = offscreen ? ghostColor : LOOKS[line.speaker]?.accent || "#FFC93C";
   // The offscreen voice trembles
@@ -250,6 +255,53 @@ function EndCard({ card, t, frame, fps }) {
   );
 }
 
+// End of an interactive part: the question and two options, highlighted as the narrator reads them
+function ChoiceCard({ line, t, frame, fps }) {
+  const k = t - line.start;
+  const { question, a, b } = line.choice;
+  const fade = interpolate(k, [0, 0.35], [0, 1], { extrapolateRight: "clamp" });
+  // Rough timing of when the narrator reaches each option (word share of the line)
+  const words = (s) => s.split(/\s+/).filter(Boolean).length;
+  const total = words(line.text);
+  const dur = line.end - line.start;
+  const aAt = line.start + dur * (words(question) / total);
+  const bAt = line.start + dur * ((words(question) + 1 + words(a) + 1) / total);
+  const ctaAt = line.end - dur * (4 / total);
+  const optionStyle = (at, color) => {
+    const p = spring({ frame: frame - Math.round(at * fps), fps, config: { damping: 12, stiffness: 170 } });
+    return {
+      opacity: Math.min(1, p * 1.5), transform: `translateY(${(1 - p) * 60}px) scale(${0.9 + 0.1 * p})`,
+      display: "flex", alignItems: "center", gap: 28, margin: "0 60px", padding: "30px 36px",
+      background: "rgba(255,255,255,0.08)", border: `6px solid ${color}`, borderRadius: 34,
+    };
+  };
+  const badge = (letter, color) => (
+    <div style={{
+      flex: "0 0 auto", width: 110, height: 110, borderRadius: 55, background: color, color: "#111",
+      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72,
+    }}>{letter}</div>
+  );
+  const qPop = spring({ frame: frame - Math.round(line.start * fps), fps, config: { damping: 11, stiffness: 160 } });
+  const ctaPulse = t >= ctaAt ? 1 + 0.05 * Math.sin((t - ctaAt) * 7) : 0;
+  return (
+    <AbsoluteFill style={{
+      backgroundColor: `rgba(5,5,12,${0.82 * fade})`, justifyContent: "center", gap: 46,
+      fontFamily: FONT, fontWeight: 900, textTransform: "uppercase", color: "#fff",
+    }}>
+      <div style={{
+        transform: `scale(${0.6 + 0.4 * qPop})`, textAlign: "center", padding: "0 60px",
+        fontSize: 96, lineHeight: 1.08, color: "#FFC93C", WebkitTextStroke: "12px #000", paintOrder: "stroke fill",
+      }}>{question}</div>
+      <div style={optionStyle(aAt, "#4FC3F7")}>{badge("A", "#4FC3F7")}<div style={{ fontSize: 58, lineHeight: 1.12 }}>{a}</div></div>
+      <div style={optionStyle(bAt, "#FF7A59")}>{badge("B", "#FF7A59")}<div style={{ fontSize: 58, lineHeight: 1.12 }}>{b}</div></div>
+      <div style={{
+        opacity: ctaPulse ? 1 : 0, transform: `scale(${ctaPulse || 1})`, textAlign: "center",
+        fontSize: 70, color: "#fff", WebkitTextStroke: "10px #000", paintOrder: "stroke fill", marginTop: 10,
+      }}>Comment A or B</div>
+    </AbsoluteFill>
+  );
+}
+
 /**
  * @param {{scene: string, lines: object[], durationSeconds: number, hook?: string|null,
  *          endCard?: {title: string, subtitle?: string, start: number}|null, audio?: string|null,
@@ -265,6 +317,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
   const t = frame / fps;
 
   const idx = currentLineIndex(lines, t);
+  const choiceLine = lines.find(l => l.choice);
   const line = lines[idx];
   const sceneName = line.scene || scene;
   const night = !!line.night;
@@ -275,7 +328,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
   const next = lines[idx + 1];
   const shotEnd = next ? next.start : line.end + 1;
   const progress = Math.max(0, Math.min(1, (t - line.start) / Math.max(0.1, shotEnd - line.start)));
-  const z = 1 + 0.035 * progress;
+  const z = 1 + (line.speaker === "N" ? 0.06 : 0.035) * progress;
   const shot = shotType(lines, idx, scene);
 
   // Fade through black when the place or lighting changes
@@ -299,12 +352,12 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
   const shake = shakeOffset(line, t);
 
   // Facing: left half looks right, right half looks left; the middle one looks at whoever spoke last
-  const lastOther = (who) => [...lines].reverse().find(l => l.start <= t && l.speaker !== who && cast.includes(l.speaker));
+  const lastOther = (who) => [...lines].reverse().find(l => l.start <= t && actorOf(l) !== who && cast.includes(actorOf(l)));
   const facesLeft = (who, i) => {
     if (cast.length === 1) return false;
     if (cast.length === 3 && i === 1) {
       const other = lastOther(who);
-      return other ? cast.indexOf(other.speaker) === 0 : false;
+      return other ? cast.indexOf(actorOf(other)) === 0 : false;
     }
     return i >= cast.length / 2;
   };
@@ -329,7 +382,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
         pose={ps.pose}
         prevPose={ps.prevPose}
         poseK={ps.poseK}
-        listening={line.speaker !== who && cast.includes(line.speaker)}
+        listening={actorOf(line) !== who && cast.includes(actorOf(line))}
         seated={seated}
         desk={seated && deskScenes.includes(sceneName) ? (shot === "single" ? "wide" : "narrow") : false}
       />
@@ -348,13 +401,14 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
   let stage;
   if (shot === "single") {
     // The speaker alone, bigger, with the background panned to suggest the camera turned to face them
-    const i = cast.indexOf(line.speaker);
-    const left = facesLeft(line.speaker, i);
+    const actor = actorOf(line);
+    const i = cast.indexOf(actor);
+    const left = facesLeft(actor, i);
     // Knees-up framing: head around 45% down the screen, legs run off the bottom (seated: same head height)
     const S = 2.0;
     const w = 400 * S;
     const charLeft = 540 - w / 2 + (left ? 70 : -70);
-    const seatedHere1 = (line.seated || []).includes(line.speaker);
+    const seatedHere1 = (line.seated || []).includes(actor);
     const charTop = 860 - 150 * S - (seatedHere1 ? 150 * S : 0);
     stage = (
       <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 45%" }}>
@@ -365,7 +419,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
           position: "absolute", left: charLeft, top: charTop, width: w, height: 900 * S,
           transform: left ? "scaleX(-1)" : undefined,
         }}>
-          {renderCharacter(line.speaker, i)}
+          {renderCharacter(actor, i)}
         </div>
         {nightOverlay}
       </AbsoluteFill>
@@ -408,8 +462,9 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
       {blackout > 0 && <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${blackout})` }} />}
       <Captions lines={lines} t={t} frame={frame} fps={fps} />
       {line.speaker === "CARD" && t <= line.end + 0.3 && <TitleCard line={line} t={t} frame={frame} fps={fps} />}
-      {hook && line.speaker !== "CARD" && !(endCard && t >= endCard.start) && <HookBanner text={hook} frame={frame} fps={fps} />}
-      {endCard && <EndCard card={endCard} t={t} frame={frame} fps={fps} />}
+      {hook && line.speaker !== "CARD" && !(choiceLine && t >= choiceLine.start) && !(endCard && t >= endCard.start) && <HookBanner text={hook} frame={frame} fps={fps} />}
+      {choiceLine && t >= choiceLine.start && <ChoiceCard line={choiceLine} t={t} frame={frame} fps={fps} />}
+      {endCard && !endCard.choice && <EndCard card={endCard} t={t} frame={frame} fps={fps} />}
       {audio ? <Audio src={staticFile(audio)} /> : null}
     </AbsoluteFill>
   );

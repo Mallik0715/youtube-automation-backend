@@ -43,7 +43,10 @@ for (const series of SERIES) {
         if (line.pose && !POSES.has(line.pose)) fail(`unknown pose "${line.pose}"`);
         if (line.card) { seconds += 1.6 + LINE_GAP; continue; }
         if (!line.text) fail("empty line");
-        if (line.speaker === "V") {
+        if (line.speaker === "N") {
+          if (line.focus && !seg.cast.includes(line.focus)) fail(`narration focuses on ${line.focus}, who isn't on screen in "${seg.scene}"`);
+          if (!EMOTIONS.has(line.emotion)) fail(`unknown emotion "${line.emotion}"`);
+        } else if (line.speaker === "V") {
           if (!VOICES.has(line.voiceOf)) fail(`offscreen voice needs a valid voiceOf (${line.voiceOf})`);
           seconds += line.fx === "echo" ? 0.8 : 0;
         } else {
@@ -52,6 +55,16 @@ for (const series of SERIES) {
         }
         const words = (line.text || "").split(/\s+/).filter(Boolean).length;
         seconds += words / WORDS_PER_SECOND * (line.fx === "echo" ? 1.25 : 1) + 0.35 + LINE_GAP;
+      }
+    }
+    if (series.interactive) {
+      const c = part.choice;
+      if (!c || !c.question || !c.a || !c.b) fail("interactive series: every part needs choice { question, a, b }");
+      else {
+        if (/[.!?]$/.test(c.a) || /[.!?]$/.test(c.b)) fail("choice options shouldn't end with punctuation (the narrator adds it)");
+        const words = `${c.question} A ${c.a} Or B ${c.b} Comment A or B`.split(/\s+/).length;
+        seconds += words / WORDS_PER_SECOND + 0.35 + LINE_GAP;
+        lines++;
       }
     }
     total++;
