@@ -9,9 +9,11 @@
     "auth:cli": "node config/getRefreshToken.js",
     "dev": "nodemon server.js",
     "skit": "node skit.js",
-    "studio": "remotion studio remotion/index.jsx",
+    "studio": "remotion studio remotion/index.jsx --public-dir=assets",
     "series": "node skit.js --series",
-    "check:series": "node scripts/checkSeries.js"
+    "check:series": "node scripts/checkSeries.js",
+    "make:backgrounds": "node scripts/generateBackgrounds.js",
+    "make:sfx": "node scripts/generateSfx.js"
   },
   "keywords": [],
   "author": "",

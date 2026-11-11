@@ -5,7 +5,11 @@ const path = require("path");
 // (10 series x 5 parts = 50 videos; plan in series/PLAN.md)
 const SERIES = [
   require("../series/dontAnswerAfter9"),
+  // Comedy series alternate with the mysteries. Only insert new series AFTER the one currently
+  // uploading (series_progress.json "series" index), or already-uploaded parts would repeat.
+  require("../series/officeLife"),
   require("../series/tuesdayLoop"),
+  require("../series/friends"),
   require("../series/appKnowsTooMuch"),
   require("../series/missingDiamond"),
   require("../series/creatureBlackwood"),
@@ -71,9 +75,9 @@ function buildPart(series, partIndex) {
   const lines = [];
   for (const seg of part.segments) {
     for (const line of seg.lines) {
-      const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast };
+      const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast, seated: seg.seated || [] };
       if (line.card) {
-        lines.push({ ...base, speaker: "CARD", text: line.card, seconds: line.seconds || CARD_SECONDS, fx: line.fx || null });
+        lines.push({ ...base, speaker: "CARD", text: line.card, seconds: line.seconds || CARD_SECONDS, fx: line.fx || null, sfx: line.sfx || null });
       } else {
         lines.push({
           ...base,
@@ -83,6 +87,8 @@ function buildPart(series, partIndex) {
           fx: line.fx || null,
           voiceOf: line.voiceOf || null,
           hooded: !!line.hooded,
+          pose: line.pose || null, // neutral | point | hips | crossed | shrug | shock | worried
+          sfx: line.sfx || null,   // knock | thunder | footsteps | boom | whoosh (plays as the line starts)
         });
       }
     }
@@ -102,9 +108,12 @@ function buildPart(series, partIndex) {
     music: series.music || null,
     dialogue: { scene: part.segments[0].scene, lines },
     hook,
-    endCard: isLast
-      ? { title: "SEASON 2?", subtitle: "Comment \"YES\" if you want it" }
-      : { title: "WHAT HAPPENS NEXT?", subtitle: `Part ${number + 1} is up next. Follow so you don't miss it` },
+    // Mysteries end on a cliffhanger card + stinger; comedy sketches ask viewers to tag a friend (shares)
+    endCard: series.kind === "comedy"
+      ? { title: "TAG SOMEONE WHO DOES THIS", subtitle: "Follow for more", sfx: null }
+      : isLast
+        ? { title: "SEASON 2?", subtitle: "Comment \"YES\" if you want it", sfx: "stinger" }
+        : { title: "WHAT HAPPENS NEXT?", subtitle: `Part ${number + 1} is up next. Follow so you don't miss it`, sfx: "stinger" },
     seo: {
       // YouTube caps titles at 100 chars: drop the #shorts tag (it is in the description too) before cutting words
       title: `${seoTitle} #shorts`.length <= 100 ? `${seoTitle} #shorts` : seoTitle.slice(0, 100),

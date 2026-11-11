@@ -16,10 +16,10 @@ module.exports = {
         seg("train", true, ["A", "B"], [
           L("B", "happy", "Last train home. Nearly empty. Nice."),
           L("A", "neutral", "There were twenty people when we got on."),
-          CARD("TUNNEL", "shake"),
+          CARD("TUNNEL", "shake", "whoosh"),
           L("B", "surprised", "Max... where did that family go?"),
           L("A", "worried", "They were right there. Before the tunnel."),
-          CARD("TUNNEL", "shake"),
+          CARD("TUNNEL", "shake", "whoosh"),
           L("B", "worried", "The old man too. Gone."),
           L("B", "worried", "Max. We're the only ones left. And the train isn't stopping.", { fx: "shake" }),
         ]),

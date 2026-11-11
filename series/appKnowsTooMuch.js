@@ -39,7 +39,7 @@ module.exports = {
           V("robot", "In ten minutes, someone will knock."),
           V("robot", "Do not open the door."),
           L("B", "worried", "That's not vague, Max."),
-          CARD("10 MINUTES LATER"),
+          CARD("10 MINUTES LATER", null, "knock"),
           L("B", "surprised", "...Someone's knocking.", { fx: "shake" }),
           L("A", "worried", "Don't. Open. It."),
         ]),

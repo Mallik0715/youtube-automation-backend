@@ -96,7 +96,7 @@ module.exports = {
           L("A", "neutral", "We expected a ghost, so every clue looked like one. That's confirmation bias."),
         ]),
         seg("room", true, ["A", "D", "B"], [
-          L("D", "neutral", "You should not have opened that notebook.", { hooded: true }),
+          L("D", "neutral", "You should not have opened that notebook.", { hooded: true, sfx: "footsteps" }),
           L("B", "surprised", "Bruno?! The mechanic?!", { fx: "shake" }),
           L("D", "smug", "I never fixed your car, Leo. I'm the one who broke it."),
         ]),

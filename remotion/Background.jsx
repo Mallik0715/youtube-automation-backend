@@ -1,4 +1,5 @@
 import React from "react";
+import { Img, staticFile } from "remotion";
 
 // Flat cartoon scenes drawn in code (1080x1920). Floor starts at FLOOR_Y; characters stand on it.
 // Scene names must match SCENES in services/dialogueScriptService.js.
@@ -897,16 +898,76 @@ const SCENES = {
   museum: Museum, forest: Forest, cabin: Cabin, cave: Cave, shore: Shore, lighthouse: LighthouseRoom,
   deck: BoatDeck, desert: Desert, radio: RadioStation, train: TrainCarriage, snow: SnowMountain,
   icecave: IceCave, underwater: Underwater,
+  meeting: Office, // code-drawn fallback until a meeting-room image exists
 };
 export const SCENE_NAMES = Object.keys(SCENES);
 // Scenes that bring their own darkness and light get a lighter night overlay
 export const NIGHT_OVERLAY = { tunnel: 0.15, temple: 0.1, cave: 0.15, icecave: 0.1, underwater: 0.1, lighthouse: 0.2, cabin: 0.2, train: 0.2 };
 
-export function Background({ scene, frame, night = false }) {
+// Moving weather drawn on top of painted backgrounds, so still images still feel alive
+function Weather({ scene, night, frame }) {
+  if (scene === "deck" && night) return <Rain frame={frame} />;
+  if (scene === "snow") {
+    return (
+      <g>
+        {Array.from({ length: 50 }).map((_, i) => {
+          const x = (i * 73 + frame * (6 + (i % 4))) % (W + 100) - 50;
+          const y = (i * 151 + frame * (3 + (i % 3))) % H;
+          return <circle key={i} cx={x} cy={y} r={3 + (i % 4)} fill="#fff" opacity="0.85" />;
+        })}
+      </g>
+    );
+  }
+  if (scene === "underwater") {
+    return (
+      <g>
+        {Array.from({ length: 18 }).map((_, i) => {
+          const x = (i * 131) % W + Math.sin(frame / 15 + i) * 12;
+          const y = H - ((frame * (2 + (i % 3)) + i * 140) % H);
+          return <circle key={i} cx={x} cy={y} r={5 + (i % 4) * 3} fill="none" stroke="#DFF8FF" strokeWidth="3" opacity="0.6" />;
+        })}
+      </g>
+    );
+  }
+  if (scene === "forest") {
+    return <ellipse cx={540 + Math.sin(frame / 60) * 40} cy={FLOOR_Y - 40} rx="700" ry="90" fill="#fff" opacity={night ? 0.12 : 0.18} />;
+  }
+  return null;
+}
+
+/** Image key for a place + lighting, e.g. "office" or "office_night" (see series/backgrounds.js) */
+export const backgroundKey = (scene, night) => `${scene}${night ? "_night" : ""}`;
+
+/**
+ * @param images - keys of the painted backgrounds available in assets/backgrounds (passed in by the renderer).
+ *   Uses the exact image if there is one; at night falls back to the day image darkened; otherwise the
+ *   code-drawn scene. Returns whether the night lighting is already baked in (so no extra overlay is needed).
+ */
+export function Background({ scene, frame, night = false, images = [] }) {
+  const key = backgroundKey(scene, night);
+  const exact = images.includes(key);
+  const dayForNight = !exact && night && images.includes(scene);
   const Scene = SCENES[scene] || Cafe;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0 }}>
-      <Scene frame={frame} night={night} />
-    </svg>
+    <>
+      {exact || dayForNight ? (
+        <Img
+          src={staticFile(`backgrounds/${exact ? key : scene}.jpg`)}
+          style={{
+            position: "absolute", inset: 0, width: W, height: H, objectFit: "cover",
+            filter: dayForNight ? "brightness(0.45) saturate(0.7) hue-rotate(200deg)" : undefined,
+          }}
+        />
+      ) : (
+        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0 }}>
+          <Scene frame={frame} night={night} />
+        </svg>
+      )}
+      {(exact || dayForNight) && (
+        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0 }}>
+          <Weather scene={scene} night={night} frame={frame} />
+        </svg>
+      )}
+    </>
   );
 }

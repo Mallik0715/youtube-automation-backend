@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { Background, FLOOR_Y, NIGHT_OVERLAY } from "./Background";
+import { Background, FLOOR_Y, NIGHT_OVERLAY, backgroundKey } from "./Background";
 import { Character, LOOKS } from "./Character";
 import { loadFont } from "@remotion/google-fonts/Montserrat";
 
@@ -85,16 +85,42 @@ function settingStart(lines, i, scene) {
   return j;
 }
 
-// Camera target for a line as {s, tx, ty}: screen = s * point + (tx, ty).
-// Odd lines are close-ups on the speaker, even lines are wide shots.
-function shotFor(lines, i) {
+// Shot for line i. Like edited cartoons: open each setting on a wide shot, then cut to the speaker
+// alone ("single") line by line, coming back to the wide shot every few lines to re-establish.
+// Offscreen voices and title cards use the wide shot.
+function shotType(lines, i, scene) {
   const line = lines[i];
-  const spot = layoutFor(castOf(line)).find(p => p.who === line.speaker);
-  if (!spot || i % 2 === 0) return { s: 1, tx: 0, ty: 0 };
-  const s = 1.45;
-  const h = spot.head;
-  const dx = (540 - h.x) * 0.7;
-  return { s, tx: (1 - s) * h.x + dx, ty: (1 - s) * h.y };
+  if (!castOf(line).includes(line.speaker)) return "wide";
+  const k = i - settingStart(lines, i, scene);
+  return k === 0 || k % 4 === 3 ? "wide" : "single";
+}
+
+// Pose for a line: explicit line.pose, otherwise picked from the emotion (varied by line so it isn't repetitive)
+function autoPose(line, i) {
+  if (!line) return "neutral";
+  if (line.pose) return line.pose;
+  switch (line.emotion) {
+    case "smug": return i % 2 ? "crossed" : "hips";
+    case "surprised": return line.fx === "shake" ? "shock" : "shrug";
+    case "happy": return i % 2 ? "shrug" : "neutral";
+    case "worried": return "worried";
+    default: return ["neutral", "point", "hips"][i % 3];
+  }
+}
+
+function poseState(lines, who, t) {
+  const own = [];
+  lines.forEach((l, i) => { if (l.speaker === who) own.push(i); });
+  const started = own.filter(i => lines[i].start <= t);
+  const cur = started.length ? started[started.length - 1] : own[0];
+  if (cur === undefined) return { pose: "neutral", prevPose: "neutral", poseK: 1 };
+  const prev = started.length > 1 ? started[started.length - 2] : null;
+  const k = Math.max(0, Math.min(1, (t - lines[cur].start) / 0.3));
+  return {
+    pose: autoPose(lines[cur], cur),
+    prevPose: prev === null ? autoPose(lines[cur], cur) : autoPose(lines[prev], prev),
+    poseK: 0.5 - 0.5 * Math.cos(Math.PI * k),
+  };
 }
 
 function currentLineIndex(lines, t) {
@@ -226,12 +252,14 @@ function EndCard({ card, t, frame, fps }) {
 
 /**
  * @param {{scene: string, lines: object[], durationSeconds: number, hook?: string|null,
- *          endCard?: {title: string, subtitle?: string, start: number}|null, audio?: string|null}} props
- *   Each line: speaker (A-D, V = offscreen voice, CARD = title card), text, emotion, start, end,
- *   and optionally scene / night / cast / fx ("shake" | "echo") / hooded.
+ *          endCard?: {title: string, subtitle?: string, start: number}|null, audio?: string|null,
+ *          mouth?: number[]|null, backgrounds?: string[]}} props
+ *   Each line: speaker (A-F, V = offscreen voice, CARD = title card), text, emotion, start, end,
+ *   and optionally scene / night / cast / fx ("shake" | "echo" | "radio" | "robot") / hooded / pose.
+ *   mouth: voice loudness per frame (0..1) for real lip sync. backgrounds: painted background keys available.
  *   audio: optional file in the public dir, for previewing with sound in Remotion Studio
  */
-export function Skit({ scene, lines, hook, endCard, audio }) {
+export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgrounds = [] }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -243,28 +271,14 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
   const cast = line.cast || DEFAULT_CAST;
   const people = layoutFor(cast);
 
-  // "Camera": glides (eased) between a wide shot and close-ups on whoever is talking.
-  // Hard cut only on a scene change or a shock line (fx "shake"). Plus a slow push-in so it's never still.
+  // Slow push-in through each shot so the picture is never completely still
   const next = lines[idx + 1];
   const shotEnd = next ? next.start : line.end + 1;
   const progress = Math.max(0, Math.min(1, (t - line.start) / Math.max(0.1, shotEnd - line.start)));
-  const target = shotFor(lines, idx);
-  const canGlide = idx > 0 && sameSetting(lines[idx - 1], line, scene) && line.fx !== "shake";
-  const from = canGlide ? shotFor(lines, idx - 1) : target;
-  const k = canGlide
-    ? spring({ frame: frame - Math.round(line.start * fps), fps, config: { damping: 200, mass: 0.9 }, durationInFrames: 20 })
-    : 1;
-  const cs = from.s + (target.s - from.s) * k;
-  const ctx = from.tx + (target.tx - from.tx) * k;
-  const cty = from.ty + (target.ty - from.ty) * k;
-  // Push-in around the screen centre
-  const z = 1 + 0.03 * progress;
-  const scale = cs * z;
-  // Never let the scene's edge show
-  const camX = Math.max(1080 * (1 - scale), Math.min(0, z * (ctx - 540) + 540));
-  const camY = Math.max(1920 * (1 - scale), Math.min(0, z * (cty - 960) + 960));
+  const z = 1 + 0.035 * progress;
+  const shot = shotType(lines, idx, scene);
 
-  // Fade through black when the place or cast changes
+  // Fade through black when the place or lighting changes
   const runStart = settingStart(lines, idx, scene);
   let nextRun = idx + 1;
   while (nextRun < lines.length && sameSetting(lines[nextRun - 1], lines[nextRun], scene)) nextRun++;
@@ -276,7 +290,7 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
     : 0;
   const blackout = Math.max(fadeIn, fadeOut);
 
-  // Same place, new cast: everyone glides to their new spot and newcomers walk in from the side
+  // Same place, new cast: everyone glides to their new spot and newcomers walk in
   const prevRun = runStart > 0 && samePlace(lines[runStart - 1], line) ? lines[runStart - 1] : null;
   const prevPeople = prevRun ? layoutFor(castOf(prevRun)) : [];
   const enter = prevRun
@@ -286,21 +300,80 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
 
   // Facing: left half looks right, right half looks left; the middle one looks at whoever spoke last
   const lastOther = (who) => [...lines].reverse().find(l => l.start <= t && l.speaker !== who && cast.includes(l.speaker));
-  const facesLeft = (p, i) => {
+  const facesLeft = (who, i) => {
     if (cast.length === 1) return false;
     if (cast.length === 3 && i === 1) {
-      const other = lastOther(p.who);
+      const other = lastOther(who);
       return other ? cast.indexOf(other.speaker) === 0 : false;
     }
     return i >= cast.length / 2;
   };
 
-  const overlay = NIGHT_OVERLAY[sceneName] ?? 0.3;
+  // Real lip sync: loudness of the voice track this frame, lightly smoothed
+  const level = mouth ? Math.max(mouth[frame] || 0, 0.6 * (mouth[frame - 1] || 0)) : null;
 
-  return (
-    <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `translate(${camX + shake.x}px, ${camY + shake.y}px) scale(${scale})`, transformOrigin: "0 0" }}>
-        <Background scene={sceneName} frame={frame} night={night} />
+  const seatedHere = line.seated || [];
+  const deskScenes = ["office", "meeting"];
+  const renderCharacter = (who, i) => {
+    const ps = poseState(lines, who, t);
+    const seated = seatedHere.includes(who);
+    return (
+      <Character
+        who={who}
+        frame={frame}
+        talk={talkAmount(lines, who, t)}
+        gesture={gestureAmount(lines, who, t)}
+        emotion={stateLine(lines, who, t)?.emotion || "neutral"}
+        hooded={isHooded(lines, who, t)}
+        voice={line.speaker === who ? level : null}
+        pose={ps.pose}
+        prevPose={ps.prevPose}
+        poseK={ps.poseK}
+        listening={line.speaker !== who && cast.includes(line.speaker)}
+        seated={seated}
+        desk={seated && deskScenes.includes(sceneName) ? (shot === "single" ? "wide" : "narrow") : false}
+      />
+    );
+  };
+
+  const bakedNight = backgrounds.includes(backgroundKey(sceneName, night));
+  const overlay = NIGHT_OVERLAY[sceneName] ?? 0.3;
+  const nightOverlay = night && !bakedNight && (
+    <AbsoluteFill style={{
+      background: `radial-gradient(ellipse at 50% 60%, rgba(30,40,90,${overlay * 0.6}) 0%, rgba(8,10,30,${Math.min(0.9, overlay * 1.5)}) 100%)`,
+      mixBlendMode: "multiply",
+    }} />
+  );
+
+  let stage;
+  if (shot === "single") {
+    // The speaker alone, bigger, with the background panned to suggest the camera turned to face them
+    const i = cast.indexOf(line.speaker);
+    const left = facesLeft(line.speaker, i);
+    // Knees-up framing: head around 45% down the screen, legs run off the bottom (seated: same head height)
+    const S = 2.0;
+    const w = 400 * S;
+    const charLeft = 540 - w / 2 + (left ? 70 : -70);
+    const seatedHere1 = (line.seated || []).includes(line.speaker);
+    const charTop = 860 - 150 * S - (seatedHere1 ? 150 * S : 0);
+    stage = (
+      <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 45%" }}>
+        <AbsoluteFill style={{ transform: `translateX(${left ? -110 : 110}px) scale(1.25)`, transformOrigin: "50% 50%" }}>
+          <Background scene={sceneName} frame={frame} night={night} images={backgrounds} />
+        </AbsoluteFill>
+        <div style={{
+          position: "absolute", left: charLeft, top: charTop, width: w, height: 900 * S,
+          transform: left ? "scaleX(-1)" : undefined,
+        }}>
+          {renderCharacter(line.speaker, i)}
+        </div>
+        {nightOverlay}
+      </AbsoluteFill>
+    );
+  } else {
+    stage = (
+      <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 55%" }}>
+        <Background scene={sceneName} frame={frame} night={night} images={backgrounds} />
         {people.map((p, i) => {
           const before = prevPeople.find(q => q.who === p.who);
           // Newcomers on the edges walk in from their side; a newcomer in the middle fades in and
@@ -311,37 +384,31 @@ export function Skit({ scene, lines, hook, endCard, audio }) {
           const rise = isNew && middle ? (1 - enter) * 120 : 0;
           const opacity = isNew && middle ? Math.min(1, enter * 1.4) : 1;
           const startW = before ? before.w : p.w;
-          const left = startLeft + (p.left - startLeft) * enter;
+          const pLeft = startLeft + (p.left - startLeft) * enter;
           const w = startW + (p.w - startW) * enter;
           const top = (before ? before.top : p.top) + (p.top - (before ? before.top : p.top)) * enter;
           const h = (before ? before.h : p.h) + (p.h - (before ? before.h : p.h)) * enter;
           return (
-          <div key={p.who} style={{
-            position: "absolute", left, top: top + rise, width: w, height: h, opacity,
-            transform: facesLeft(p, i) ? "scaleX(-1)" : undefined,
-          }}>
-            <Character
-              who={p.who}
-              frame={frame}
-              talk={talkAmount(lines, p.who, t)}
-              gesture={gestureAmount(lines, p.who, t)}
-              emotion={stateLine(lines, p.who, t)?.emotion || "neutral"}
-              hooded={isHooded(lines, p.who, t)}
-            />
-          </div>
+            <div key={p.who} style={{
+              position: "absolute", left: pLeft, top: top + rise, width: w, height: h, opacity,
+              transform: facesLeft(p.who, i) ? "scaleX(-1)" : undefined,
+            }}>
+              {renderCharacter(p.who, i)}
+            </div>
           );
         })}
-        {night && (
-          <AbsoluteFill style={{
-            background: `radial-gradient(ellipse at 50% 60%, rgba(30,40,90,${overlay * 0.6}) 0%, rgba(8,10,30,${Math.min(0.9, overlay * 1.5)}) 100%)`,
-            mixBlendMode: "multiply",
-          }} />
-        )}
+        {nightOverlay}
       </AbsoluteFill>
+    );
+  }
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
+      {stage}
       {blackout > 0 && <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${blackout})` }} />}
       <Captions lines={lines} t={t} frame={frame} fps={fps} />
       {line.speaker === "CARD" && t <= line.end + 0.3 && <TitleCard line={line} t={t} frame={frame} fps={fps} />}
-      {hook && line.speaker !== "CARD" && <HookBanner text={hook} frame={frame} fps={fps} />}
+      {hook && line.speaker !== "CARD" && !(endCard && t >= endCard.start) && <HookBanner text={hook} frame={frame} fps={fps} />}
       {endCard && <EndCard card={endCard} t={t} frame={frame} fps={fps} />}
       {audio ? <Audio src={staticFile(audio)} /> : null}
     </AbsoluteFill>

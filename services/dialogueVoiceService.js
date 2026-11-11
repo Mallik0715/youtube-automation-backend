@@ -7,15 +7,16 @@ const { probeDuration, FFMPEG } = require("./videoBuilderService");
 // One distinct voice per character. Override A/B with TTS_VOICE_A / TTS_VOICE_B
 // (list voices: python -m edge_tts --list-voices)
 const VOICES = {
-  A: { voice: process.env.TTS_VOICE_A || "en-US-GuyNeural", rate: "+20%", pitch: "+0Hz" },  // Max
-  B: { voice: process.env.TTS_VOICE_B || "en-US-EricNeural", rate: "+18%", pitch: "+6Hz" }, // Leo
-  C: { voice: "en-GB-SoniaNeural", rate: "+2%", pitch: "-10Hz" },                           // Mira
-  D: { voice: "en-GB-RyanNeural", rate: "+8%", pitch: "-12Hz" },                             // Bruno
-  E: { voice: "en-US-AvaNeural", rate: "+14%", pitch: "+0Hz" },                             // Zara
-  F: { voice: "en-GB-ThomasNeural", rate: "+6%", pitch: "-4Hz" },                            // Victor
-  child: { voice: "en-US-AnaNeural", rate: "-25%", pitch: "-4Hz" },                          // creepy child whisper
-  radio: { voice: "en-US-RogerNeural", rate: "+0%", pitch: "-2Hz" },                         // old radio broadcast
-  robot: { voice: "en-US-EmmaNeural", rate: "+5%", pitch: "-6Hz" },                          // app / AI voice
+  // The "Multilingual" voices are Microsoft's newest, most natural-sounding ones
+  A: { voice: process.env.TTS_VOICE_A || "en-US-AndrewMultilingualNeural", rate: "+12%", pitch: "+0Hz" }, // Max
+  B: { voice: process.env.TTS_VOICE_B || "en-US-BrianMultilingualNeural", rate: "+12%", pitch: "+8Hz" },  // Leo
+  C: { voice: "en-GB-SoniaNeural", rate: "+2%", pitch: "-10Hz" },                                         // Mira
+  D: { voice: "en-GB-RyanNeural", rate: "+8%", pitch: "-12Hz" },                                          // Bruno
+  E: { voice: "en-US-AvaMultilingualNeural", rate: "+10%", pitch: "+0Hz" },                               // Zara
+  F: { voice: "en-GB-ThomasNeural", rate: "+6%", pitch: "-4Hz" },                                         // Victor
+  child: { voice: "en-US-AnaNeural", rate: "-25%", pitch: "-4Hz" },                                       // creepy child whisper
+  radio: { voice: "en-US-RogerNeural", rate: "+0%", pitch: "-2Hz" },                                      // old radio broadcast
+  robot: { voice: "en-US-EmmaMultilingualNeural", rate: "+5%", pitch: "-6Hz" },                           // app / AI voice
 };
 
 // Post-processing per offscreen-voice effect

@@ -15,3 +15,7 @@ storage/finalVideo.mp4
 
 # Generated media and run artifacts
 storage/
+
+# Reference videos from other creators - never commit
+demo_video*
+reference/

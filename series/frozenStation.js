@@ -42,7 +42,7 @@ module.exports = {
           L("A", "neutral", "Stress does that. Scared groups hunt for someone to blame. It feels like control."),
         ]),
         seg("cabin", true, ["A", "D", "B"], [
-          L("D", "neutral", "I'm going outside. I'll prove I'm not the problem."),
+          L("D", "neutral", "I'm going outside. I'll prove I'm not the problem.", { sfx: "footsteps" }),
           L("A", "worried", "Bruno, the storm! You'll get lost!"),
           L("B", "surprised", "He's gone. And his tracks are already disappearing.", { fx: "shake" }),
         ]),

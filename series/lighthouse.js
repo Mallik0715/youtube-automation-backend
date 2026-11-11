@@ -24,7 +24,7 @@ module.exports = {
           L("A", "surprised", "Someone's up there. Let's go."),
         ]),
         seg("deck", true, ["A", "B"], [
-          L("B", "worried", "Rowing to a haunted lighthouse at three AM. Great plan."),
+          L("B", "worried", "Rowing to a haunted lighthouse at three AM. Great plan.", { sfx: "thunder" }),
           L("A", "surprised", "The door... it's locked. From the inside.", { fx: "shake" }),
         ]),
       ],
@@ -56,7 +56,7 @@ module.exports = {
           L("A", "neutral", "No ghost. But fresh oil and a new timer. Someone keeps this light working."),
         ]),
         seg("deck", true, ["A", "B"], [
-          L("B", "surprised", "Max! The storm took our boat!", { fx: "shake" }),
+          L("B", "surprised", "Max! The storm took our boat!", { fx: "shake", sfx: "thunder" }),
           L("A", "worried", "Then we're stuck here. With whoever lights this place."),
         ]),
       ],

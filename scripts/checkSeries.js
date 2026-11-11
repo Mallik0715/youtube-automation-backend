@@ -12,10 +12,12 @@ const SCENES = new Set([...sceneBlock.matchAll(/(\w+):\s*\w+/g)].map(m => m[1]))
 const CHARACTERS = new Set(["A", "B", "C", "D", "E", "F"]);
 const VOICES = new Set([...CHARACTERS, "child", "radio", "robot"]);
 const EMOTIONS = new Set(["neutral", "happy", "worried", "surprised", "smug"]);
+const POSES = new Set(["neutral", "point", "hips", "crossed", "shrug", "shock", "worried"]);
+const SFX = new Set(fs.readdirSync(path.join(__dirname, "../assets/sfx")).filter(f => f.endsWith(".mp3")).map(f => f.slice(0, -4)));
 
-// Calibrated from real renders: ~2.6 spoken words/second at the series voice speeds,
+// Calibrated from real renders: ~2.25 spoken words/second (natural voices) at the series voice speeds,
 // plus the gap between lines, echo tails on ghost voices, and title cards
-const WORDS_PER_SECOND = 2.6;
+const WORDS_PER_SECOND = 2.25;
 const LINE_GAP = 0.15;
 const END_CARD = 2.6;
 const TARGET_MAX = 62;
@@ -37,6 +39,8 @@ for (const series of SERIES) {
       for (const who of seg.cast) if (!CHARACTERS.has(who)) fail(`unknown character "${who}" in cast`);
       for (const line of seg.lines) {
         lines++;
+        if (line.sfx && !SFX.has(line.sfx)) fail(`unknown sound effect "${line.sfx}" (have: ${[...SFX].join(", ")})`);
+        if (line.pose && !POSES.has(line.pose)) fail(`unknown pose "${line.pose}"`);
         if (line.card) { seconds += 1.6 + LINE_GAP; continue; }
         if (!line.text) fail("empty line");
         if (line.speaker === "V") {
