@@ -266,7 +266,7 @@ function ChoiceCard({ line, t, frame, fps }) {
   const dur = line.end - line.start;
   const aAt = line.start + dur * (words(question) / total);
   const bAt = line.start + dur * ((words(question) + 1 + words(a) + 1) / total);
-  const ctaAt = line.end - dur * (4 / total);
+  const ctaAt = line.start + dur * ((line.text.indexOf("Comment A or B") >= 0 ? line.text.slice(0, line.text.indexOf("Comment A or B")).split(/\s+/).filter(Boolean).length : total - 4) / total);
   const optionStyle = (at, color) => {
     const p = spring({ frame: frame - Math.round(at * fps), fps, config: { damping: 12, stiffness: 170 } });
     return {

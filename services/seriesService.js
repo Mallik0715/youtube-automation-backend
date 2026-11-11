@@ -106,7 +106,9 @@ function buildPart(series, partIndex) {
       scene: last.scene, night: last.night, cast: last.cast, seated: last.seated,
       speaker: "N", emotion: "neutral", fx: null, voiceOf: null, hooded: false, pose: null, focus: null,
       sfx: "stinger",
-      text: `${choice.question} A: ${choice.a}. Or B: ${choice.b}. Comment A or B.`,
+      // Honest call to action: the story is pre-written, so we never claim the comments decide it
+      text: `${choice.question} A: ${choice.a}. Or B: ${choice.b}. Comment A or B. ` +
+        (isLast ? "Drop your theory below." : `Part ${number + 1} shows if you think like ${series.hero || "him"}.`),
       choice,
     });
   }

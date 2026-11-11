@@ -9,6 +9,7 @@ module.exports = {
   id: "hundred-million",
   title: "The $100 Million Test",
   interactive: true,
+  hero: "Leo",
   music: "suspense",
   hashtags: ["#shorts", "#whatwouldyoudo", "#story", "#animation", "#100million"],
   tags: ["what would you do", "100 million dollars", "choose your path", "money story"],

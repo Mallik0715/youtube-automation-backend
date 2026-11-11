@@ -62,7 +62,7 @@ for (const series of SERIES) {
       if (!c || !c.question || !c.a || !c.b) fail("interactive series: every part needs choice { question, a, b }");
       else {
         if (/[.!?]$/.test(c.a) || /[.!?]$/.test(c.b)) fail("choice options shouldn't end with punctuation (the narrator adds it)");
-        const words = `${c.question} A ${c.a} Or B ${c.b} Comment A or B`.split(/\s+/).length;
+        const words = `${c.question} A ${c.a} Or B ${c.b} Comment A or B. Part 2 shows if you think like Leo`.split(/\s+/).length;
         seconds += words / WORDS_PER_SECOND + 0.35 + LINE_GAP;
         lines++;
       }
