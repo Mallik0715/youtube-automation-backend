@@ -9,6 +9,8 @@ const SERIES = [
   require("../series/dontAnswerAfter9"),
   // Narrated, viewers pick A or B at the end of every part
   require("../series/hundredMillion"),
+  require("../series/backTo2010"),
+  require("../series/perfectPlan"),
   require("../series/tuesdayLoop"),
   // Comedy is off for now (files kept in series/ in case it comes back):
   // require("../series/officeLife"),
@@ -90,6 +92,8 @@ function buildPart(series, partIndex) {
           fx: line.fx || null,
           voiceOf: line.voiceOf || null,
           focus: line.focus || null, // narrator lines: who the camera shows acting it out
+          // A series can recast a character's voice (e.g. Max, whose usual voice sounds like the narrator's)
+          voice: (series.voices || {})[line.voiceOf || line.speaker] || null,
           hooded: !!line.hooded,
           pose: line.pose || null, // neutral | point | hips | crossed | shrug | shock | worried
           sfx: line.sfx || null,   // knock | thunder | footsteps | boom | whoosh (plays as the line starts)

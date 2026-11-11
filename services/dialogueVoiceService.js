@@ -14,7 +14,7 @@ const VOICES = {
   D: { voice: "en-GB-RyanNeural", rate: "+8%", pitch: "-12Hz" },                                          // Bruno
   E: { voice: "en-US-AvaMultilingualNeural", rate: "+10%", pitch: "+0Hz" },                               // Zara
   F: { voice: "en-GB-ThomasNeural", rate: "+6%", pitch: "-4Hz" },                                         // Victor
-  // Storyteller for narrated series: warm, calm, a touch deeper than Max
+  // Storyteller for narrated series (narrated series recast Max with series.voices so he doesn't sound like this): warm, calm, a touch deeper than Max
   N: { voice: process.env.TTS_VOICE_N || "en-US-AndrewMultilingualNeural", rate: "+6%", pitch: "-3Hz" },
   child: { voice: "en-US-AnaNeural", rate: "-25%", pitch: "-4Hz" },                                       // creepy child whisper
   radio: { voice: "en-US-RogerNeural", rate: "+0%", pitch: "-2Hz" },                                      // old radio broadcast
@@ -48,7 +48,7 @@ async function speakLine(line, outFile) {
   // Offscreen voices (speaker "V") borrow someone's voice; ghosts are slowed and lowered
   const filter = VOICE_FX[line.fx] || null;
   const eerie = line.fx === "echo";
-  const v = VOICES[line.voiceOf || line.speaker] || VOICES.A;
+  const v = line.voice || VOICES[line.voiceOf || line.speaker] || VOICES.A;
   const rate = eerie ? "-15%" : v.rate;
   const pitch = eerie ? "-18Hz" : v.pitch;
   const rawFile = filter ? outFile.replace(/\.mp3$/, "_raw.mp3") : outFile;

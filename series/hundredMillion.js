@@ -10,6 +10,7 @@ module.exports = {
   title: "The $100 Million Test",
   interactive: true,
   hero: "Leo",
+  voices: { A: { voice: "en-AU-WilliamMultilingualNeural", rate: "+10%", pitch: "+0Hz" } }, // Max, distinct from the narrator
   music: "suspense",
   hashtags: ["#shorts", "#whatwouldyoudo", "#story", "#animation", "#100million"],
   tags: ["what would you do", "100 million dollars", "choose your path", "money story"],

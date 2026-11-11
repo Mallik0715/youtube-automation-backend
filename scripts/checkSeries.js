@@ -18,6 +18,8 @@ const SFX = new Set(fs.readdirSync(path.join(__dirname, "../assets/sfx")).filter
 // Calibrated from real renders: ~2.25 spoken words/second (natural voices) at the series voice speeds,
 // plus the gap between lines, echo tails on ghost voices, and title cards
 const WORDS_PER_SECOND = 2.25;
+// The narrator reads faster than the characters talk (measured: Back to 2010 Pt 2 came out 55.8s)
+const NARRATOR_WPS = 2.9;
 const LINE_GAP = 0.15;
 const END_CARD = 2.6;
 const TARGET_MAX = 62;
@@ -54,7 +56,8 @@ for (const series of SERIES) {
           if (!EMOTIONS.has(line.emotion)) fail(`unknown emotion "${line.emotion}"`);
         }
         const words = (line.text || "").split(/\s+/).filter(Boolean).length;
-        seconds += words / WORDS_PER_SECOND * (line.fx === "echo" ? 1.25 : 1) + 0.35 + LINE_GAP;
+        const wps = line.speaker === "N" ? NARRATOR_WPS : WORDS_PER_SECOND;
+        seconds += words / wps * (line.fx === "echo" ? 1.25 : 1) + 0.35 + LINE_GAP;
       }
     }
     if (series.interactive) {
@@ -63,7 +66,7 @@ for (const series of SERIES) {
       else {
         if (/[.!?]$/.test(c.a) || /[.!?]$/.test(c.b)) fail("choice options shouldn't end with punctuation (the narrator adds it)");
         const words = `${c.question} A ${c.a} Or B ${c.b} Comment A or B. Part 2 shows if you think like Leo`.split(/\s+/).length;
-        seconds += words / WORDS_PER_SECOND + 0.35 + LINE_GAP;
+        seconds += words / NARRATOR_WPS + 0.35 + LINE_GAP;
         lines++;
       }
     }
