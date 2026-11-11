@@ -11,6 +11,7 @@ const SERIES = [
   require("../series/hundredMillion"),
   require("../series/backTo2010"),
   require("../series/perfectPlan"),
+  require("../series/theBag"),
   require("../series/tuesdayLoop"),
   // Comedy is off for now (files kept in series/ in case it comes back):
   // require("../series/officeLife"),
