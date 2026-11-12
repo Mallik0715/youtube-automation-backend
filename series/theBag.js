@@ -35,6 +35,7 @@ module.exports = {
     },
     {
       title: "37 Missed Calls",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "The phone in the bag said: *We're coming for it.*",
       choice: { question: "What should they do?", a: "Give it to the police", b: "Keep it and hide it" },
       segments: [
@@ -51,6 +52,7 @@ module.exports = {
     },
     {
       title: "The Watch",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "They promised not to spend *a single dollar*. Then he did.",
       choice: { question: "What should Zara do?", a: "Confront Max", b: "Move the money without telling him" },
       segments: [
@@ -70,6 +72,7 @@ module.exports = {
     },
     {
       title: "Where's the Money?",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "She hid the money from her *best friend*",
       choice: { question: "What should Zara tell him?", a: "The truth", b: "Lie and say it's still there" },
       segments: [
@@ -90,6 +93,7 @@ module.exports = {
     },
     {
       title: "The Handshake",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "She saw her best friend *shaking hands with the enemy*",
       choice: { question: "What should Zara do?", a: "Walk in and confront them", b: "Follow the man in the suit" },
       segments: [
@@ -110,6 +114,7 @@ module.exports = {
     },
     {
       title: "The Investigator",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "The man in the suit *wasn't who she thought*",
       choice: { question: "What should Zara do?", a: "Call Max and tell him everything", b: "Go to the cabin alone" },
       segments: [
@@ -128,6 +133,7 @@ module.exports = {
     },
     {
       title: "Tea With a Robber",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "A robber was *having tea with her grandma*",
       choice: { question: "What should they do?", a: "Give him the bag", b: "Trick him with a fake bag" },
       segments: [
@@ -146,6 +152,7 @@ module.exports = {
     },
     {
       title: "Newspaper",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "They tricked the robber. Then they *opened the real bag*.",
       choice: { question: "Who has the real money?", a: "Grandma", b: "The investigator" },
       segments: [
@@ -165,6 +172,7 @@ module.exports = {
     },
     {
       title: "Grandma Knew",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "Grandma was *one step ahead of everyone*",
       choice: { question: "How should they split the reward?", a: "Fifty-fifty", b: "Give it all to Grandma" },
       segments: [
@@ -182,6 +190,7 @@ module.exports = {
     },
     {
       title: "The Last Call",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "The money was gone. Then *the phone rang again*.",
       choice: { question: "Who is calling?", a: "The robbers' boss", b: "Someone who knows Grandma's secret" },
       segments: [

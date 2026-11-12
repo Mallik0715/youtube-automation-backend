@@ -69,6 +69,11 @@ for (const series of SERIES) {
         seconds += words / NARRATOR_WPS + 0.35 + LINE_GAP;
         lines++;
       }
+      if (pi > 0) {
+        if (part.follows !== "a" && part.follows !== "b") fail('interactive series: parts 2+ need follows: "a" or "b" (which option of the last choice the story continues with)');
+        // "77 percent of you said A: <option>. And that's exactly what Leo did."
+        else seconds += (12 + series.parts[pi - 1].choice.a.split(/\s+/).length) / NARRATOR_WPS + 0.35 + LINE_GAP;
+      }
     }
     total++;
     rows.push({ where, lines, seconds });

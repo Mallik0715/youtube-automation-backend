@@ -33,9 +33,10 @@ const CARD_SECONDS = 1.6;
 function loadProgress() {
   try {
     const data = JSON.parse(fs.readFileSync(PROGRESS_FILE, "utf8"));
-    return { series: data.series || 0, part: data.part || 0 };
+    // videos: "<seriesId>:<part>" -> YouTube video id, so the next part can count the A/B votes
+    return { series: data.series || 0, part: data.part || 0, videos: data.videos || {} };
   } catch {
-    return { series: 0, part: 0 };
+    return { series: 0, part: 0, videos: {} };
   }
 }
 
@@ -54,11 +55,12 @@ function findSeries(id) {
  * Returns null once every part of every series is done - never re-uploads old parts.
  */
 function getNextPart({ advance = false } = {}) {
-  let { series: si, part: pi } = loadProgress();
+  const progress = loadProgress();
+  let { series: si, part: pi } = progress;
   while (si < SERIES.length && pi >= SERIES[si].parts.length) { si += 1; pi = 0; }
   if (si >= SERIES.length) return null;
 
-  if (advance) saveProgress({ series: si, part: pi + 1 });
+  if (advance) saveProgress({ ...progress, series: si, part: pi + 1 });
   return buildPart(SERIES[si], pi);
 }
 
@@ -69,6 +71,51 @@ function getPart(seriesId, partNumber) {
     throw new Error(`${series.id} has parts 1-${series.parts.length}`);
   }
   return buildPart(series, partNumber - 1);
+}
+
+/** Remembers the YouTube id of an uploaded part (kept in series_progress.json, committed by the workflow) */
+function recordUpload(seriesId, number, videoId) {
+  const progress = loadProgress();
+  progress.videos[`${seriesId}:${number}`] = videoId;
+  saveProgress(progress);
+}
+
+/** YouTube id of an uploaded part, or null */
+function uploadedVideoId(seriesId, number) {
+  return loadProgress().videos[`${seriesId}:${number}`] || null;
+}
+
+const LETTER_WORD = { a: "A", b: "B" };
+const MIN_VOTES = 3;
+
+/**
+ * Interactive series: opens the part with what viewers actually voted on the previous part.
+ *   votes = { a, b } counted from real comments, or null when they couldn't be read.
+ * Never claims a result that isn't true - with too few votes it just says "here's what he did".
+ */
+function addVoteIntro(part, votes) {
+  if (!part.previousChoice || !part.follows) return part;
+  const prev = part.previousChoice;
+  const hero = part.hero;
+  const chosen = part.follows; // "a" | "b" - the option this part's story continues with
+  let text;
+  const total = votes ? votes.a + votes.b : 0;
+  if (total >= MIN_VOTES && votes.a !== votes.b) {
+    const top = votes.a > votes.b ? "a" : "b";
+    const pct = Math.round((Math.max(votes.a, votes.b) / total) * 100);
+    text = `${pct} percent of you said ${LETTER_WORD[top]}: ${prev[top]}.` +
+      (top === chosen ? ` And that's exactly what ${hero} did.` : ` But ${hero} chose ${LETTER_WORD[chosen]}.`);
+  } else if (total >= MIN_VOTES) {
+    text = `You were split right down the middle. ${hero} chose ${LETTER_WORD[chosen]}: ${prev[chosen]}.`;
+  } else {
+    text = `Last time, we asked: ${prev.question.replace(/^\w/, c => c.toLowerCase())} Here's what ${hero} did.`;
+  }
+  const first = part.dialogue.lines[0];
+  const intro = {
+    scene: first.scene, night: first.night, cast: first.cast, seated: first.seated,
+    speaker: "N", text, emotion: "neutral", fx: null, voiceOf: null, hooded: false, pose: null, focus: null, sfx: null, voice: null,
+  };
+  return { ...part, voteIntro: text, dialogue: { ...part.dialogue, lines: [intro, ...part.dialogue.lines] } };
 }
 
 // Flattens segments into one list of lines, each carrying its own scene/lighting/cast
@@ -129,6 +176,10 @@ function buildPart(series, partIndex) {
     number,
     total,
     partTitle: part.title,
+    hero: series.hero || "he",
+    // Interactive series: which option of the previous part's choice this part continues with
+    follows: series.interactive && partIndex > 0 ? part.follows || null : null,
+    previousChoice: series.interactive && partIndex > 0 ? series.parts[partIndex - 1].choice || null : null,
     music: series.music || null,
     dialogue: { scene: part.segments[0].scene, lines },
     hook,
@@ -152,4 +203,4 @@ function buildPart(series, partIndex) {
   };
 }
 
-module.exports = { getNextPart, getPart, SERIES };
+module.exports = { getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, SERIES };

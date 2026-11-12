@@ -38,6 +38,7 @@ module.exports = {
     },
     {
       title: "One Condition",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "Every *perfect plan* has one mistake",
       choice: { question: "What should they do?", a: "Bring the old thief in", b: "Do it just the two of them" },
       segments: [
@@ -57,6 +58,7 @@ module.exports = {
     },
     {
       title: "Already Gone",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "They came to steal the diamond. *Someone got there first.*",
       choice: { question: "What should they do?", a: "Run before the police come", b: "Stay and find out who did it" },
       segments: [
@@ -72,6 +74,7 @@ module.exports = {
     },
     {
       title: "The Curator",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "The real thief was *the last person anyone would suspect*",
       choice: { question: "What should they do?", a: "Follow her", b: "Call the police and tell the truth" },
       segments: [
@@ -90,6 +93,7 @@ module.exports = {
     },
     {
       title: "The Setup",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "He realised his debt was *a trap all along*",
       choice: { question: "What should Max do?", a: "Grab the diamond", b: "Record everything and leave" },
       segments: [
@@ -108,6 +112,7 @@ module.exports = {
     },
     {
       title: "The Deal",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "Betray your best friend. *Or lose everything.*",
       choice: { question: "What should Max do?", a: "Take Victor's deal", b: "Refuse and protect Leo" },
       segments: [
@@ -128,6 +133,7 @@ module.exports = {
     },
     {
       title: "On the Run",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "He said *no* to the most dangerous man in the city",
       choice: { question: "How should Max save Leo?", a: "Steal the diamond back", b: "Get Zara to confess" },
       segments: [
@@ -147,6 +153,7 @@ module.exports = {
     },
     {
       title: "Zara's Secret",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "The thief was *being blackmailed too*",
       choice: { question: "What should Max do?", a: "Go to the boat alone", b: "Get Leo out of jail first" },
       segments: [
@@ -163,6 +170,7 @@ module.exports = {
     },
     {
       title: "Midnight at the Harbour",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "He walked onto the boat *alone*",
       choice: { question: "What should Max do?", a: "Take the diamond and run", b: "Hand it to the police" },
       segments: [
@@ -180,6 +188,7 @@ module.exports = {
     },
     {
       title: "One Mistake",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "The diamond came home. *Or did it?*",
       choice: { question: "Where is the real diamond?", a: "Bruno has it", b: "It was never real" },
       segments: [

@@ -41,6 +41,7 @@ module.exports = {
     },
     {
       title: "Less Than a Cent",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "She bought *20,000 Bitcoin* for $200",
       choice: { question: "What should Zara do?", a: "Ask the old man how he knows", b: "Ignore him and run" },
       segments: [
@@ -64,6 +65,7 @@ module.exports = {
     },
     {
       title: "Who Are You?",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "She changed the past. Her best friend *forgot she existed*.",
       choice: { question: "What should Zara do?", a: "Make Leo remember her", b: "Find the old man" },
       segments: [
@@ -84,6 +86,7 @@ module.exports = {
     },
     {
       title: "The Watchmaker",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "The old man knew *exactly* what she did",
       choice: { question: "What should Zara do?", a: "Destroy the Bitcoin", b: "Keep it and win Leo back herself" },
       segments: [
@@ -102,6 +105,7 @@ module.exports = {
     },
     {
       title: "Strangers Again",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "She had to make her best friend *like her again*. From zero.",
       choice: { question: "What should Zara tell Victor?", a: "The truth", b: "Lie and say it was luck" },
       segments: [
@@ -124,6 +128,7 @@ module.exports = {
     },
     {
       title: "The Notebook",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "Someone stole her *notebook of the future*",
       choice: { question: "What should Zara do?", a: "Steal the notebook back", b: "Go to the police" },
       segments: [
@@ -143,6 +148,7 @@ module.exports = {
     },
     {
       title: "Midnight Break-In",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "She broke into a millionaire's office to *steal back the future*",
       choice: { question: "What should Zara do?", a: "Burn the notebook", b: "Use it to beat Victor first" },
       segments: [
@@ -162,6 +168,7 @@ module.exports = {
     },
     {
       title: "Burn It",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "She *burned* the only map of the future",
       choice: { question: "Is the old man telling the truth?", a: "Believe him", b: "Run" },
       segments: [
@@ -182,6 +189,7 @@ module.exports = {
     },
     {
       title: "From 2040",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "The old man was her best friend. *From the future.*",
       choice: { question: "What should Zara do?", a: "Let old Leo go", b: "Beg him to stay" },
       segments: [
@@ -198,6 +206,7 @@ module.exports = {
     },
     {
       title: "The Night of the Crash",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "March 2026. *The night of the crash.* Again.",
       choice: { question: "Why did future Zara send that message?", a: "To warn her about something", b: "To take her place" },
       segments: [

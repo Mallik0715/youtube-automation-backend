@@ -65,11 +65,27 @@ function freshWorkDir() {
 }
 
 async function runSeries() {
-  const { getNextPart, getPart } = require("./services/seriesService");
-  const part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD });
+  const { getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro } = require("./services/seriesService");
+  let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD });
   if (!part) {
     console.log("🏁 Every part of every series is already uploaded. Add a new series in series/ to continue.");
     return;
+  }
+
+  // Interactive series: open with how viewers voted on the previous part (real comment counts).
+  // Local testing: --votes 12,5 pretends A got 12 and B got 5.
+  if (part.follows) {
+    let votes = null;
+    const fake = flagValue("--votes");
+    if (fake) {
+      const [a, b] = fake.split(",").map(n => parseInt(n, 10) || 0);
+      votes = { a, b };
+    } else {
+      const { countVotes } = require("./services/voteService");
+      votes = await countVotes(uploadedVideoId(part.seriesId, part.number - 1));
+    }
+    part = addVoteIntro(part, votes);
+    console.log("🗳️ ", part.voteIntro);
   }
   console.log(`========== SERIES: ${part.seriesTitle} - Part ${part.number}/${part.total}: ${part.partTitle} ==========`);
 
@@ -90,6 +106,8 @@ async function runSeries() {
   }
   const { uploadToYouTube } = require("./services/uploadService");
   const url = await uploadToYouTube(video, part.seo.title, part.seo.description, part.seo.tags);
+  // Remembered so the next part can count this part's A/B comments
+  recordUpload(part.seriesId, part.number, new URL(url).searchParams.get("v"));
   console.log("🎉 SUCCESS! Part uploaded:", url);
 }
 

@@ -41,6 +41,7 @@ module.exports = {
     },
     {
       title: "It's Not a Mistake",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "The bank said the *$100 million* was really his",
       choice: { question: "What should Leo do first?", a: "Pay for his mom's surgery", b: "Hide the money and act normal" },
       segments: [
@@ -62,6 +63,7 @@ module.exports = {
     },
     {
       title: "The Man in the Suit",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "A stranger offered him *$1 million* to give back the rest",
       choice: { question: "What should Leo do?", a: "Take the deal and keep $1 million", b: "Refuse and find out who H is" },
       segments: [
@@ -84,6 +86,7 @@ module.exports = {
     },
     {
       title: "Who Is H?",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "He found out *who* sent him $100 million...",
       choice: { question: "What should Leo do?", a: "Find the other nine winners", b: "Go straight to the police" },
       segments: [
@@ -103,6 +106,7 @@ module.exports = {
     },
     {
       title: "The Ten",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "Six of the ten *gave the money back*. Then he found out why.",
       choice: { question: "Should Leo go?", a: "Go and watch the video", b: "Don't go, it's a trap" },
       segments: [
@@ -123,6 +127,7 @@ module.exports = {
     },
     {
       title: "The Dead Man's Video",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "A dead billionaire left him a *secret video*",
       choice: { question: "What should Leo do with the money?", a: "Give it to people who need it", b: "Invest it and make it grow" },
       segments: [
@@ -140,6 +145,7 @@ module.exports = {
     },
     {
       title: "Frozen",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "He gave away millions. Then his account was *frozen*.",
       choice: { question: "What should Leo do?", a: "Sign and walk away", b: "Fight Victor in court" },
       segments: [
@@ -160,6 +166,7 @@ module.exports = {
     },
     {
       title: "The Message",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "He saw *one text* on his best friend's phone...",
       choice: { question: "What should Leo do?", a: "Confront Zara right now", b: "Pretend he never saw it" },
       segments: [
@@ -180,6 +187,7 @@ module.exports = {
     },
     {
       title: "Midnight at the Harbour",
+      follows: "b", // the option of the previous part's choice this part continues with
       hook: "His best friend *sold him out*. So he set a trap.",
       choice: { question: "What should Leo do about Zara?", a: "Forgive her", b: "Never speak to her again" },
       segments: [
@@ -198,6 +206,7 @@ module.exports = {
     },
     {
       title: "The Inheritance",
+      follows: "a", // the option of the previous part's choice this part continues with
       hook: "The will was read. Who gets the *$40 billion*?",
       choice: { question: "Who sent that message?", a: "Arthur Hale is still alive", b: "Someone else is running the game" },
       segments: [
