@@ -91,7 +91,7 @@ const MIN_VOTES = 3;
 /**
  * Interactive series: opens the part with what viewers actually voted on the previous part.
  *   votes = { a, b } counted from real comments, or null when they couldn't be read.
- * Never claims a result that isn't true - with too few votes it just says "here's what he did".
+ * Never claims a vote result that isn't true - with too few votes it just says which option the hero chose.
  */
 function addVoteIntro(part, votes) {
   if (!part.previousChoice || !part.follows) return part;
@@ -108,7 +108,7 @@ function addVoteIntro(part, votes) {
   } else if (total >= MIN_VOTES) {
     text = `You were split right down the middle. ${hero} chose ${LETTER_WORD[chosen]}: ${prev[chosen]}.`;
   } else {
-    text = `Last time, we asked: ${prev.question.replace(/^\w/, c => c.toLowerCase())} Here's what ${hero} did.`;
+    text = `Last time, we asked: ${prev.question.replace(/^\w/, c => c.toLowerCase())} ${hero} chose ${LETTER_WORD[chosen]}: ${prev[chosen]}.`;
   }
   const first = part.dialogue.lines[0];
   const intro = {
