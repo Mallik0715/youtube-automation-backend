@@ -21,6 +21,15 @@ const VOICES = {
   robot: { voice: "en-US-EmmaMultilingualNeural", rate: "+5%", pitch: "-6Hz" },                           // app / AI voice
 };
 
+// Backup engine: Kokoro (open-source, runs on this machine - scripts/kokoro_tts.py). Only used when
+// edge-tts is unreachable, and then for the WHOLE part, so a video never mixes two engines.
+// One voice for every line: am_michael, a deep, calm storyteller. Sped up to match the edge-tts
+// narrator's pace (~2.9 words/s). Ghost / radio / app lines still get their sound effects.
+const KOKORO_VOICE = process.env.KOKORO_VOICE || "am_michael";
+const KOKORO_SPEED = 1.15;
+const KOKORO_PYTHON = process.env.KOKORO_PYTHON || process.env.PYTHON_PATH || "python";
+const KOKORO_SCRIPT = path.join(__dirname, "../scripts/kokoro_tts.py");
+
 // Post-processing per offscreen-voice effect
 const VOICE_FX = {
   // Ghostly: echoes trailing off, thin and distant
@@ -32,9 +41,9 @@ const VOICE_FX = {
 };
 
 const GAP_SECONDS = 0.15; // pause between lines so the back-and-forth breathes
-// Microsoft's free TTS endpoint sometimes refuses requests for a minute or two (more often from
-// GitHub's servers), so keep trying with growing waits: 5s, 10s, 20s, 40s, 60s, 60s
-const ATTEMPTS = 7;
+// Microsoft's free TTS endpoint sometimes refuses requests (more often from GitHub's servers):
+// retry with growing waits (5s, 10s, 20s), then switch the part to Kokoro
+const ATTEMPTS = 4;
 const retryWait = (attempt) => Math.min(60, 5 * 2 ** (attempt - 1)) * 1000;
 
 function runFfmpeg(args) {
@@ -47,10 +56,32 @@ function runFfmpeg(args) {
   });
 }
 
-async function speakLine(line, outFile) {
+function runKokoro(line, eerie, outWav) {
+  const speed = eerie ? 0.85 : KOKORO_SPEED;
+  return new Promise((resolve, reject) => {
+    const proc = spawn(KOKORO_PYTHON, [KOKORO_SCRIPT, "--voice", KOKORO_VOICE, "--speed", String(speed), "--text", line.text, "--out", outWav]);
+    let tail = "";
+    proc.stderr.on("data", d => { tail = (tail + d).slice(-2000); });
+    proc.on("error", err => reject(new Error(`kokoro: ${err.message}`)));
+    proc.on("close", code => (code === 0 ? resolve() : reject(new Error(`kokoro failed: ${tail.trim().split("\n").pop()}`))));
+  });
+}
+
+async function speakLine(line, outFile, engine = "edge") {
   // Offscreen voices (speaker "V") borrow someone's voice; ghosts are slowed and lowered
   const filter = VOICE_FX[line.fx] || null;
   const eerie = line.fx === "echo";
+
+  if (engine === "kokoro") {
+    const wav = outFile.replace(/\.mp3$/, "_k.wav");
+    await runKokoro(line, eerie, wav);
+    // Ghost voices also drop in pitch, as with edge-tts
+    const chain = [eerie ? "asetrate=24000*0.88,aresample=24000" : null, filter].filter(Boolean).join(",");
+    await runFfmpeg(["-y", "-i", wav, ...(chain ? ["-af", chain] : []), "-c:a", "libmp3lame", "-b:a", "192k", outFile]);
+    fs.unlinkSync(wav);
+    return;
+  }
+
   const v = line.voice || VOICES[line.voiceOf || line.speaker] || VOICES.A;
   const rate = eerie ? "-15%" : v.rate;
   const pitch = eerie ? "-18Hz" : v.pitch;
@@ -94,13 +125,29 @@ async function generateDialogueVoices(dialogue, outDir) {
   fs.mkdirSync(outDir, { recursive: true });
   console.log(`🎙️ Voicing ${dialogue.lines.length} lines...`);
 
-  const files = [];
-  for (let i = 0; i < dialogue.lines.length; i++) {
-    const line = dialogue.lines[i];
-    const file = path.join(outDir, `line_${i + 1}.mp3`);
-    if (line.speaker === "CARD") await makeSilence(line.seconds || 1.6, file);
-    else await speakLine(line, file);
-    files.push(file);
+  const voiceAll = async (engine) => {
+    const out = [];
+    for (let i = 0; i < dialogue.lines.length; i++) {
+      const line = dialogue.lines[i];
+      const file = path.join(outDir, `line_${i + 1}.mp3`);
+      if (line.speaker === "CARD") await makeSilence(line.seconds || 1.6, file);
+      else await speakLine(line, file, engine);
+      out.push(file);
+    }
+    return out;
+  };
+
+  let files;
+  if (process.env.TTS_ENGINE === "kokoro") {
+    files = await voiceAll("kokoro");
+  } else {
+    try {
+      files = await voiceAll("edge");
+    } catch (err) {
+      // Redo the whole part with Kokoro so no video mixes two sets of voices
+      console.warn(`⚠️ edge-tts unavailable (${err.message}) - voicing this part with Kokoro instead`);
+      files = await voiceAll("kokoro");
+    }
   }
 
   // Each line is padded with exactly GAP_SECONDS of silence, so start times are exact sums
