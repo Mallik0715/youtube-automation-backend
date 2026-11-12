@@ -81,8 +81,11 @@ async function runSeries() {
       const [a, b] = fake.split(",").map(n => parseInt(n, 10) || 0);
       votes = { a, b };
     } else {
-      const { countVotes } = require("./services/voteService");
-      votes = await countVotes(uploadedVideoId(part.seriesId, part.number - 1));
+      const { countVotes, findVideoByTitle } = require("./services/voteService");
+      // Saved id from our own upload, or (older uploads) look the previous part up by its title
+      const prevId = uploadedVideoId(part.seriesId, part.number - 1) ||
+        await findVideoByTitle(getPart(part.seriesId, part.number - 1).seo.title);
+      votes = await countVotes(prevId);
     }
     part = addVoteIntro(part, votes);
     console.log("🗳️ ", part.voteIntro);

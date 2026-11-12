@@ -54,4 +54,33 @@ async function countVotes(videoId) {
   return votes;
 }
 
-module.exports = { countVotes, readVote };
+// Channel to search when a part's video id wasn't saved (parts uploaded before ids were recorded)
+const CHANNEL_HANDLE = process.env.YOUTUBE_CHANNEL_HANDLE || "@Facts7777-im";
+
+/**
+ * Finds an uploaded part by its exact YouTube title among the channel's recent uploads.
+ * Costs ~2-5 API units. Returns the video id or null.
+ */
+async function findVideoByTitle(title) {
+  const key = process.env.YOUTUBE_API_KEY;
+  if (!key || !title) return null;
+  const youtube = google.youtube({ version: "v3", auth: key });
+  try {
+    const ch = await youtube.channels.list({ part: ["contentDetails"], forHandle: CHANNEL_HANDLE });
+    const uploads = ch.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploads) return null;
+    let pageToken;
+    for (let page = 0; page < 4; page++) {
+      const res = await youtube.playlistItems.list({ part: ["snippet"], playlistId: uploads, maxResults: 50, pageToken });
+      const hit = (res.data.items || []).find(i => i.snippet.title.trim() === title.trim());
+      if (hit) return hit.snippet.resourceId.videoId;
+      pageToken = res.data.nextPageToken;
+      if (!pageToken) break;
+    }
+  } catch (err) {
+    console.warn(`⚠️ Couldn't search the channel's uploads (${err.message})`);
+  }
+  return null;
+}
+
+module.exports = { countVotes, readVote, findVideoByTitle };
