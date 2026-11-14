@@ -1,67 +1,108 @@
 const fs = require("fs");
 const path = require("path");
 
-// Add new series here; they play in this order, one part per upload
-// (10 series x 5 parts = 50 videos; plan in series/PLAN.md)
-// Only insert new series AFTER the one currently uploading (series_progress.json "series" index),
-// or already-uploaded parts would repeat.
-const SERIES = [
-  require("../series/dontAnswerAfter9"),
-  // Narrated, viewers pick A or B at the end of every part
-  require("../series/hundredMillion"),
-  require("../series/backTo2010"),
-  require("../series/perfectPlan"),
-  require("../series/theBag"),
-  require("../series/tuesdayLoop"),
-  // Comedy is off for now (files kept in series/ in case it comes back):
-  // require("../series/officeLife"),
-  // require("../series/friends"),
-  require("../series/appKnowsTooMuch"),
-  require("../series/missingDiamond"),
-  require("../series/creatureBlackwood"),
-  require("../series/lighthouse"),
-  require("../series/lastRadioMessage"),
-  require("../series/nightTrain"),
-  require("../series/frozenStation"),
-  require("../series/lostInTheDeep"),
-];
+// Series scripts live in series/ (hand-written .js files, or .json files saved by the series writer page).
+// series/queue.json is the upload order (file names). Progress is tracked by series id, so series can be
+// added, reordered or removed in the queue without ever repeating an uploaded part.
+const SERIES_DIR = path.join(__dirname, "../series");
+const QUEUE_FILE = path.join(SERIES_DIR, "queue.json");
+
+/** Loads one series by file name (no extension). JSON is read fresh each time (the writer page edits it). */
+function loadSeriesFile(name) {
+  const json = path.join(SERIES_DIR, `${name}.json`);
+  const s = fs.existsSync(json) ? JSON.parse(fs.readFileSync(json, "utf8")) : require(path.join(SERIES_DIR, `${name}.js`));
+  return { ...s, file: name };
+}
+
+function readQueue() {
+  return JSON.parse(fs.readFileSync(QUEUE_FILE, "utf8"));
+}
+
+function writeQueue(names) {
+  fs.writeFileSync(QUEUE_FILE, JSON.stringify(names, null, 2) + "\n", "utf8");
+}
+
+/** The series in upload order */
+function queueSeries() {
+  return readQueue().map(loadSeriesFile);
+}
+
+/** Every series script in series/, queued or not (helpers and non-series files are skipped) */
+function allSeries() {
+  return fs.readdirSync(SERIES_DIR)
+    .filter(f => /\.(js|json)$/.test(f) && f !== "queue.json")
+    .map(f => f.replace(/\.(js|json)$/, ""))
+    .filter((n, i, arr) => arr.indexOf(n) === i)
+    .map(n => { try { return loadSeriesFile(n); } catch { return null; } })
+    .filter(s => s && Array.isArray(s.parts));
+}
+
+const SERIES = queueSeries();
 
 // Committed back by the workflow, like topic_progress.json
 const PROGRESS_FILE = path.join(__dirname, "series_progress.json");
 const CARD_SECONDS = 1.6;
 
-function loadProgress() {
-  try {
-    const data = JSON.parse(fs.readFileSync(PROGRESS_FILE, "utf8"));
-    // videos: "<seriesId>:<part>" -> YouTube video id, so the next part can count the A/B votes
-    return { series: data.series || 0, part: data.part || 0, videos: data.videos || {} };
-  } catch {
-    return { series: 0, part: 0, videos: {} };
+/** @param {string|null} json - progress file contents to use instead of the local file (e.g. GitHub's copy) */
+function loadProgress(json = null) {
+  let data = {};
+  try { data = JSON.parse(json || fs.readFileSync(PROGRESS_FILE, "utf8")); } catch {}
+  // videos: "<seriesId>:<part>" -> YouTube video id, so the next part can count the A/B votes
+  const progress = { seriesId: data.seriesId || null, part: data.part || 0, done: data.done || [], videos: data.videos || {} };
+  // Older progress files stored the queue position ("series": 1) - convert to ids using the original order
+  if (!progress.seriesId && typeof data.series === "number") {
+    const list = queueSeries();
+    progress.seriesId = list[data.series]?.id || null;
+    progress.done = [...new Set([...progress.done, ...list.slice(0, data.series).map(s => s.id)])];
   }
+  return progress;
 }
 
 function saveProgress(progress) {
-  fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress), "utf8");
+  const { seriesId, part, done, videos } = progress;
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ seriesId, part, done, videos }), "utf8");
 }
 
 function findSeries(id) {
-  const index = id ? SERIES.findIndex(s => s.id === id) : 0;
-  if (index === -1) throw new Error(`Unknown series "${id}". Available: ${SERIES.map(s => s.id).join(", ")}`);
-  return { series: SERIES[index], index };
+  const series = id ? allSeries().find(s => s.id === id) : queueSeries()[0];
+  if (!series) throw new Error(`Unknown series "${id}". Available: ${allSeries().map(s => s.id).join(", ")}`);
+  return { series };
+}
+
+/** Which series uploads now, and from which part (0-based). null once the whole queue is done. */
+function currentPosition(progressJson = null) {
+  const progress = loadProgress(progressJson);
+  const list = queueSeries();
+  const done = new Set(progress.done);
+  let cur = list.find(s => s.id === progress.seriesId);
+  let part = progress.part;
+  if (!cur || part >= cur.parts.length) {
+    if (cur) done.add(cur.id);
+    cur = list.find(s => !done.has(s.id) && s.id !== progress.seriesId);
+    part = 0;
+  }
+  return { progress, list, done, series: cur || null, part };
 }
 
 /**
  * The part to make next. With advance=true, progress moves on (use only for real uploads).
- * Returns null once every part of every series is done - never re-uploads old parts.
+ * Returns null once every part of every queued series is done - never re-uploads old parts.
  */
 function getNextPart({ advance = false } = {}) {
-  const progress = loadProgress();
-  let { series: si, part: pi } = progress;
-  while (si < SERIES.length && pi >= SERIES[si].parts.length) { si += 1; pi = 0; }
-  if (si >= SERIES.length) return null;
+  const { progress, done, series, part } = currentPosition();
+  if (!series) return null;
+  if (advance) saveProgress({ ...progress, seriesId: series.id, part: part + 1, done: [...done] });
+  return buildPart(series, part);
+}
 
-  if (advance) saveProgress({ ...progress, series: si, part: pi + 1 });
-  return buildPart(SERIES[si], pi);
+/** The queue with each series' status, for the writer page */
+function queueStatus(progressJson = null) {
+  const { list, done, series: cur, part } = currentPosition(progressJson);
+  return list.map(s => ({
+    id: s.id, file: s.file, title: s.title, parts: s.parts.length,
+    status: done.has(s.id) ? "done" : cur && s.id === cur.id ? "current" : "waiting",
+    uploaded: done.has(s.id) ? s.parts.length : cur && s.id === cur.id ? part : 0,
+  }));
 }
 
 /** @param {string} seriesId @param {number} partNumber - 1-based */
@@ -119,6 +160,9 @@ function addVoteIntro(part, votes) {
 }
 
 // Flattens segments into one list of lines, each carrying its own scene/lighting/cast
+// Character codes by name (remotion/Character.jsx LOOKS)
+const HERO_CODES = { Max: "A", Leo: "B", Mira: "C", Bruno: "D", Zara: "E", Victor: "F" };
+
 function buildPart(series, partIndex) {
   const part = series.parts[partIndex];
   const total = series.parts.length;
@@ -144,6 +188,7 @@ function buildPart(series, partIndex) {
           voice: (series.voices || {})[line.voiceOf || line.speaker] || null,
           hooded: !!line.hooded,
           pose: line.pose || null, // neutral | point | hips | crossed | shrug | shock | worried
+          prop: line.prop ?? null, // object shown on screen; null = picked from the words, false = none
           sfx: line.sfx || null,   // knock | thunder | footsteps | boom | whoosh (plays as the line starts)
         });
       }
@@ -156,7 +201,10 @@ function buildPart(series, partIndex) {
     const last = lines[lines.length - 1];
     lines.push({
       scene: last.scene, night: last.night, cast: last.cast, seated: last.seated,
-      speaker: "N", emotion: "neutral", fx: null, voiceOf: null, hooded: false, pose: null, focus: null,
+      speaker: "N", emotion: "neutral", fx: null, voiceOf: null, hooded: false, prop: false,
+      // The camera stays on the hero, weighing it up, between the question and the options
+      focus: (last.cast || []).includes(series.heroCode || HERO_CODES[series.hero]) ? series.heroCode || HERO_CODES[series.hero] : null,
+      pose: "shrug",
       sfx: "stinger",
       // Honest call to action: the story is pre-written, so we never claim the comments decide it
       text: `${choice.question} A: ${choice.a}. Or B: ${choice.b}. Comment A or B. ` +
@@ -203,4 +251,7 @@ function buildPart(series, partIndex) {
   };
 }
 
-module.exports = { getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, SERIES };
+module.exports = {
+  getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, SERIES,
+  queueSeries, allSeries, readQueue, writeQueue, queueStatus, loadSeriesFile, buildPart, SERIES_DIR,
+};

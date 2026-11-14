@@ -9,12 +9,13 @@ const groq = new Groq({
 const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
 // gpt-oss is a reasoning model: keep reasoning short and leave room for the answer
-function chat(params) {
+// options: request options such as { maxRetries, timeout } (rate-limited requests are retried with backoff)
+function chat(params, options) {
   return groq.chat.completions.create({
     model: MODEL,
     reasoning_effort: "low",
     ...params,
-  });
+  }, options);
 }
 
 module.exports = { chat, MODEL };

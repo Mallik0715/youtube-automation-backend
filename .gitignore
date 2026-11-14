@@ -19,3 +19,9 @@ storage/
 # Reference videos from other creators - never commit
 demo_video*
 reference/
+
+# Series writer page build output
+web/dist/
+
+# Local Kokoro backup voice (Python 3.12 venv)
+.kokoro-venv/

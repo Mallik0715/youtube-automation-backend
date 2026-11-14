@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const { addProps } = require("./propService");
 const { spawn } = require("child_process");
 const { bundle } = require("@remotion/bundler");
 const { selectComposition, renderMedia } = require("@remotion/renderer");
@@ -81,6 +82,7 @@ function sfxEvents(lines, endCard, hook) {
     if (prev && (prev.scene !== l.scene || !!prev.night !== !!l.night)) events.push({ name: "whoosh", at: Math.max(0, l.start - 0.3) });
     if (l.fx === "shake") events.push({ name: "boom", at: l.start });
     if (l.sfx) events.push({ name: l.sfx, at: l.start });
+    if (l.prop && !l.propHold) events.push({ name: "pop", at: l.propAt });
   });
   if (endCard?.sfx) events.push({ name: endCard.sfx, at: Math.max(0, endCard.start - 0.15) });
   return events.filter(e => fs.existsSync(path.join(SFX_DIR, `${e.name}.mp3`)));
@@ -105,6 +107,8 @@ async function renderSkit(timedDialogue, voicePath, voiceDuration, options = {})
   const frames = Math.ceil(totalSeconds * FPS);
   const backgrounds = availableBackgrounds();
   const card = endCard ? { ...endCard, start: voiceDuration } : null;
+  // Objects the lines mention pop up on screen as they're said (services/propService.js)
+  timedDialogue = { ...timedDialogue, lines: addProps(timedDialogue.lines) };
   const inputProps = {
     scene: timedDialogue.scene,
     lines: timedDialogue.lines,

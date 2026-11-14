@@ -27,7 +27,10 @@ const VOICES = {
 // narrator's pace (~2.9 words/s). Ghost / radio / app lines still get their sound effects.
 const KOKORO_VOICE = process.env.KOKORO_VOICE || "am_michael";
 const KOKORO_SPEED = 1.15;
-const KOKORO_PYTHON = process.env.KOKORO_PYTHON || process.env.PYTHON_PATH || "python";
+// On a PC, Kokoro lives in .kokoro-venv/ (it needs Python 3.12); on GitHub it's installed in the runner's Python
+const LOCAL_KOKORO = [".kokoro-venv/Scripts/python.exe", ".kokoro-venv/bin/python"]
+  .map(p => path.join(__dirname, "..", p)).find(p => fs.existsSync(p));
+const KOKORO_PYTHON = process.env.KOKORO_PYTHON || LOCAL_KOKORO || process.env.PYTHON_PATH || "python";
 const KOKORO_SCRIPT = path.join(__dirname, "../scripts/kokoro_tts.py");
 
 // Post-processing per offscreen-voice effect

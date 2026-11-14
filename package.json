@@ -5,7 +5,7 @@
   "main": "pipeline.js",
   "scripts": {
     "start": "node pipeline.js",
-    "auth": "node server.js",
+    "auth": "node server.js --auth",
     "auth:cli": "node config/getRefreshToken.js",
     "dev": "nodemon server.js",
     "skit": "node skit.js",
@@ -13,7 +13,9 @@
     "series": "node skit.js --series",
     "check:series": "node scripts/checkSeries.js",
     "make:backgrounds": "node scripts/generateBackgrounds.js",
-    "make:sfx": "node scripts/generateSfx.js"
+    "make:sfx": "node scripts/generateSfx.js",
+    "app": "npm --prefix web install --no-audit --no-fund && npm --prefix web run build && node server.js",
+    "app:dev": "node server.js"
   },
   "keywords": [],
   "author": "",

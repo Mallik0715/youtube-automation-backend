@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Background, FLOOR_Y, NIGHT_OVERLAY, backgroundKey } from "./Background";
 import { Character, LOOKS } from "./Character";
+import { Prop } from "./Props";
 import { loadFont } from "@remotion/google-fonts/Montserrat";
 
 // Character placement (px on the 1080x1920 canvas). The SVG is 400x900 units, feet at y=868.
@@ -14,6 +15,7 @@ const LAYOUTS = {
 
 const EASE = 0.12; // seconds for the mouth/gesture to ease in and out at line edges
 const WORDS_PER_CAPTION = 3;
+const SMALL_WORDS = new Set(["the", "a", "an", "to", "of", "in", "on", "at", "his", "her", "my", "your", "their", "and", "or", "but", "for", "with", "from", "is", "was"]);
 const GHOST_RED = "#FF4D4D";
 // Offscreen voice caption colours: ghosts red, radios green, apps/AI cyan
 const VOICE_COLORS = { radio: "#7CFF6B", robot: "#5CE1E6" };
@@ -94,6 +96,7 @@ function settingStart(lines, i, scene) {
 function shotType(lines, i, scene) {
   const line = lines[i];
   if (!castOf(line).includes(actorOf(line))) return "wide";
+  if (line.choice) return "single"; // the hero, close up, deciding
   const k = i - settingStart(lines, i, scene);
   return k === 0 || k % 4 === 3 ? "wide" : "single";
 }
@@ -102,13 +105,20 @@ function shotType(lines, i, scene) {
 function autoPose(line, i) {
   if (!line) return "neutral";
   if (line.pose) return line.pose;
+  // An object pops up for this line: point at it (unless the moment is a big shock)
+  if (line.prop && line.fx !== "shake") return "point";
   // Narration: characters react quietly rather than gesturing as if talking
-  if (line.speaker === "N" && (line.emotion || "neutral") === "neutral") return "neutral";
+  if (line.speaker === "N" && (line.emotion || "neutral") === "neutral") return i % 3 === 2 ? "hips" : "neutral";
   switch (line.emotion) {
     case "smug": return i % 2 ? "crossed" : "hips";
-    case "surprised": return line.fx === "shake" ? "shock" : "shrug";
+    case "surprised": return line.fx === "shake" ? "shock" : i % 2 ? "shrug" : "shock";
     case "happy": return i % 2 ? "shrug" : "neutral";
-    case "worried": return "worried";
+    // Hand-on-head every time gets repetitive: alternate with arms folded tight and a helpless shrug
+    case "worried": return ["worried", "crossed", "shrug"][i % 3];
+    case "angry": return i % 2 ? "point" : "hips";
+    case "crying": return i % 2 ? "worried" : "crossed";
+    case "scared": return i % 2 ? "shock" : "crossed";
+    case "relieved": return i % 2 ? "shrug" : "neutral";
     default: return ["neutral", "point", "hips"][i % 3];
   }
 }
@@ -147,12 +157,33 @@ function Captions({ lines, t, frame, fps }) {
   if (!line) return null;
 
   const words = line.text.split(/\s+/).filter(Boolean);
-  const perWord = (line.end - line.start) / words.length;
-  const wordIdx = Math.min(words.length - 1, Math.max(0, Math.floor((t - line.start) / perWord)));
-  const chunkStart = Math.floor(wordIdx / WORDS_PER_CAPTION) * WORDS_PER_CAPTION;
-  const chunk = words.slice(chunkStart, chunkStart + WORDS_PER_CAPTION);
+  // Each word gets time in proportion to its length (long words take longer to say than "a")
+  const weight = words.map(w => w.length + 2);
+  const total = weight.reduce((a, b) => a + b, 0);
+  const startOf = [];
+  let acc = 0;
+  for (const w of weight) { startOf.push(line.start + (line.end - line.start) * (acc / total)); acc += w; }
+  let wordIdx = 0;
+  startOf.forEach((s, i) => { if (s <= t) wordIdx = i; });
+  // Chunks of up to 3 words that never run across a full stop or comma ("TIME." / "THEN HE...")
+  const chunks = [];
+  let cur = [];
+  words.forEach((w, i) => {
+    cur.push(i);
+    if (/[.,!?;:…]$/.test(w)) { chunks.push(cur); cur = []; return; }
+    if (cur.length === WORDS_PER_CAPTION) {
+      // Don't leave "the" / "a" / "to"... dangling at the end of a chunk: carry it over to the next
+      const tail = cur.length > 1 && SMALL_WORDS.has(words[cur[cur.length - 1]].toLowerCase()) ? cur.pop() : null;
+      chunks.push(cur);
+      cur = tail === null ? [] : [tail];
+    }
+  });
+  if (cur.length) chunks.push(cur);
+  const chunkIdx = chunks.find(c => c.includes(wordIdx));
+  const chunkStart = chunkIdx[0];
+  const chunk = chunkIdx.map(i => words[i]);
 
-  const chunkFrame = Math.round((line.start + chunkStart * perWord) * fps);
+  const chunkFrame = Math.round(startOf[chunkStart] * fps);
   const pop = spring({ frame: frame - chunkFrame, fps, config: { damping: 12, stiffness: 220 }, durationInFrames: 8 });
   const offscreen = line.speaker === "V";
   const ghostColor = VOICE_COLORS[line.voiceOf] || VOICE_COLORS[line.fx] || GHOST_RED;
@@ -272,7 +303,7 @@ function ChoiceCard({ line, t, frame, fps }) {
     return {
       opacity: Math.min(1, p * 1.5), transform: `translateY(${(1 - p) * 60}px) scale(${0.9 + 0.1 * p})`,
       display: "flex", alignItems: "center", gap: 28, margin: "0 60px", padding: "30px 36px",
-      background: "rgba(255,255,255,0.08)", border: `6px solid ${color}`, borderRadius: 34,
+      background: "rgba(10,10,22,0.78)", border: `6px solid ${color}`, borderRadius: 34,
     };
   };
   const badge = (letter, color) => (
@@ -283,21 +314,28 @@ function ChoiceCard({ line, t, frame, fps }) {
   );
   const qPop = spring({ frame: frame - Math.round(line.start * fps), fps, config: { damping: 11, stiffness: 160 } });
   const ctaPulse = t >= ctaAt ? 1 + 0.05 * Math.sin((t - ctaAt) * 7) : 0;
+  // While the narrator reads an option, that box glows; afterwards both stay lit
+  const glow = (from, to, color) => (t >= from && t < to ? `0 0 ${30 + 14 * Math.sin(t * 9)}px ${color}` : "none");
   return (
-    <AbsoluteFill style={{
-      backgroundColor: `rgba(5,5,12,${0.82 * fade})`, justifyContent: "center", gap: 46,
-      fontFamily: FONT, fontWeight: 900, textTransform: "uppercase", color: "#fff",
-    }}>
+    <AbsoluteFill style={{ fontFamily: FONT, fontWeight: 900, textTransform: "uppercase", color: "#fff" }}>
+      {/* Dark at the top and bottom for the text, clear in the middle so the hero stays visible, deciding */}
+      <AbsoluteFill style={{
+        opacity: fade,
+        background: "linear-gradient(180deg, rgba(5,5,12,0.92) 0%, rgba(5,5,12,0.55) 26%, rgba(5,5,12,0.1) 40%, rgba(5,5,12,0.15) 58%, rgba(5,5,12,0.85) 68%, rgba(5,5,12,0.94) 100%)",
+      }} />
       <div style={{
+        position: "absolute", top: 150, left: 0, right: 0,
         transform: `scale(${0.6 + 0.4 * qPop})`, textAlign: "center", padding: "0 60px",
-        fontSize: 96, lineHeight: 1.08, color: "#FFC93C", WebkitTextStroke: "12px #000", paintOrder: "stroke fill",
+        fontSize: 100, lineHeight: 1.08, color: "#FFC93C", WebkitTextStroke: "12px #000", paintOrder: "stroke fill",
       }}>{question}</div>
-      <div style={optionStyle(aAt, "#4FC3F7")}>{badge("A", "#4FC3F7")}<div style={{ fontSize: 58, lineHeight: 1.12 }}>{a}</div></div>
-      <div style={optionStyle(bAt, "#FF7A59")}>{badge("B", "#FF7A59")}<div style={{ fontSize: 58, lineHeight: 1.12 }}>{b}</div></div>
-      <div style={{
-        opacity: ctaPulse ? 1 : 0, transform: `scale(${ctaPulse || 1})`, textAlign: "center",
-        fontSize: 70, color: "#fff", WebkitTextStroke: "10px #000", paintOrder: "stroke fill", marginTop: 10,
-      }}>Comment A or B</div>
+      <div style={{ position: "absolute", top: 1290, left: 0, right: 0, display: "flex", flexDirection: "column", gap: 36 }}>
+        <div style={{ ...optionStyle(aAt, "#4FC3F7"), boxShadow: glow(aAt, bAt, "#4FC3F7") }}>{badge("A", "#4FC3F7")}<div style={{ fontSize: 58, lineHeight: 1.12 }}>{a}</div></div>
+        <div style={{ ...optionStyle(bAt, "#FF7A59"), boxShadow: glow(bAt, ctaAt, "#FF7A59") }}>{badge("B", "#FF7A59")}<div style={{ fontSize: 58, lineHeight: 1.12 }}>{b}</div></div>
+        <div style={{
+          opacity: ctaPulse ? 1 : 0, transform: `scale(${ctaPulse || 1})`, textAlign: "center",
+          fontSize: 70, color: "#fff", WebkitTextStroke: "10px #000", paintOrder: "stroke fill",
+        }}>Comment A or B</div>
+      </div>
     </AbsoluteFill>
   );
 }
@@ -460,6 +498,22 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
     <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
       {stage}
       {blackout > 0 && <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${blackout})` }} />}
+      {line.prop && line.speaker !== "CARD" && (() => {
+        // Where the object pops up: beside the character in a close shot (on the side they face),
+        // between the two people in a two-shot, above whoever the line is about in a three-shot
+        const until = next ? next.start : line.end + 0.3;
+        let x = 540, y = 900, size = 300;
+        if (shot === "single") {
+          const a = actorOf(line);
+          x = facesLeft(a, cast.indexOf(a)) ? 260 : 820; y = 960; size = 330;
+        } else if (cast.length === 1) {
+          x = 880; size = 280;
+        } else if (cast.length >= 3) {
+          const p = people.find(q => q.who === actorOf(line)) || people[1];
+          x = Math.min(900, Math.max(180, p.head.x)); y = 760; size = 240;
+        }
+        return <Prop name={line.prop} at={line.propAt ?? line.start} until={until} t={t} frame={frame} fps={fps} x={x} y={y} size={size} />;
+      })()}
       <Captions lines={lines} t={t} frame={frame} fps={fps} />
       {line.speaker === "CARD" && t <= line.end + 0.3 && <TitleCard line={line} t={t} frame={frame} fps={fps} />}
       {hook && line.speaker !== "CARD" && !(choiceLine && t >= choiceLine.start) && !(endCard && t >= endCard.start) && <HookBanner text={hook} frame={frame} fps={fps} />}
