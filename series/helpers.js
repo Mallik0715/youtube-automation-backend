@@ -31,6 +31,8 @@ const V = (voiceOf, text, opts = {}) => ({
 });
 const N = (text, opts = {}) => ({ speaker: "N", emotion: "neutral", text, ...opts });
 const CARD = (card, fx = null, sfx = null) => ({ card, fx, sfx });
+// A character's thought, read by the narrator (caption labelled "<name> · thinks"), camera on the thinker
+const TH = (who, text, opts = {}) => ({ speaker: "N", emotion: "neutral", text, focus: who, thought: who, ...opts });
 const seg = (scene, night, cast, lines, opts = {}) => ({ scene, night, cast, lines, seated: opts.seated || [] });
 
-module.exports = { L, V, N, CARD, seg };
+module.exports = { L, V, N, TH, CARD, seg };

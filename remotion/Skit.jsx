@@ -192,10 +192,11 @@ function Captions({ lines, t, frame, fps }) {
   // a message read by the narrator (via) gets a MESSAGE / RADIO / PHONE label
   const who = line.saidBy || (LOOKS[line.speaker] ? line.speaker : null);
   const accent = offscreen ? ghostColor : LOOKS[who]?.accent || "#FFC93C";
-  const label = line.saidBy ? line.saidByName || LOOKS[line.saidBy]?.name
+  const label = line.thought ? `${line.thoughtName || LOOKS[line.thought]?.name || ""} · thinks`
+    : line.saidBy ? line.saidByName || LOOKS[line.saidBy]?.name
     : line.via ? (line.via === "robot" ? "Message" : line.via === "radio" ? "Radio" : LOOKS[line.via] ? `Phone · ${line.viaName || LOOKS[line.via].name}` : "Voice")
     : null;
-  const labelColor = line.via ? "#5CE1E6" : accent;
+  const labelColor = line.thought ? "#C58BFF" : line.via ? "#5CE1E6" : accent;
   // The offscreen voice trembles
   const tremble = ghost ? `translate(${Math.sin(frame * 1.3) * 4}px, ${Math.cos(frame * 1.7) * 3}px)` : "";
 
@@ -205,7 +206,7 @@ function Captions({ lines, t, frame, fps }) {
       transform: `${tremble} scale(${0.75 + 0.25 * pop})`,
       fontFamily: FONT,
       fontWeight: 900, fontSize: 108, lineHeight: 1.1, textTransform: "uppercase",
-      fontStyle: offscreen || line.via ? "italic" : "normal",
+      fontStyle: offscreen || line.via || line.thought ? "italic" : "normal",
       WebkitTextStroke: "14px #000", paintOrder: "stroke fill",
       textShadow: offscreen ? `0 0 30px ${ghostColor}` : "0 8px 0 rgba(0,0,0,0.35)",
     }}>
@@ -216,7 +217,7 @@ function Captions({ lines, t, frame, fps }) {
         }}>{label}</div>
       )}
       {chunk.map((w, i) => (
-        <span key={i} style={{ color: offscreen ? (chunkStart + i === wordIdx ? "#fff" : ghostColor) : chunkStart + i === wordIdx ? (line.via ? "#5CE1E6" : accent) : "#fff" }}>
+        <span key={i} style={{ color: offscreen ? (chunkStart + i === wordIdx ? "#fff" : ghostColor) : chunkStart + i === wordIdx ? (line.thought ? "#C58BFF" : line.via ? "#5CE1E6" : accent) : "#fff" }}>
           {w}{i < chunk.length - 1 ? " " : ""}
         </span>
       ))}

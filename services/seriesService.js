@@ -231,6 +231,8 @@ function buildPart(series, partIndex, branch = null) {
           fx: line.fx || null,
           voiceOf: line.voiceOf || null,
           focus: line.focus || null, // narrator lines: who the camera shows acting it out
+          thought: line.thought || null, // a character's thought (caption: "<name> · thinks")
+          thoughtName: line.thought ? names[line.thought] || null : null,
           // A series can recast a character's voice (e.g. Max, whose usual voice sounds like the narrator's)
           voice: (series.voices || {})[line.voiceOf || line.speaker] || null,
           hooded: !!line.hooded,

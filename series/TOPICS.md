@@ -13,14 +13,14 @@ Done: ✅ · Next up: ⏭️
 5. Day 1 of having everything you buy doubled.
 
 ## Survival
-6. Day 1 stranded on an island with one stranger. Trust them or go alone?
+6. ✅ Day 1 stranded on an island with one stranger. → `series/strandedStranger.js`
 7. Day 1 of being the last person in the city.
 8. Day 1 locked in a mall overnight, every night.
 9. Day 1 of a 10-day blackout across the whole country.
-10. Day 1 stuck in a lift with your worst enemy.
+10. ✅ Day 1 stuck in a lift with your worst enemy (it happens again every day at 5 PM). → `series/liftEnemy.js`
 
 ## Weird power or rule
-11. Day 1 of hearing everyone's thoughts.
+11. ✅ Day 1 of hearing everyone's thoughts. → `series/hearingThoughts.js`
 12. Day 1 of only being able to tell the truth.
 13. Day 1 of waking up 10 years in the future.
 14. Day 1 of being invisible to everyone except one person.
