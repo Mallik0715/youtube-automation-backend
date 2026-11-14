@@ -274,8 +274,9 @@ function Limb({ points, color, width }) {
  *   listening: someone else is talking - occasional small nods
  */
 export function Character({ who, frame, talk, emotion, hooded = false, gesture = talk, pose = null, prevPose = null,
-  poseK = 1, voice = null, listening = false, seated = false, desk = false }) {
-  const look = LOOKS[who];
+  poseK = 1, voice = null, listening = false, seated = false, desk = false, lookOverride = null }) {
+  // A series can tweak a character's look (skin, hair, clothes colours) without changing the design
+  const look = lookOverride ? { ...LOOKS[who], ...lookOverride } : LOOKS[who];
   const phase = PHASE[who] || 0;
   const sleeve = hooded ? CLOAK : look.sleeve;
   const level = talk > 0.05 ? (voice ?? 0.5 + 0.3 * Math.sin(frame * 0.9 + phase)) : 0;

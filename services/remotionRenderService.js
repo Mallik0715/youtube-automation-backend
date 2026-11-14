@@ -97,7 +97,7 @@ function sfxEvents(lines, endCard, hook) {
  *   music: a mood folder under assets/music (e.g. "suspense"); omitted = any track in assets/music
  */
 async function renderSkit(timedDialogue, voicePath, voiceDuration, options = {}) {
-  const { outputName = "skitVideo.mp4", hook = null, endCard = null, music = null } = options;
+  const { outputName = "skitVideo.mp4", hook = null, endCard = null, music = null, looks = null } = options;
   const storage = path.join(__dirname, "../storage");
   const silentVideo = path.join(storage, "skit", "skit_silent.mp4");
   const outputVideo = path.join(storage, outputName);
@@ -117,6 +117,7 @@ async function renderSkit(timedDialogue, voicePath, voiceDuration, options = {})
     endCard: card,
     audio: null,
     mouth: await voiceEnvelope(voicePath, frames),
+    looks,
     backgrounds,
   };
   console.log(`🖼️  ${backgrounds.length} painted background(s) available`);

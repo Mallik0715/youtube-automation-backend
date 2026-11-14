@@ -899,6 +899,9 @@ const SCENES = {
   deck: BoatDeck, desert: Desert, radio: RadioStation, train: TrainCarriage, snow: SnowMountain,
   icecave: IceCave, underwater: Underwater,
   meeting: Office, // code-drawn fallback until a meeting-room image exists
+  // Painted images exist for these (assets/backgrounds); the code-drawn scene is only a fallback
+  bedroom: GuestRoom, classroom: Office, canteen: Cafe, corridor: Street, shop: Cafe,
+  bank: Museum, hospital: Office, mall: Street, lift: Office, island: Shore,
 };
 export const SCENE_NAMES = Object.keys(SCENES);
 // Scenes that bring their own darkness and light get a lighter night overlay

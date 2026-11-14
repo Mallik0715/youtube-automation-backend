@@ -38,6 +38,17 @@ const PLACES = {
   snow: "snowy mountain top, a small red research hut with an antenna, deep snow, peaks",
   icecave: "inside a blue glacier ice cave, icicles, a giant dark shape frozen inside the ice wall",
   underwater: "deep underwater scene, an old sunken wooden shipwreck, seaweed, sandy sea floor, light rays from above",
+  // "Day 1 of..." series: everyday places
+  bedroom: "teenage boy's small bedroom, single bed with a pillow, study desk with books and a lamp, posters on the wall, window with curtains",
+  classroom: "school classroom, rows of wooden desks and chairs, green chalkboard, big windows, notice board",
+  canteen: "school canteen, long tables with benches, food counter with trays, menu board, windows",
+  corridor: "school corridor, rows of blue metal lockers, notice boards, long hallway with windows",
+  shop: "small mobile phone shop interior, glass display counter with smartphones, shelves of phone boxes, bright signs",
+  bank: "bank hall interior, marble floor, teller counters with glass windows, a big vault door at the back",
+  hospital: "hospital corridor, white walls, a hospital bed seen through a doorway, chairs for waiting, soft lights",
+  mall: "shopping mall interior, shop fronts with glass windows, escalator, shiny floor, hanging lights",
+  lift: "inside a small elevator, metal walls, button panel with floor numbers, handrail, closed doors",
+  island: "small tropical desert island beach, palm trees, white sand, calm turquoise sea, a wrecked wooden boat",
 };
 
 // Every place + lighting combination the series use
@@ -47,6 +58,7 @@ const KEYS = [
   "museum_night", "forest", "forest_night", "cabin", "cabin_night", "cave_night",
   "shore", "shore_night", "lighthouse_night", "deck", "deck_night", "desert", "radio",
   "train", "train_night", "snow", "snow_night", "icecave_night", "underwater",
+  "bedroom", "classroom", "canteen", "corridor", "shop", "bank", "hospital", "mall", "lift", "island",
 ];
 
 function promptFor(key) {

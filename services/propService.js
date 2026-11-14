@@ -8,7 +8,7 @@ const RULES = [
   ["cash", /\bpiggy bank\b/i],
   ["bitcoin", /\b(bitcoins?|btc|crypto)\b/i],
   ["police", /\b(police|cops?|detectives?|arrest(ed)?|roadblock|handcuffs)\b/i],
-  ["envelope", /\b(envelopes?|letters?)\b/i],
+  ["envelope", /\b(envelopes?|letters?|note|notes)\b/i],
   ["camera", /\b(cameras?|cctv|footage)\b/i],
   ["watch", /\b(?:a|the|his|her|new|shiny|fake|gold) (?:shiny |new |gold )*watch\b/i],
   ["phone", /\b(phones?|missed calls?|texts?|texted|ringing|voicemail)\b/i],
@@ -34,7 +34,9 @@ function timeAtChar(line, index) {
 function pickProp(line) {
   if (line.speaker === "CARD" || line.choice || line.prop === false) return null;
   if (typeof line.prop === "string") return { prop: line.prop, at: 0 };
-  if (line.speaker === "V" && VOICE_PROPS[line.voiceOf]) return { prop: VOICE_PROPS[line.voiceOf], at: 0 };
+  // Messages: a text/app message shows a phone, a broadcast a radio, a phone call a phone
+  const via = line.speaker === "V" ? line.voiceOf : line.via;
+  if (via) return { prop: VOICE_PROPS[via] || "phone", at: 0 };
   for (const [prop, re] of RULES) {
     const m = line.text.match(re);
     if (m) return { prop, at: m.index };

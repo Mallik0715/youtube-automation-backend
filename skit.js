@@ -65,7 +65,7 @@ function freshWorkDir() {
 }
 
 async function runSeries() {
-  const { getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro } = require("./services/seriesService");
+  const { getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, pickBranch } = require("./services/seriesService");
   let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD });
   if (!part) {
     console.log("🏁 Every part of every series is already uploaded. Add a new series in series/ to continue.");
@@ -87,6 +87,12 @@ async function runSeries() {
         await findVideoByTitle(getPart(part.seriesId, part.number - 1).seo.title);
       votes = await countVotes(prevId);
     }
+    // Branching series: the story goes the way most viewers voted (default from the script when too few votes)
+    if (part.branching) {
+      const branch = pickBranch(votes, part.follows);
+      if (branch !== part.follows) part = getPart(part.seriesId, part.number, branch);
+      console.log(`🔀 Story continues with option ${branch.toUpperCase()}`);
+    }
     part = addVoteIntro(part, votes);
     console.log("🗳️ ", part.voteIntro);
   }
@@ -99,7 +105,7 @@ async function runSeries() {
 
   const outputName = `series_${part.seriesId}_part${part.number}.mp4`;
   const video = await renderSkit(timed, voicePath, duration, {
-    outputName, hook: part.hook, endCard: part.endCard, music: part.music,
+    outputName, hook: part.hook, endCard: part.endCard, music: part.music, looks: part.looks,
   });
 
   if (!UPLOAD) {
@@ -110,7 +116,7 @@ async function runSeries() {
   const { uploadToYouTube } = require("./services/uploadService");
   const url = await uploadToYouTube(video, part.seo.title, part.seo.description, part.seo.tags);
   // Remembered so the next part can count this part's A/B comments
-  recordUpload(part.seriesId, part.number, new URL(url).searchParams.get("v"));
+  recordUpload(part.seriesId, part.number, new URL(url).searchParams.get("v"), part.branching ? part.follows : null);
   console.log("🎉 SUCCESS! Part uploaded:", url);
 }
 

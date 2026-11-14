@@ -5,7 +5,8 @@
 // Works in two steps so each request stays small (Groq's free tier limits tokens per minute):
 //   1. outline: series title, characters, and per part: what happens, hook, A/B choice
 //   2. each part written as scenes and narrator/character lines, then checked; a failing part is retried once
-const { chat } = require("./groqClient");
+// Groq is loaded only when used (SCRIPT_AI=groq), so a missing Groq key never breaks Gemini writing
+const chat = (...args) => require("./groqClient").chat(...args);
 const { parseLLMJson } = require("./jsonHelper");
 const { validateSeries, SCENES, CHARACTERS, EMOTIONS, SFX } = require("./seriesValidator");
 
@@ -26,13 +27,19 @@ const SCENE_HINTS = {
   museum: "museum hall", forest: "forest", cabin: "wooden cabin", cave: "cave", shore: "beach", lighthouse: "lighthouse room",
   deck: "boat deck", desert: "desert", radio: "radio station", train: "train carriage", snow: "snowy mountain",
   icecave: "ice cave", underwater: "underwater", meeting: "meeting room / bank office",
+  bedroom: "teen bedroom", classroom: "school classroom", canteen: "school canteen", corridor: "school corridor with lockers",
+  shop: "phone / gadget shop", bank: "bank hall", hospital: "hospital corridor", mall: "shopping mall", lift: "elevator", island: "desert island beach",
 };
 
-// A real, hand-written part used as the example of the format and tone
-const EXAMPLE = (() => {
-  const bag = require("../series/theBag");
-  return JSON.stringify({ segments: bag.parts[1].segments.map(s => ({ scene: s.scene, night: s.night, cast: s.cast, lines: s.lines })) });
-})();
+// Real, hand-written parts used as examples of the format and tone ("$1,000 Every Day")
+const EXAMPLE_SERIES = require("../series/thousandEveryDay");
+const pickSegs = (segs) => (segs || []).map(s => ({ scene: s.scene, night: s.night, cast: s.cast, lines: s.lines }));
+const EXAMPLE_FIRST = JSON.stringify({ segments: pickSegs(EXAMPLE_SERIES.parts[0].segments) });
+const EXAMPLE_NEXT = JSON.stringify({
+  ifA: pickSegs(EXAMPLE_SERIES.parts[1].ifA), ifB: pickSegs(EXAMPLE_SERIES.parts[1].ifB), segments: pickSegs(EXAMPLE_SERIES.parts[1].segments),
+});
+// "Day 1 of..." titles get Day 1, Day 2... parts
+const isDaySeries = (title) => /^\s*day\s*1\b/i.test(title || "");
 
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "series";
 
@@ -57,7 +64,9 @@ async function ask(system, user, maxTokens, onLog = () => {}) {
 }
 
 const STYLE = `Style: suspense and drama, NO comedy. Grounded, believable, gripping. Family-friendly (no gore, no swearing).
-Every part ends on a cliffhanger that forces a real dilemma - two options a viewer could genuinely argue about.`;
+Very short, punchy sentences - like "He counted it twice. It was real." Concrete details (amounts, objects, places).
+Every part ends on a cliffhanger that forces a real dilemma - two options a viewer could genuinely argue about.
+VIEWERS DECIDE: the option with the most comment votes is what happens next, so both options must lead somewhere interesting.`;
 
 async function writeOutline({ mode, title, story, heroCode, parts, notes }, onLog) {
   const system = `You plan viral "What would you do?" story series for YouTube Shorts. A narrator tells the story while cartoon characters act it out.
@@ -74,10 +83,13 @@ Return JSON only:
  "parts": [{"title": "2-4 words",
    "beats": "3-5 sentences: exactly what happens in this part, ending on the cliffhanger",
    "hook": "on-screen headline, max 12 words, wrap the 1-3 key words in *stars*",
-   "choice": {"question": "short question, e.g. What should Leo do?", "a": "option, max 7 words, no punctuation", "b": "option, max 7 words, no punctuation"},
-   "follows": "a or b: which option of the PREVIOUS part's choice this part continues with (null for part 1)"}]}
-Rules: exactly ${parts} parts. Mix "a" and "b" across follows so both kinds of choices happen. Each part's beats must start from the option it follows.
-The hero is character ${heroCode}. The last part ends on a final twist; its choice can be a theory question (e.g. "Who sent the letter?").`;
+   "choice": {"question": "What would you do?", "a": "option A, max 14 words, no final punctuation, e.g. Buy Arjun the phone, and risk him asking where the money came from", "b": "option B, same style"},
+   "ifA": "1-2 sentences: what happens right after the hero picks option A of the PREVIOUS part's choice (null for part 1)",
+   "ifB": "1-2 sentences: the same for option B (null for part 1)",
+   "default": "a or b: which option to use if nobody votes (null for part 1)"}]}
+Rules: exactly ${parts} parts. The beats must make sense whichever option won last time - the consequences of each option go in ifA / ifB, and the beats continue from there without depending on which one happened.
+${isDaySeries(title) ? 'This is a "Day 1 of..." series: part N is Day N. Every part\'s beats start with "Day N." and every hook starts with "Day N:".' : ""}
+The hero is character ${heroCode}. The last part ends on a final twist and one last big choice.`;
 
   const user = mode === "story"
     ? `Series title: ${title}\n\nThe creator's story is below. Keep THEIR events, characters and order - do not change what happens. You may split it into ${parts} parts, add cliffhangers, small connecting details and the A/B dilemmas. Map their people onto the on-screen characters (keep their names).\n\nSTORY:\n${story}${notes ? `\n\nExtra notes: ${notes}` : ""}`
@@ -91,28 +103,37 @@ The hero is character ${heroCode}. The last part ends on a final twist; its choi
 
 function partPrompt(outline, index, heroCode) {
   const p = outline.parts[index];
+  const prev = index > 0 ? outline.parts[index - 1] : null;
   const names = outline.characters.map(c => `${c.code} = ${c.name} (${c.role})`).join("; ");
+  const segFmt = `[{"scene": "...", "night": false, "cast": ["B", "E"], "lines": [ ... ]}]`;
   return {
-    system: `You write one part of a narrated YouTube Shorts story series. A narrator (speaker "N") tells the story; cartoon characters act it out on screen and occasionally say one short line.
+    system: `You write one part of a narrated YouTube Shorts story series. ONLY a narrator speaks; the cartoon characters act the story out silently on screen.
 ${STYLE}
-Format - JSON only: {"segments": [{"scene": "...", "night": false, "cast": ["B", "E"], "lines": [ ... ]}]}
+${index === 0
+    ? `Format - JSON only: {"segments": ${segFmt}}`
+    : `Format - JSON only: {"ifA": ${segFmt}, "ifB": ${segFmt}, "segments": ${segFmt}}
+- ifA: 2-3 lines (25-40 words): what happens right after the hero picked option A last time. ifB: the same for option B.
+- segments: the rest of the part. It is played after ifA OR ifB, so it must make sense after either one.`}
 - segment = one place. 1-3 segments per part. scene must be one of: ${SCENES.map(s => `${s} (${SCENE_HINTS[s] || s})`).join(", ")}.
 - cast = codes of the characters on screen in that place, left to right, 1-3 of: ${CHARACTERS.join(", ")}.
 - Narrator line: {"speaker": "N", "text": "...", "focus": "B", "emotion": "worried"} - focus = who the camera shows (must be in that segment's cast).
-- Character line: {"speaker": "E", "emotion": "surprised", "text": "..."} - speaker must be in the cast. Max 10 words. Use 1-3 per part, for punch.
-- Offscreen voice: {"speaker": "V", "voiceOf": "robot", "text": "..."} - voiceOf "robot" for texts/app messages, "radio" for news broadcasts, or a character code for a phone call.
+- Quote line (1-3 per part, max 10 words): {"speaker": "B", "emotion": "crying", "text": "My phone's broken."} - the narrator reads it while that character acts it out; speaker must be in the cast.
+- No other voices. Notes and messages are told by the narrator: "The note said: Tell anyone, and it stops forever."
 - emotion: one of ${EMOTIONS.join(", ")}.
 - Optional on any line: "fx": "shake" for a shock (max 2 per part); "sfx": one of ${SFX.join(", ")}.
-- Length: 7-11 lines, 90-130 words in total. Short punchy sentences, present the facts cinematically.
+- Length: ${index === 0 ? "8-10 lines, 80-110 words" : "segments 5-8 lines, 60-90 words"}. Short punchy sentences, present the facts cinematically.
 - Mention concrete objects (money, phone, envelope, car, bag, watch, key, police, clock...) - they appear on screen.
 - Do NOT write the A/B question; it is added automatically after your last line. End right on the cliffhanger.
-${index === 0 ? "- Part 1: the first line must grab attention immediately." : "- Do NOT recap or say which option was chosen (an intro line is added automatically). Start right after the chosen option happened."}
-Example of a finished part (from another series):
-${EXAMPLE}`,
+${index === 0 ? "- Part 1: the first line must grab attention immediately." : "- Do NOT recap the vote (an intro line is added automatically)."}
+${isDaySeries(outline.title) || /^day/i.test(p.beats || "") ? `- The first line of "segments" starts with "Day ${index + 1}."` : ""}
+Example of a finished ${index === 0 ? "first part" : "later part"} (from another series):
+${index === 0 ? EXAMPLE_FIRST : EXAMPLE_NEXT}`,
     user: `Series: ${outline.title}
 Characters: ${names}. The hero is ${heroCode}.
 Story so far: ${outline.parts.slice(0, index).map((q, i) => `Part ${i + 1}: ${q.beats}`).join(" ") || "(this is the first part)"}
-${index > 0 ? `Last part asked: ${outline.parts[index - 1].choice.question} A: ${outline.parts[index - 1].choice.a} / B: ${outline.parts[index - 1].choice.b}. This part continues with option ${String(p.follows).toUpperCase()}.` : ""}
+${prev ? `Last part asked: ${prev.choice.question} A: ${prev.choice.a} / B: ${prev.choice.b}.
+If A won: ${p.ifA || "(you decide)"}
+If B won: ${p.ifB || "(you decide)"}` : ""}
 Write PART ${index + 1} of ${outline.parts.length}: "${p.title}".
 What happens: ${p.beats}
 It ends on this dilemma: ${p.choice.question} A: ${p.choice.a} / B: ${p.choice.b}`,
@@ -153,13 +174,14 @@ async function writePart(outline, index, heroCode, onLog = () => {}) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     const res = await ask(system, user + feedback, 5000, onLog);
     const p = outline.parts[index];
+    const def = p.default === "a" || p.default === "b" ? p.default : index % 2 ? "a" : "b";
     const part = {
       title: p.title, hook: p.hook, choice: cleanChoice(p.choice),
-      ...(index > 0 ? { follows: p.follows === "a" || p.follows === "b" ? p.follows : "a" } : {}),
+      ...(index > 0 ? { follows: def, ifA: normalizeSegments(res.ifA), ifB: normalizeSegments(res.ifB) } : {}),
       segments: normalizeSegments(res.segments),
     };
     // Check just this part (with the previous part's choice so the length estimate is right)
-    const probe = { id: "probe", title: "probe", interactive: true, parts: index > 0 ? [{ ...outline.parts[index - 1], choice: cleanChoice(outline.parts[index - 1].choice), segments: [{ scene: "home", cast: ["B"], lines: [{ speaker: "N", text: "x", emotion: "neutral" }] }] }, part] : [part] };
+    const probe = { id: "probe", title: "probe", interactive: true, branching: true, parts: index > 0 ? [{ ...outline.parts[index - 1], choice: cleanChoice(outline.parts[index - 1].choice), segments: [{ scene: "home", cast: ["B"], lines: [{ speaker: "N", text: "x", emotion: "neutral" }] }] }, part] : [part] };
     const r = validateSeries(probe);
     const mine = r.parts[r.parts.length - 1];
     const tooLong = mine.seconds > 66;
@@ -198,16 +220,16 @@ async function writeSeries(input, onLog = () => {}) {
     written.push(await writePart(outline, i, heroCode, onLog));
   }
 
-  const usesMax = written.some(p => p.segments.some(s => s.cast.includes("A")));
   const series = {
     id: slugify(outline.title || input.title),
     title: outline.title || input.title,
     interactive: true,
+    branching: true,        // the most comment votes decide which way the next part goes
+    choiceStyle: "wwyd",    // "A: ... B: ... What would you do? Comment A or B."
+    ...(isDaySeries(input.title) || isDaySeries(outline.title) ? { unit: "Day" } : {}),
     hero,
     heroCode,
     music: "suspense",
-    // Max's usual voice is also the narrator's; give him his own
-    ...(usesMax ? { voices: { A: { voice: "en-AU-WilliamMultilingualNeural", rate: "+10%", pitch: "+0Hz" } } } : {}),
     hashtags: (outline.hashtags || ["#shorts", "#whatwouldyoudo"]).slice(0, 6),
     tags: (outline.tags || []).slice(0, 8),
     description: outline.description || "",

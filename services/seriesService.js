@@ -48,7 +48,7 @@ function loadProgress(json = null) {
   let data = {};
   try { data = JSON.parse(json || fs.readFileSync(PROGRESS_FILE, "utf8")); } catch {}
   // videos: "<seriesId>:<part>" -> YouTube video id, so the next part can count the A/B votes
-  const progress = { seriesId: data.seriesId || null, part: data.part || 0, done: data.done || [], videos: data.videos || {} };
+  const progress = { seriesId: data.seriesId || null, part: data.part || 0, done: data.done || [], videos: data.videos || {}, branches: data.branches || {} };
   // Older progress files stored the queue position ("series": 1) - convert to ids using the original order
   if (!progress.seriesId && typeof data.series === "number") {
     const list = queueSeries();
@@ -59,8 +59,8 @@ function loadProgress(json = null) {
 }
 
 function saveProgress(progress) {
-  const { seriesId, part, done, videos } = progress;
-  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ seriesId, part, done, videos }), "utf8");
+  const { seriesId, part, done, videos, branches } = progress;
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ seriesId, part, done, videos, branches }), "utf8");
 }
 
 function findSeries(id) {
@@ -105,20 +105,31 @@ function queueStatus(progressJson = null) {
   }));
 }
 
-/** @param {string} seriesId @param {number} partNumber - 1-based */
-function getPart(seriesId, partNumber) {
+/** @param {string} seriesId @param {number} partNumber - 1-based @param {"a"|"b"|null} branch */
+function getPart(seriesId, partNumber, branch = null) {
   const { series } = findSeries(seriesId);
   if (partNumber < 1 || partNumber > series.parts.length) {
     throw new Error(`${series.id} has parts 1-${series.parts.length}`);
   }
-  return buildPart(series, partNumber - 1);
+  return buildPart(series, partNumber - 1, branch);
 }
 
-/** Remembers the YouTube id of an uploaded part (kept in series_progress.json, committed by the workflow) */
-function recordUpload(seriesId, number, videoId) {
+/**
+ * Remembers the YouTube id of an uploaded part (kept in series_progress.json, committed by the workflow),
+ * and for branching series which way the story went.
+ */
+function recordUpload(seriesId, number, videoId, branch = null) {
   const progress = loadProgress();
   progress.videos[`${seriesId}:${number}`] = videoId;
+  if (branch) progress.branches[`${seriesId}:${number}`] = branch;
   saveProgress(progress);
+}
+
+/** Which option won the vote: the majority with at least MIN_VOTES votes, otherwise the script's default */
+function pickBranch(votes, fallback) {
+  const total = votes ? votes.a + votes.b : 0;
+  if (total >= MIN_VOTES && votes.a !== votes.b) return votes.a > votes.b ? "a" : "b";
+  return fallback || "a";
 }
 
 /** YouTube id of an uploaded part, or null */
@@ -160,21 +171,57 @@ function addVoteIntro(part, votes) {
 }
 
 // Flattens segments into one list of lines, each carrying its own scene/lighting/cast
+// Only the narrator speaks: characters act their lines silently and messages are read by the narrator.
+// Set NARRATOR_ONLY=0 to bring back character voices.
+const NARRATOR_ONLY = process.env.NARRATOR_ONLY !== "0";
+
 // Character codes by name (remotion/Character.jsx LOOKS)
 const HERO_CODES = { Max: "A", Leo: "B", Mira: "C", Bruno: "D", Zara: "E", Victor: "F" };
 
-function buildPart(series, partIndex) {
+/**
+ * Branching series (series.branching): from part 2 on, a part opens with the consequence of the option
+ * viewers voted for on the previous part - part.ifA or part.ifB - then continues with part.segments.
+ * branch: "a" | "b" (the winning vote); default part.follows.
+ */
+function buildPart(series, partIndex, branch = null) {
   const part = series.parts[partIndex];
   const total = series.parts.length;
   const number = partIndex + 1;
   const isLast = number === total;
+  const pick = series.branching && partIndex > 0 ? (branch || part.follows || "a") : null;
+  const segments = pick ? [...((pick === "a" ? part.ifA : part.ifB) || []), ...part.segments] : part.segments;
+  // Names the story uses for each character code (captions of their lines show it)
+  const names = { ...Object.fromEntries((series.characters || []).map(c => [c.code, c.name])), ...(series.names || {}) };
 
   const lines = [];
-  for (const seg of part.segments) {
+  for (const seg of segments) {
     for (const line of seg.lines) {
       const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast, seated: seg.seated || [] };
       if (line.card) {
         lines.push({ ...base, speaker: "CARD", text: line.card, seconds: line.seconds || CARD_SECONDS, fx: line.fx || null, sfx: line.sfx || null });
+      } else if (NARRATOR_ONLY && line.speaker !== "N") {
+        // Narrator-only: the storyteller reads every line. A character's line is still acted out by that
+        // character (camera on them, their face and pose), and its caption carries their name.
+        // Phone / radio / app messages are read plainly too (the phone or radio pops up on screen).
+        const isVoice = line.speaker === "V";
+        lines.push({
+          ...base,
+          speaker: "N",
+          text: line.text,
+          emotion: line.emotion || "neutral",
+          fx: line.fx === "shake" ? "shake" : null,
+          voiceOf: null,
+          focus: isVoice ? null : line.speaker,
+          saidBy: isVoice ? null : line.speaker, // caption shows this character's name
+          saidByName: isVoice ? null : names[line.speaker] || null,
+          via: isVoice ? line.voiceOf || null : null, // "robot" (text/app), "radio", or who's on the phone
+          viaName: isVoice ? names[line.voiceOf] || null : null,
+          voice: null,
+          hooded: !!line.hooded,
+          pose: line.pose || null,
+          prop: line.prop ?? null,
+          sfx: line.sfx || null,
+        });
       } else {
         lines.push({
           ...base,
@@ -206,16 +253,19 @@ function buildPart(series, partIndex) {
       focus: (last.cast || []).includes(series.heroCode || HERO_CODES[series.hero]) ? series.heroCode || HERO_CODES[series.hero] : null,
       pose: "shrug",
       sfx: "stinger",
-      // Honest call to action: the story is pre-written, so we never claim the comments decide it
-      text: `${choice.question} A: ${choice.a}. Or B: ${choice.b}. Comment A or B. ` +
-        (isLast ? "Drop your theory below." : `Part ${number + 1} shows if you think like ${series.hero || "him"}.`),
+      // Honest call to action: only a branching series lets the votes decide what happens next
+      text: series.choiceStyle === "wwyd"
+        ? `A: ${choice.a}. B: ${choice.b}. ${choice.question} Comment A or B.` +
+          (isLast ? "" : series.branching ? ` The most votes decide ${series.unit ? `${series.unit} ${number + 1}` : "what happens next"}.` : "")
+        : `${choice.question} A: ${choice.a}. Or B: ${choice.b}. Comment A or B. ` +
+          (isLast ? "Drop your theory below." : `Part ${number + 1} shows if you think like ${series.hero || "him"}.`),
       choice,
     });
   }
 
   // The hook headline sits on screen the whole video and leads the YouTube title:
   // curiosity first, series + part number last (people who want Part 1 can still find it)
-  const hook = part.hook || part.title;
+  const hook = (pick && part[`hook${pick.toUpperCase()}`]) || part.hook || part.title;
   // *stars* only mark the on-screen yellow highlight - never let them reach YouTube
   const seoTitle = `${hook.replace(/\*/g, "")} | ${series.title} Pt ${number}`;
   return {
@@ -226,10 +276,12 @@ function buildPart(series, partIndex) {
     partTitle: part.title,
     hero: series.hero || "he",
     // Interactive series: which option of the previous part's choice this part continues with
-    follows: series.interactive && partIndex > 0 ? part.follows || null : null,
+    follows: series.interactive && partIndex > 0 ? pick || part.follows || null : null,
+    branching: !!series.branching,
+    looks: series.looks || null, // per-series look tweaks (e.g. skin and hair colour) by character code
     previousChoice: series.interactive && partIndex > 0 ? series.parts[partIndex - 1].choice || null : null,
     music: series.music || null,
-    dialogue: { scene: part.segments[0].scene, lines },
+    dialogue: { scene: segments[0].scene, lines },
     hook,
     // Mysteries end on a cliffhanger card + stinger; comedy sketches ask viewers to tag a friend (shares)
     endCard: choice
@@ -252,6 +304,6 @@ function buildPart(series, partIndex) {
 }
 
 module.exports = {
-  getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, SERIES,
+  getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, pickBranch, SERIES,
   queueSeries, allSeries, readQueue, writeQueue, queueStatus, loadSeriesFile, buildPart, SERIES_DIR,
 };

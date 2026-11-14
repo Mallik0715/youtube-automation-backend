@@ -42,32 +42,47 @@ function validateSeries(series) {
     const partErrors = [];
     const fail = (msg) => { partErrors.push(msg); errors.push(`${where}: ${msg}`); };
     if (!part.hook) fail("missing hook");
+    // Branching series: parts 2+ open with ifA or ifB (whichever option won the vote) - check both
+    const branched = series.branching && pi > 0;
+    if (branched && (!Array.isArray(part.ifA) || !part.ifA.length || !Array.isArray(part.ifB) || !part.ifB.length)) {
+      fail("branching series: parts 2+ need ifA and ifB (what happens after each option)");
+    }
+    const variants = branched ? [[...(part.ifA || []), ...(part.segments || [])], [...(part.ifB || []), ...(part.segments || [])]] : [part.segments || []];
+    const seen = new Set();
+    const once = (msg) => { if (!seen.has(msg)) { seen.add(msg); fail(msg); } };
     let seconds = END_CARD;
     let lines = 0;
-    for (const seg of part.segments || []) {
-      if (!SCENES.includes(seg.scene)) fail(`unknown scene "${seg.scene}"`);
-      if (!Array.isArray(seg.cast) || seg.cast.length < 1 || seg.cast.length > 3) fail(`cast must be 1-3 characters (${seg.cast})`);
-      for (const who of seg.cast || []) if (!CHARACTERS.includes(who)) fail(`unknown character "${who}" in cast`);
-      for (const line of seg.lines || []) {
-        lines++;
-        if (line.sfx && !SFX.includes(line.sfx)) fail(`unknown sound effect "${line.sfx}" (have: ${SFX.join(", ")})`);
-        if (line.pose && !POSES.includes(line.pose)) fail(`unknown pose "${line.pose}"`);
-        if (line.card) { seconds += 1.6 + LINE_GAP; continue; }
-        if (!line.text) fail("empty line");
-        if (line.speaker === "N") {
-          if (line.focus && !(seg.cast || []).includes(line.focus)) fail(`narration focuses on ${line.focus}, who isn't on screen in "${seg.scene}"`);
-          if (!EMOTIONS.includes(line.emotion)) fail(`unknown emotion "${line.emotion}"`);
-        } else if (line.speaker === "V") {
-          if (!VOICES.includes(line.voiceOf)) fail(`offscreen voice needs a valid voiceOf (${line.voiceOf})`);
-          seconds += line.fx === "echo" ? 0.8 : 0;
-        } else {
-          if (!(seg.cast || []).includes(line.speaker)) fail(`${line.speaker} speaks but isn't on screen in "${seg.scene}"`);
-          if (!EMOTIONS.includes(line.emotion)) fail(`unknown emotion "${line.emotion}"`);
+    for (const segs of variants) {
+      let vSeconds = END_CARD;
+      let vLines = 0;
+      for (const seg of segs) {
+        if (!SCENES.includes(seg.scene)) once(`unknown scene "${seg.scene}"`);
+        if (!Array.isArray(seg.cast) || seg.cast.length < 1 || seg.cast.length > 3) once(`cast must be 1-3 characters (${seg.cast})`);
+        for (const who of seg.cast || []) if (!CHARACTERS.includes(who)) once(`unknown character "${who}" in cast`);
+        for (const line of seg.lines || []) {
+          vLines++;
+          if (line.sfx && !SFX.includes(line.sfx)) once(`unknown sound effect "${line.sfx}" (have: ${SFX.join(", ")})`);
+          if (line.pose && !POSES.includes(line.pose)) once(`unknown pose "${line.pose}"`);
+          if (line.card) { vSeconds += 1.6 + LINE_GAP; continue; }
+          if (!line.text) once("empty line");
+          if (line.speaker === "N") {
+            if (line.focus && !(seg.cast || []).includes(line.focus)) once(`narration focuses on ${line.focus}, who isn't on screen in "${seg.scene}"`);
+            if (!EMOTIONS.includes(line.emotion)) once(`unknown emotion "${line.emotion}"`);
+          } else if (line.speaker === "V") {
+            if (!VOICES.includes(line.voiceOf)) once(`offscreen voice needs a valid voiceOf (${line.voiceOf})`);
+            vSeconds += line.fx === "echo" ? 0.8 : 0;
+          } else {
+            if (!(seg.cast || []).includes(line.speaker)) once(`${line.speaker} speaks but isn't on screen in "${seg.scene}"`);
+            if (!EMOTIONS.includes(line.emotion)) once(`unknown emotion "${line.emotion}"`);
+          }
+          const words = (line.text || "").split(/\s+/).filter(Boolean).length;
+          // Only the narrator speaks now, at the narrator's pace (character lines are read by the narrator too)
+          const wps = line.speaker === "N" || process.env.NARRATOR_ONLY !== "0" ? NARRATOR_WPS : WORDS_PER_SECOND;
+          vSeconds += words / wps * (line.fx === "echo" ? 1.25 : 1) + 0.35 + LINE_GAP;
         }
-        const words = (line.text || "").split(/\s+/).filter(Boolean).length;
-        const wps = line.speaker === "N" ? NARRATOR_WPS : WORDS_PER_SECOND;
-        seconds += words / wps * (line.fx === "echo" ? 1.25 : 1) + 0.35 + LINE_GAP;
       }
+      seconds = Math.max(seconds, vSeconds);
+      lines = Math.max(lines, vLines);
     }
     if (!lines) fail("part has no lines");
     if (series.interactive) {

@@ -188,7 +188,14 @@ function Captions({ lines, t, frame, fps }) {
   const offscreen = line.speaker === "V";
   const ghostColor = VOICE_COLORS[line.voiceOf] || VOICE_COLORS[line.fx] || GHOST_RED;
   const ghost = offscreen && line.fx === "echo";
-  const accent = offscreen ? ghostColor : LOOKS[line.speaker]?.accent || "#FFC93C";
+  // Narrator-only mode: a character's line (saidBy) is captioned in their colour with their name;
+  // a message read by the narrator (via) gets a MESSAGE / RADIO / PHONE label
+  const who = line.saidBy || (LOOKS[line.speaker] ? line.speaker : null);
+  const accent = offscreen ? ghostColor : LOOKS[who]?.accent || "#FFC93C";
+  const label = line.saidBy ? line.saidByName || LOOKS[line.saidBy]?.name
+    : line.via ? (line.via === "robot" ? "Message" : line.via === "radio" ? "Radio" : LOOKS[line.via] ? `Phone · ${line.viaName || LOOKS[line.via].name}` : "Voice")
+    : null;
+  const labelColor = line.via ? "#5CE1E6" : accent;
   // The offscreen voice trembles
   const tremble = ghost ? `translate(${Math.sin(frame * 1.3) * 4}px, ${Math.cos(frame * 1.7) * 3}px)` : "";
 
@@ -198,12 +205,18 @@ function Captions({ lines, t, frame, fps }) {
       transform: `${tremble} scale(${0.75 + 0.25 * pop})`,
       fontFamily: FONT,
       fontWeight: 900, fontSize: 108, lineHeight: 1.1, textTransform: "uppercase",
-      fontStyle: offscreen ? "italic" : "normal",
+      fontStyle: offscreen || line.via ? "italic" : "normal",
       WebkitTextStroke: "14px #000", paintOrder: "stroke fill",
       textShadow: offscreen ? `0 0 30px ${ghostColor}` : "0 8px 0 rgba(0,0,0,0.35)",
     }}>
+      {label && (
+        <div style={{
+          position: "absolute", left: 0, right: 0, top: -70, fontSize: 52, fontStyle: "normal",
+          color: labelColor, WebkitTextStroke: "9px #000", letterSpacing: 2,
+        }}>{label}</div>
+      )}
       {chunk.map((w, i) => (
-        <span key={i} style={{ color: offscreen ? (chunkStart + i === wordIdx ? "#fff" : ghostColor) : chunkStart + i === wordIdx ? accent : "#fff" }}>
+        <span key={i} style={{ color: offscreen ? (chunkStart + i === wordIdx ? "#fff" : ghostColor) : chunkStart + i === wordIdx ? (line.via ? "#5CE1E6" : accent) : "#fff" }}>
           {w}{i < chunk.length - 1 ? " " : ""}
         </span>
       ))}
@@ -295,8 +308,12 @@ function ChoiceCard({ line, t, frame, fps }) {
   const words = (s) => s.split(/\s+/).filter(Boolean).length;
   const total = words(line.text);
   const dur = line.end - line.start;
-  const aAt = line.start + dur * (words(question) / total);
-  const bAt = line.start + dur * ((words(question) + 1 + words(a) + 1) / total);
+  const wordsBefore = (marker, fallback) => {
+    const i = line.text.indexOf(marker);
+    return i >= 0 ? words(line.text.slice(0, i)) : fallback;
+  };
+  const aAt = line.start + dur * (wordsBefore("A:", words(question)) / total);
+  const bAt = line.start + dur * (wordsBefore("B:", words(question) + 1 + words(a) + 1) / total);
   const ctaAt = line.start + dur * ((line.text.indexOf("Comment A or B") >= 0 ? line.text.slice(0, line.text.indexOf("Comment A or B")).split(/\s+/).filter(Boolean).length : total - 4) / total);
   const optionStyle = (at, color) => {
     const p = spring({ frame: frame - Math.round(at * fps), fps, config: { damping: 12, stiffness: 170 } });
@@ -349,7 +366,7 @@ function ChoiceCard({ line, t, frame, fps }) {
  *   mouth: voice loudness per frame (0..1) for real lip sync. backgrounds: painted background keys available.
  *   audio: optional file in the public dir, for previewing with sound in Remotion Studio
  */
-export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgrounds = [] }) {
+export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgrounds = [], looks = null }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -411,6 +428,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
     return (
       <Character
         who={who}
+        lookOverride={looks?.[who] || null}
         frame={frame}
         talk={talkAmount(lines, who, t)}
         gesture={gestureAmount(lines, who, t)}
