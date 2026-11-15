@@ -15,7 +15,8 @@
     "make:backgrounds": "node scripts/generateBackgrounds.js",
     "make:sfx": "node scripts/generateSfx.js",
     "app": "npm --prefix web install --no-audit --no-fund && npm --prefix web run build && node server.js",
-    "app:dev": "node server.js"
+    "app:dev": "node server.js",
+    "check:instagram": "node scripts/checkInstagram.js"
   },
   "keywords": [],
   "author": "",

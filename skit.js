@@ -65,7 +65,8 @@ function freshWorkDir() {
 }
 
 async function runSeries() {
-  const { getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, pickBranch } = require("./services/seriesService");
+  const { getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, pickBranch } = require("./services/seriesService");
+  const instagram = require("./services/instagramService");
   let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD });
   if (!part) {
     console.log("🏁 Every part of every series is already uploaded. Add a new series in series/ to continue.");
@@ -86,6 +87,10 @@ async function runSeries() {
       const prevId = uploadedVideoId(part.seriesId, part.number - 1) ||
         await findVideoByTitle(getPart(part.seriesId, part.number - 1).seo.title);
       votes = await countVotes(prevId);
+      // Instagram Reel comments count too (when the previous part was also posted there)
+      const igVotes = instagram.isConfigured() ? await instagram.countInstagramVotes(instagramMediaId(part.seriesId, part.number - 1)) : null;
+      if (igVotes) votes = { a: (votes?.a || 0) + igVotes.a, b: (votes?.b || 0) + igVotes.b };
+      if (votes) console.log(`🗳️  Total votes: A ${votes.a} · B ${votes.b}`);
     }
     // Branching series: the story goes the way most viewers voted (default from the script when too few votes)
     if (part.branching) {
@@ -118,6 +123,16 @@ async function runSeries() {
   // Remembered so the next part can count this part's A/B comments
   recordUpload(part.seriesId, part.number, new URL(url).searchParams.get("v"), part.branching ? part.follows : null);
   console.log("🎉 SUCCESS! Part uploaded:", url);
+
+  // Same video as an Instagram Reel. A failure here never undoes or blocks the YouTube upload.
+  if (instagram.isConfigured()) {
+    try {
+      const reel = await instagram.uploadReel(video, instagram.captionFor(part));
+      recordInstagram(part.seriesId, part.number, reel.id);
+    } catch (err) {
+      console.warn(`⚠️ Instagram upload failed (YouTube upload is done): ${err.message}`);
+    }
+  }
 }
 
 async function run() {

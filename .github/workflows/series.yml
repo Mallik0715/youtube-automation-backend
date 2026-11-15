@@ -69,6 +69,9 @@ jobs:
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
           # Optional: reads A/B votes from the previous part's comments (without it, a neutral opening is used)
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          # Optional: also posts each part as an Instagram Reel and counts its A/B comments
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
         # Up to 3 tries if the free voice service is down for a while. Progress is reset before each
         # retry so a failed try never skips a part.
         run: |

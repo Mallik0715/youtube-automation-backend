@@ -125,6 +125,17 @@ function recordUpload(seriesId, number, videoId, branch = null) {
   saveProgress(progress);
 }
 
+/** Remembers the Instagram Reel of an uploaded part, so the next part can count its votes too */
+function recordInstagram(seriesId, number, mediaId) {
+  const progress = loadProgress();
+  progress.videos[`ig:${seriesId}:${number}`] = mediaId;
+  saveProgress(progress);
+}
+
+function instagramMediaId(seriesId, number) {
+  return loadProgress().videos[`ig:${seriesId}:${number}`] || null;
+}
+
 /** Which option won the vote: the majority with at least MIN_VOTES votes, otherwise the script's default */
 function pickBranch(votes, fallback) {
   const total = votes ? votes.a + votes.b : 0;
@@ -280,6 +291,8 @@ function buildPart(series, partIndex, branch = null) {
     // Interactive series: which option of the previous part's choice this part continues with
     follows: series.interactive && partIndex > 0 ? pick || part.follows || null : null,
     branching: !!series.branching,
+    choice: part.choice || null,
+    hashtags: series.hashtags || [],
     looks: series.looks || null, // per-series look tweaks (e.g. skin and hair colour) by character code
     previousChoice: series.interactive && partIndex > 0 ? series.parts[partIndex - 1].choice || null : null,
     music: series.music || null,
@@ -306,6 +319,6 @@ function buildPart(series, partIndex, branch = null) {
 }
 
 module.exports = {
-  getNextPart, getPart, recordUpload, uploadedVideoId, addVoteIntro, pickBranch, SERIES,
+  getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, pickBranch, SERIES,
   queueSeries, allSeries, readQueue, writeQueue, queueStatus, loadSeriesFile, buildPart, SERIES_DIR,
 };
