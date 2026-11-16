@@ -14,8 +14,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      - name: Install FFmpeg (for the test clip)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Check the Instagram connection
         env:
           INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-        run: npm run check:instagram
+        # Also uploads a 5-second test clip without publishing it, to test the whole upload path
+        run: npm run check:instagram -- --upload-test

@@ -19,10 +19,14 @@ function config() {
 
 const isConfigured = () => !!config();
 
-// Meta's error message, not axios's generic one
+// Meta's error message, not axios's generic one. The upload server answers in its own format
+// ({debug_info: {...}}), so anything else Meta sent back is shown too (it never contains the token).
 function explain(err) {
-  const e = err.response?.data?.error;
-  return e ? `${e.message}${e.error_user_msg ? ` - ${e.error_user_msg}` : ""} (code ${e.code})` : err.message;
+  const data = err.response?.data;
+  const e = data?.error;
+  if (e) return `${e.message}${e.error_user_msg ? ` - ${e.error_user_msg}` : ""} (code ${e.code}${e.error_subcode ? `/${e.error_subcode}` : ""})`;
+  if (data) return `${err.message}: ${(typeof data === "string" ? data : JSON.stringify(data)).slice(0, 500)}`;
+  return err.message;
 }
 
 /** Account check that never posts anything: who the token belongs to and how many posts it has */
@@ -42,23 +46,34 @@ async function checkAccount() {
  * wait while Instagram processes it, then publish.
  * @returns {Promise<{id: string, permalink: string|null}>}
  */
-async function uploadReel(videoPath, caption) {
+async function uploadReel(videoPath, caption, { publish = true } = {}) {
   const c = config();
   if (!c) throw new Error("Instagram is not configured");
   const size = fs.statSync(videoPath).size;
-  console.log("📸 Uploading to Instagram Reels...");
+  console.log(`📸 Uploading to Instagram Reels (${(size / 1e6).toFixed(1)} MB)...`);
+  let step = "creating the upload";
   try {
     const container = await axios.post(`${c.base}/${c.userId}/media`, null, {
       params: { media_type: "REELS", upload_type: "resumable", caption, share_to_feed: true, access_token: c.token },
     });
     const containerId = container.data.id;
 
-    await axios.post(`https://rupload.facebook.com/ig-api-upload/${VERSION}/${containerId}`, fs.readFileSync(videoPath), {
+    step = "sending the video file";
+    const file = fs.readFileSync(videoPath);
+    const send = (url) => axios.post(url, file, {
       headers: { Authorization: `OAuth ${c.token}`, offset: "0", file_size: String(size), "Content-Type": "application/octet-stream" },
       maxBodyLength: Infinity, maxContentLength: Infinity, timeout: 300000,
     });
+    // Meta's docs show the upload address both with and without the API version - try both
+    try {
+      await send(`https://rupload.facebook.com/ig-api-upload/${VERSION}/${containerId}`);
+    } catch (err) {
+      console.warn(`   upload server said: ${explain(err)} - retrying the other address`);
+      await send(`https://rupload.facebook.com/ig-api-upload/${containerId}`);
+    }
 
     // Processing usually takes 20-90 seconds
+    step = "waiting for Instagram to process the video";
     for (let i = 0; i < 60; i++) {
       await sleep(10000);
       const s = await axios.get(`${c.base}/${containerId}`, { params: { fields: "status_code,status", access_token: c.token } });
@@ -67,6 +82,11 @@ async function uploadReel(videoPath, caption) {
       if (i === 59) throw new Error("Instagram is still processing after 10 minutes");
     }
 
+    if (!publish) {
+      console.log("✅ Test upload processed by Instagram (not published - it expires on its own)");
+      return { id: null, permalink: null, containerId };
+    }
+    step = "publishing";
     const published = await axios.post(`${c.base}/${c.userId}/media_publish`, null, { params: { creation_id: containerId, access_token: c.token } });
     const id = published.data.id;
     let permalink = null;
@@ -76,7 +96,7 @@ async function uploadReel(videoPath, caption) {
     console.log("✅ Reel published:", permalink || id);
     return { id, permalink };
   } catch (err) {
-    throw new Error(explain(err));
+    throw new Error(`while ${step}: ${explain(err)}`);
   }
 }
 
