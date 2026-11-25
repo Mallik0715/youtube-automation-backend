@@ -1,5 +1,6 @@
 import React from "react";
 import { Img, staticFile } from "remotion";
+import { VECTOR_SCENES, VectorBack } from "./Scenes";
 
 // Flat cartoon scenes drawn in code (1080x1920). Floor starts at FLOOR_Y; characters stand on it.
 // Scene names must match SCENES in services/dialogueScriptService.js.
@@ -902,6 +903,8 @@ const SCENES = {
   // Painted images exist for these (assets/backgrounds); the code-drawn scene is only a fallback
   bedroom: GuestRoom, classroom: Office, canteen: Cafe, corridor: Street, shop: Cafe,
   bank: Museum, hospital: Office, mall: Street, lift: Office, island: Shore,
+  // Drawn in remotion/Scenes.jsx (these older drawings are only fallbacks)
+  kitchen: Home, controlroom: RadioStation, basement: RadioStation, cliff: Forest, camp: Shore,
 };
 export const SCENE_NAMES = Object.keys(SCENES);
 // Scenes that bring their own darkness and light get a lighter night overlay
@@ -946,7 +949,9 @@ export const backgroundKey = (scene, night) => `${scene}${night ? "_night" : ""}
  *   Uses the exact image if there is one; at night falls back to the day image darkened; otherwise the
  *   code-drawn scene. Returns whether the night lighting is already baked in (so no extra overlay is needed).
  */
-export function Background({ scene, frame, night = false, images = [] }) {
+export function Background({ scene, frame, night = false, images = [], details = [] }) {
+  // Flat drawn locations (remotion/Scenes.jsx) match the characters, so they win over painted images
+  if (VECTOR_SCENES[scene]) return <VectorBack scene={scene} frame={frame} night={night} details={details} />;
   const key = backgroundKey(scene, night);
   const exact = images.includes(key);
   const dayForNight = !exact && night && images.includes(scene);

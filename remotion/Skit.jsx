@@ -3,6 +3,7 @@ import { AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, 
 import { Background, FLOOR_Y, NIGHT_OVERLAY, backgroundKey } from "./Background";
 import { Character, LOOKS } from "./Character";
 import { Prop } from "./Props";
+import { VECTOR_SCENES, VectorFront } from "./Scenes";
 import { loadFont } from "@remotion/google-fonts/Montserrat";
 
 // Character placement (px on the 1080x1920 canvas). The SVG is 400x900 units, feet at y=868.
@@ -24,6 +25,8 @@ const VOICE_COLORS = { radio: "#7CFF6B", robot: "#5CE1E6" };
 const { fontFamily: MONTSERRAT } = loadFont("normal", { weights: ["900"], subsets: ["latin"] });
 const FONT = `${MONTSERRAT}, "Arial Black", "Segoe UI Black", sans-serif`;
 const DEFAULT_CAST = ["A", "B"];
+const PHASES = { A: 0, B: 1.6, C: 3.1, D: 0.8, E: 2.4, F: 4 };
+const smooth = (k) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
 
 function layoutFor(cast) {
   const layout = LAYOUTS[Math.min(3, Math.max(1, cast.length))];
@@ -225,6 +228,30 @@ function Captions({ lines, t, frame, fps }) {
   );
 }
 
+// "Previously" recap: old-film look (vignette, flicker, a few scratches) and a rewind badge
+function Flashback({ t, frame }) {
+  const pop = Math.min(1, t / 0.25);
+  const flicker = 0.06 + 0.04 * Math.abs(Math.sin(frame * 1.7));
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 45%, rgba(30,15,0,0.65) 100%)" }} />
+      <AbsoluteFill style={{ background: "#fff", opacity: flicker * 0.5 }} />
+      {[0, 1].map(i => (
+        <div key={i} style={{ position: "absolute", top: 0, bottom: 0, width: 3, background: "rgba(255,255,255,0.35)", left: ((frame * (37 + i * 53)) % 1080) }} />
+      ))}
+      <div style={{
+        position: "absolute", top: 1560, left: 0, right: 0, display: "flex", justifyContent: "center",
+        transform: `scale(${0.6 + 0.4 * pop})`, opacity: pop,
+      }}>
+        <div style={{
+          fontFamily: FONT, fontWeight: 900, fontSize: 54, letterSpacing: 6, color: "#fff",
+          background: "rgba(20,20,28,0.85)", border: "5px solid #FFC93C", borderRadius: 50, padding: "10px 40px",
+        }}>⏪ PREVIOUSLY</div>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
 function TitleCard({ line, t, frame, fps }) {
   const startFrame = Math.round(line.start * fps);
   const pop = spring({ frame: frame - startFrame, fps, config: { damping: 9, stiffness: 160 } });
@@ -403,8 +430,10 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
   const prevRun = runStart > 0 && samePlace(lines[runStart - 1], line) ? lines[runStart - 1] : null;
   const prevPeople = prevRun ? layoutFor(castOf(prevRun)) : [];
   const enter = prevRun
-    ? spring({ frame: frame - Math.round(lines[runStart].start * fps), fps, config: { damping: 16, mass: 0.8 }, durationInFrames: 24 })
+    ? smooth((t - lines[runStart].start) / 1.0)
     : 1;
+  // New place: everyone walks a few steps into the shot as the picture fades in
+  const arrive = runStart > 0 && !prevRun ? Math.min(1, (t - lines[runStart].start) / 0.9) : 1;
   const shake = shakeOffset(line, t);
 
   // Facing: left half looks right, right half looks left; the middle one looks at whoever spoke last
@@ -423,9 +452,10 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
 
   const seatedHere = line.seated || [];
   const deskScenes = ["office", "meeting"];
-  const renderCharacter = (who, i) => {
+  const renderCharacter = (who, i, walk = 0) => {
     const ps = poseState(lines, who, t);
     const seated = seatedHere.includes(who);
+    const own = stateLine(lines, who, t);
     return (
       <Character
         who={who}
@@ -441,12 +471,15 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
         poseK={ps.poseK}
         listening={actorOf(line) !== who && cast.includes(actorOf(line))}
         seated={seated}
+        since={own && own.start <= t ? t - own.start : 9}
+        walk={walk}
+        walkPhase={frame * 0.42 + (PHASES[who] || 0)}
         desk={seated && deskScenes.includes(sceneName) ? (shot === "single" ? "wide" : "narrow") : false}
       />
     );
   };
 
-  const bakedNight = backgrounds.includes(backgroundKey(sceneName, night));
+  const bakedNight = !VECTOR_SCENES[sceneName] && backgrounds.includes(backgroundKey(sceneName, night));
   const overlay = NIGHT_OVERLAY[sceneName] ?? 0.3;
   const nightOverlay = night && !bakedNight && (
     <AbsoluteFill style={{
@@ -470,7 +503,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
     stage = (
       <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 45%" }}>
         <AbsoluteFill style={{ transform: `translateX(${left ? -110 : 110}px) scale(1.25)`, transformOrigin: "50% 50%" }}>
-          <Background scene={sceneName} frame={frame} night={night} images={backgrounds} />
+          <Background scene={sceneName} frame={frame} night={night} images={backgrounds} details={line.details || []} />
         </AbsoluteFill>
         <div style={{
           position: "absolute", left: charLeft, top: charTop, width: w, height: 900 * S,
@@ -478,13 +511,17 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
         }}>
           {renderCharacter(actor, i)}
         </div>
+        {/* foreground moves further than the background: depth */}
+        <AbsoluteFill style={{ transform: `translateX(${left ? -230 : 230}px) scale(1.42)`, transformOrigin: "50% 60%" }}>
+          <VectorFront scene={sceneName} frame={frame} night={night} details={line.details || []} />
+        </AbsoluteFill>
         {nightOverlay}
       </AbsoluteFill>
     );
   } else {
     stage = (
       <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 55%" }}>
-        <Background scene={sceneName} frame={frame} night={night} images={backgrounds} />
+        <Background scene={sceneName} frame={frame} night={night} images={backgrounds} details={line.details || []} />
         {people.map((p, i) => {
           const before = prevPeople.find(q => q.who === p.who);
           // Newcomers on the edges walk in from their side; a newcomer in the middle fades in and
@@ -499,15 +536,20 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
           const w = startW + (p.w - startW) * enter;
           const top = (before ? before.top : p.top) + (p.top - (before ? before.top : p.top)) * enter;
           const h = (before ? before.h : p.h) + (p.h - (before ? before.h : p.h)) * enter;
+          const moving = !!prevRun && enter < 1 && Math.abs(p.left - startLeft) > 20;
+          const fromSide = i < cast.length / 2 ? -1 : 1;
+          const arriveX = arrive < 1 ? fromSide * 170 * (1 - smooth(arrive)) : 0;
+          const walk = moving ? Math.min(1, (1 - enter) * 4) : arrive < 1 ? Math.min(1, (1 - arrive) * 3) : 0;
           return (
             <div key={p.who} style={{
-              position: "absolute", left: pLeft, top: top + rise, width: w, height: h, opacity,
+              position: "absolute", left: pLeft + arriveX, top: top + rise, width: w, height: h, opacity,
               transform: facesLeft(p.who, i) ? "scaleX(-1)" : undefined,
             }}>
-              {renderCharacter(p.who, i)}
+              {renderCharacter(p.who, i, walk)}
             </div>
           );
         })}
+        <VectorFront scene={sceneName} frame={frame} night={night} details={line.details || []} />
         {nightOverlay}
       </AbsoluteFill>
     );
@@ -515,7 +557,13 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
-      {stage}
+      {line.recap
+        ? <AbsoluteFill style={{ filter: "sepia(0.6) saturate(0.75) contrast(0.95) brightness(0.92)" }}>{stage}</AbsoluteFill>
+        : stage}
+      {line.recap && <Flashback t={t - line.start} frame={frame} />}
+      {/* the script changes the light: "the lights went out" / "the lights turned warm" */}
+      {line.light === "dark" && <AbsoluteFill style={{ backgroundColor: "#03040a", opacity: Math.min(0.82, (t - line.start) / 0.15) * (0.9 + 0.1 * Math.sin(frame * 0.7)) }} />}
+      {line.light === "warm" && <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 40%, rgba(255,200,110,0.35), rgba(255,140,40,0.2))", mixBlendMode: "screen", opacity: Math.min(1, (t - line.start) / 0.8) }} />}
       {blackout > 0 && <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${blackout})` }} />}
       {line.prop && line.speaker !== "CARD" && (() => {
         // Where the object pops up: beside the character in a close shot (on the side they face),

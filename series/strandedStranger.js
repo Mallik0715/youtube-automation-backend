@@ -25,6 +25,7 @@ module.exports = {
   parts: [
     {
       title: "The Briefcase",
+      recap: "Maya woke up stranded on an island with one stranger, Daniel. He had one bottle of water, and a locked briefcase.",
       hook: "Day 1: Stranded on an island with *one stranger*",
       choice: { question: "What would you do?", a: "Team up with Daniel and share everything", b: "Take your half of the water and go alone" },
       segments: [
@@ -42,6 +43,7 @@ module.exports = {
     },
     {
       title: "Thirst",
+      recap: "With no water left, they had to risk the coconuts on the cliff, or the strange-smelling stream.",
       follows: "a",
       hook: "Day 2: The only water on the island *smelled wrong*",
       choice: { question: "What would you do?", a: "Drink the stream water anyway", b: "Climb the cliff for coconuts" },
@@ -58,7 +60,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("forest", false, ["E", "F"], [
+        seg("cliff", false, ["E", "F"], [
           N("Day 2. The sun was brutal. Thirst was the real enemy now.", { focus: "E", emotion: "worried" }),
           N("Daniel found coconuts. At the top of a crumbling cliff.", { focus: "F", emotion: "neutral" }),
           N("Maya found a stream. But the water smelled strange.", { focus: "E", emotion: "worried" }),
@@ -68,6 +70,7 @@ module.exports = {
     },
     {
       title: "Gone",
+      recap: "Daniel vanished with the briefcase. Then Maya heard a boat out at sea.",
       follows: "b",
       hook: "Day 3: She woke up. *He was gone.* So was the briefcase.",
       choice: { question: "What would you do?", a: "Light a fire to signal the boat", b: "Follow Daniel's footprints first" },
@@ -78,7 +81,7 @@ module.exports = {
         ]),
       ],
       ifB: [
-        seg("forest", false, ["E", "F"], [
+        seg("cliff", false, ["E", "F"], [
           N("Maya climbed. Halfway up, a rock gave way.", { focus: "E", emotion: "scared", fx: "shake" }),
           N("She hung by one hand. Until Daniel grabbed her wrist and pulled her up.", { focus: "F", emotion: "worried" }),
         ]),
@@ -93,6 +96,7 @@ module.exports = {
     },
     {
       title: "Flashlights",
+      recap: "Daniel's briefcase holds proof against his boss. And three men from a boat are searching the beach.",
       follows: "a",
       hook: "Day 4: Men came to the island *looking for him*",
       choice: { question: "What would you do?", a: "Hide with Daniel in the cave", b: "Wave to the men for rescue" },
@@ -121,6 +125,7 @@ module.exports = {
     },
     {
       title: "The Camp",
+      recap: "Daniel found the men's camp, with a radio and a boat. They only get one try.",
       follows: "a",
       hook: "Day 5: The men had a radio. *And a boat.*",
       choice: { question: "What would you do?", a: "Steal the radio tonight", b: "Steal the boat tonight" },
@@ -138,7 +143,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("forest", false, ["E", "F"], [
+        seg("camp", false, ["E", "F"], [
           N("Day 5. Daniel found the men's camp on the north beach.", { focus: "F", emotion: "neutral" }),
           N("A radio on a crate. A small boat tied to the rocks.", { focus: "E", emotion: "surprised" }),
           L("F", "worried", "We only get one try. Tonight."),
@@ -147,17 +152,18 @@ module.exports = {
     },
     {
       title: "Victor Hale",
+      recap: "Maya found Daniel's real name: Victor Hale. The man accused of stealing 50 million dollars.",
       follows: "b",
       hook: "Day 6: The name inside his suit was *on the news*",
       choice: { question: "What would you do?", a: "Confront him", b: "Pretend you didn't see it" },
       ifA: [
-        seg("island", true, ["E"], [
+        seg("camp", true, ["E"], [
           N("Maya crept in and grabbed the radio. She called for help.", { focus: "E", emotion: "worried" }),
           N("A voice answered: Coast guard. Hold on. Four days.", { focus: "E", emotion: "relieved" }),
         ]),
       ],
       ifB: [
-        seg("island", true, ["E", "F"], [
+        seg("camp", true, ["E", "F"], [
           N("Daniel tried the boat. No key.", { focus: "F", emotion: "worried" }),
           N("A dog started barking. They ran for their lives.", { focus: "E", emotion: "scared", sfx: "footsteps" }),
         ]),
@@ -172,6 +178,7 @@ module.exports = {
     },
     {
       title: "The Storm",
+      recap: "A storm wrecked the men's boat. Now everyone was stranded, and Rook offered a truce.",
       follows: "a",
       hook: "Day 7: The storm left *everyone stranded together*",
       choice: { question: "What would you do?", a: "Accept Rook's truce", b: "Refuse and stay hidden" },
@@ -199,6 +206,7 @@ module.exports = {
     },
     {
       title: "The Code",
+      recap: "Daniel left the briefcase with a note. The code was Maya's birthday. She never told him her birthday.",
       follows: "a",
       hook: "Day 8: The code to the briefcase was *her birthday*",
       choice: { question: "What would you do?", a: "Open the briefcase", b: "Go and find Daniel" },
@@ -224,6 +232,7 @@ module.exports = {
     },
     {
       title: "The Photo",
+      recap: "Daniel was Maya's father. A coast guard ship appeared, and Rook ran for the briefcase.",
       follows: "a",
       hook: "Day 9: Inside the briefcase was *a photo of her*",
       choice: { question: "What would you do?", a: "Give Rook the briefcase to stop him", b: "Run with the briefcase to the ship" },
@@ -234,7 +243,7 @@ module.exports = {
         ]),
       ],
       ifB: [
-        seg("forest", false, ["E", "F"], [
+        seg("cliff", false, ["E", "F"], [
           N("She found him at the cliff, staring at the sea.", { focus: "F", emotion: "worried" }),
           L("F", "crying", "I should have told you on Day 1."),
         ]),

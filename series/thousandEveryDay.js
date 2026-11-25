@@ -32,6 +32,7 @@ module.exports = {
   parts: [
     {
       title: "The Note",
+      recap: "Rahul gets $1,000 every morning. If he tells anyone, it stops. Then his best friend Arjun broke his phone.",
       hook: "Day 1: He gets *$1,000 every morning*. He can't tell anyone.",
       choice: { question: "What would you do?", a: "Buy Arjun the phone, and risk him asking where the money came from", b: "Say nothing, and keep the secret safe" },
       segments: [
@@ -52,6 +53,7 @@ module.exports = {
     },
     {
       title: "I Saw You",
+      recap: "The note said: I saw what you did. And Dadi needed $800 for the landlord by Friday.",
       follows: "a",
       hook: "Day 2: The note knew *what he did yesterday*",
       choice: { question: "What would you do?", a: "Give Dadi the money, and make up a story", b: "Pay the landlord yourself, in secret" },
@@ -74,7 +76,7 @@ module.exports = {
           N("But today, the note had one more line.", { focus: "A", emotion: "worried" }),
           N("I saw what you did.", { focus: "A", emotion: "scared", fx: "shake" }),
         ]),
-        seg("home", false, ["A", "C"], [
+        seg("kitchen", false, ["A", "C"], [
           N("Downstairs, Dadi was counting coins on the kitchen table.", { focus: "C", emotion: "worried" }),
           L("C", "crying", "The landlord wants $800 by Friday. Or we're out."),
           N("Rahul had the money. But how could he give it without telling her?", { focus: "A", emotion: "worried" }),
@@ -83,11 +85,12 @@ module.exports = {
     },
     {
       title: "The Topper",
+      recap: "Priya saw Rahul's cash. She wanted a cut, or she would tell everyone.",
       follows: "b",
       hook: "Day 3: The smartest girl in school *knows his secret*",
       choice: { question: "What would you do?", a: "Pay Priya to stay quiet", b: "Call her bluff and say nothing" },
       ifA: [
-        seg("home", false, ["A", "C"], [
+        seg("kitchen", false, ["A", "C"], [
           N("Rahul handed Dadi $800. He said he won it in a school quiz.", { focus: "A", emotion: "smug" }),
           N("Dadi looked at him for a long time. Then she hugged him. She didn't believe a word.", { focus: "C", emotion: "smug" }),
         ]),
@@ -112,6 +115,7 @@ module.exports = {
     },
     {
       title: "The Black Car",
+      recap: "The money stopped for a day. A black car watched Rahul. Then a note: Someone else knows. Fix it.",
       follows: "b",
       hook: "Day 4: No money. Just *a man outside his window*",
       choice: { question: "What would you do?", a: "Follow the black car tomorrow", b: "Hide the money and lie low" },
@@ -142,6 +146,7 @@ module.exports = {
     },
     {
       title: "Mr. Mehta",
+      recap: "Mr. Mehta, the man in the purple suit, delivers the money. His boss watches every dollar Rahul spends.",
       follows: "a",
       hook: "Day 5: The man who delivers the money *finally speaks*",
       choice: { question: "What would you do?", a: "Ask to meet his boss", b: "Take the money and ask no questions" },
@@ -169,6 +174,7 @@ module.exports = {
     },
     {
       title: "The Bag Falls",
+      recap: "Arjun grabbed Rahul's bag, and bundles of cash fell onto the canteen floor.",
       follows: "b",
       hook: "Day 6: *Bundles of cash* fell out in front of everyone",
       choice: { question: "What would you do?", a: "Tell Arjun everything, and risk losing the money forever", b: "Lie to your best friend again" },
@@ -195,6 +201,7 @@ module.exports = {
     },
     {
       title: "The Hospital",
+      recap: "Dadi collapsed. Her operation cost $5,000, tonight. Rahul had almost exactly that.",
       follows: "a",
       hook: "Day 7: Dadi needs *$5,000 tonight*",
       choice: { question: "What would you do?", a: "Pay the hospital in cash, and face the questions", b: "Call Mr. Mehta and beg for help" },
@@ -212,7 +219,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("home", false, ["A", "C"], [
+        seg("kitchen", false, ["A", "C"], [
           N("Day 7. That afternoon, Dadi collapsed in the kitchen.", { focus: "C", emotion: "worried", fx: "shake" }),
         ]),
         seg("hospital", false, ["A"], [
@@ -224,6 +231,7 @@ module.exports = {
     },
     {
       title: "Dadi Knows",
+      recap: "Dadi woke up after the operation. She knew Rahul paid. And she knew who sends the money.",
       follows: "a",
       hook: "Day 8: Dadi woke up and said *I know who sends the money*",
       choice: { question: "What would you do?", a: "Ask Dadi who it is", b: "Find out yourself, and keep Dadi out of it" },
@@ -250,6 +258,7 @@ module.exports = {
     },
     {
       title: "The Cook",
+      recap: "Kaka, the old canteen cook, was really Mr. Kapoor, one of the richest men in the country. He had been watching Rahul since Day 1.",
       follows: "b",
       hook: "Day 9: The secret billionaire was *the school cook*",
       choice: { question: "What would you do?", a: "Give him back every dollar", b: "Ask him why he chose you" },

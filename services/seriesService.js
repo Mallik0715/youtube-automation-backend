@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { segmentDetails, stickyBefore, lineLight } = require("./sceneDetails");
 
 // Series scripts live in series/ (hand-written .js files, or .json files saved by the series writer page).
 // series/queue.json is the upload order (file names). Progress is tracked by series id, so series can be
@@ -175,10 +176,36 @@ function addVoteIntro(part, votes) {
   }
   const first = part.dialogue.lines[0];
   const intro = {
-    scene: first.scene, night: first.night, cast: first.cast, seated: first.seated,
+    scene: first.scene, night: first.night, cast: first.cast, seated: first.seated, details: first.details,
     speaker: "N", text, emotion: "neutral", fx: null, voiceOf: null, hooded: false, pose: null, focus: null, sfx: null, voice: null,
   };
   return { ...part, voteIntro: text, dialogue: { ...part.dialogue, lines: [intro, ...part.dialogue.lines] } };
+}
+
+// "Previously..." for the part after `prevIndex`: the previous part's recap (or its hook as a fallback),
+// shown as a flashback in the place where that part ended
+function previouslyOf(series, prevIndex) {
+  const prev = series.parts[prevIndex];
+  const text = prev.recap || (prev.hook || prev.title || "").replace(/\*/g, "").replace(/^(Day|Part)\s*\d+\s*[:.]\s*/i, "");
+  if (!text) return null;
+  const segs = prev.segments && prev.segments.length ? prev.segments : prev.ifA || [];
+  const last = segs[segs.length - 1] || {};
+  return { text, scene: last.scene || null, night: !!last.night, cast: last.cast || null, seated: last.seated || [] };
+}
+
+/** Opens a part (Day 2 on) with a short narrated recap of the previous part, played as a flashback */
+function addPreviously(part) {
+  const p = part.previously;
+  if (!p || part.dialogue.lines.some(l => l.recap)) return part;
+  const first = part.dialogue.lines[0];
+  const hero = HERO_CODES[part.hero] || null;
+  const cast = p.cast || first.cast;
+  const line = {
+    scene: p.scene || first.scene, night: p.night, cast, seated: p.seated,
+    speaker: "N", text: `Previously: ${p.text}`, emotion: "worried", fx: null, voiceOf: null, hooded: false,
+    pose: null, focus: null, sfx: null, voice: null, recap: true, prop: false,
+  };
+  return { ...part, dialogue: { ...part.dialogue, lines: [line, ...part.dialogue.lines] } };
 }
 
 // Flattens segments into one list of lines, each carrying its own scene/lighting/cast
@@ -205,9 +232,12 @@ function buildPart(series, partIndex, branch = null) {
   const names = { ...Object.fromEntries((series.characters || []).map(c => [c.code, c.name])), ...(series.names || {}) };
 
   const lines = [];
+  // Each location shows what its narration mentions (storm, footprints, a ship, the black car...)
+  const sticky = stickyBefore(series, partIndex);
   for (const seg of segments) {
+    const details = segmentDetails(seg, sticky, segments);
     for (const line of seg.lines) {
-      const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast, seated: seg.seated || [] };
+      const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast, seated: seg.seated || [], details, light: lineLight(line.text) };
       if (line.card) {
         lines.push({ ...base, speaker: "CARD", text: line.card, seconds: line.seconds || CARD_SECONDS, fx: line.fx || null, sfx: line.sfx || null });
       } else if (NARRATOR_ONLY && line.speaker !== "N") {
@@ -260,7 +290,7 @@ function buildPart(series, partIndex, branch = null) {
   if (choice) {
     const last = lines[lines.length - 1];
     lines.push({
-      scene: last.scene, night: last.night, cast: last.cast, seated: last.seated,
+      scene: last.scene, night: last.night, cast: last.cast, seated: last.seated, details: last.details,
       speaker: "N", emotion: "neutral", fx: null, voiceOf: null, hooded: false, prop: false,
       // The camera stays on the hero, weighing it up, between the question and the options
       focus: (last.cast || []).includes(series.heroCode || HERO_CODES[series.hero]) ? series.heroCode || HERO_CODES[series.hero] : null,
@@ -295,6 +325,7 @@ function buildPart(series, partIndex, branch = null) {
     hashtags: series.hashtags || [],
     looks: series.looks || null, // per-series look tweaks (e.g. skin and hair colour) by character code
     previousChoice: series.interactive && partIndex > 0 ? series.parts[partIndex - 1].choice || null : null,
+    previously: partIndex > 0 ? previouslyOf(series, partIndex - 1) : null,
     music: series.music || null,
     dialogue: { scene: segments[0].scene, lines },
     hook,
@@ -319,6 +350,6 @@ function buildPart(series, partIndex, branch = null) {
 }
 
 module.exports = {
-  getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, pickBranch, SERIES,
+  getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch, SERIES,
   queueSeries, allSeries, readQueue, writeQueue, queueStatus, loadSeriesFile, buildPart, SERIES_DIR,
 };

@@ -65,7 +65,7 @@ function freshWorkDir() {
 }
 
 async function runSeries() {
-  const { getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, pickBranch } = require("./services/seriesService");
+  const { getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch } = require("./services/seriesService");
   const instagram = require("./services/instagramService");
   let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD });
   if (!part) {
@@ -101,6 +101,9 @@ async function runSeries() {
     part = addVoteIntro(part, votes);
     console.log("🗳️ ", part.voteIntro);
   }
+  // Day 2 on: a short "Previously..." flashback before anything else
+  part = addPreviously(part);
+  if (part.previously) console.log("⏪ Previously:", part.previously.text);
   console.log(`========== SERIES: ${part.seriesTitle} - Part ${part.number}/${part.total}: ${part.partTitle} ==========`);
 
   const workDir = freshWorkDir();

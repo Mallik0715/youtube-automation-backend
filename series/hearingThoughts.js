@@ -26,6 +26,7 @@ module.exports = {
   parts: [
     {
       title: "The Voices",
+      recap: "After a hit to the head, Noah can hear everyone's thoughts. And his best friend Jake is hiding something.",
       hook: "Day 1: He can hear *everyone's thoughts*",
       choice: { question: "What would you do?", a: "Ask Jake what he did", b: "Keep quiet and keep listening" },
       segments: [
@@ -41,6 +42,7 @@ module.exports = {
     },
     {
       title: "The Answers",
+      recap: "The stolen exam answers were found in Noah's locker. And Jake thought: I'm sorry, buddy.",
       follows: "b",
       hook: "Day 2: The stolen exam answers were *in his locker*",
       choice: { question: "What would you do?", a: "Expose Jake in front of everyone", b: "Take the blame for your best friend" },
@@ -72,6 +74,7 @@ module.exports = {
     },
     {
       title: "Nana's Secret",
+      recap: "Noah heard Nana Rose's secret thought. They are losing the house.",
       follows: "b",
       hook: "Day 3: His grandmother was *hiding something huge*",
       choice: { question: "What would you do?", a: "Tell Nana you heard her thought", b: "Secretly find a way to help" },
@@ -89,7 +92,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("home", true, ["B", "C"], [
+        seg("kitchen", true, ["B", "C"], [
           N("Day 3. At dinner, Nana Rose laughed at his jokes like always.", { focus: "C", emotion: "happy" }),
           N("But her thoughts were quiet. And scared.", { focus: "C", emotion: "worried" }),
           TH("C", "How do I tell him we're losing the house?", { emotion: "crying" }),
@@ -98,11 +101,12 @@ module.exports = {
     },
     {
       title: "The Landlord",
+      recap: "The landlord, Mr. Grant, wanted Nana to sign papers. In his head, Noah heard: they're fake.",
       follows: "a",
       hook: "Day 4: The landlord was *lying*. Noah heard every word.",
       choice: { question: "What would you do?", a: "Call him out in front of Nana", b: "Find proof first" },
       ifA: [
-        seg("home", true, ["B", "C"], [
+        seg("kitchen", true, ["B", "C"], [
           L("B", "worried", "Nana. I heard you. About the house."),
           N("Nana dropped her fork. She stared at him.", { focus: "C", emotion: "surprised", fx: "shake" }),
           TH("C", "He can hear. Just like I could.", { emotion: "scared" }),
@@ -115,7 +119,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("home", false, ["B", "C", "D"], [
+        seg("kitchen", false, ["B", "C", "D"], [
           N("Day 4. Mr. Grant, the landlord, came with papers to sign.", { focus: "D", emotion: "smug" }),
           L("D", "smug", "Just sign here, Rose. It's for your own good."),
           TH("D", "The old lady will never know these papers are fake.", { emotion: "smug" }),
@@ -124,11 +128,12 @@ module.exports = {
     },
     {
       title: "Outside the Window",
+      recap: "Late at night, a stranger's thought drifted in: Tomorrow, the boy disappears.",
       follows: "b",
       hook: "Day 5: A stranger's thought: *Tomorrow, the boy disappears*",
       choice: { question: "What would you do?", a: "Wake Nana and tell her", b: "Stay up and watch the window" },
       ifA: [
-        seg("home", false, ["B", "C", "D"], [
+        seg("kitchen", false, ["B", "C", "D"], [
           L("B", "angry", "Those papers are fake."),
           N("Grant's smile vanished. He left without a word.", { focus: "D", emotion: "angry" }),
           TH("D", "Who told the boy?", { emotion: "angry" }),
@@ -151,6 +156,7 @@ module.exports = {
     },
     {
       title: "The Silent Man",
+      recap: "Mr. Vale, the man in the purple suit, wants Noah at his school. And Noah can't hear his thoughts at all.",
       follows: "b",
       hook: "Day 6: The only man whose thoughts he *couldn't hear*",
       choice: { question: "What would you do?", a: "Go with Mr. Vale", b: "Shut the door on him" },
@@ -178,6 +184,7 @@ module.exports = {
     },
     {
       title: "Too Loud",
+      recap: "The voices nearly broke Noah. Then he learned Nana can hear thoughts too.",
       follows: "b",
       hook: "Day 7: The voices got louder. Then *Nana spoke inside his head*",
       choice: { question: "What would you do?", a: "Let Nana teach you to control it", b: "Call Mr. Vale for help" },
@@ -205,6 +212,7 @@ module.exports = {
     },
     {
       title: "Being Followed",
+      recap: "Lily warned Noah he is being followed. Mr. Grant and Mr. Vale were in the same car.",
       follows: "a",
       hook: "Day 8: The landlord and the silent man were *working together*",
       choice: { question: "What would you do?", a: "Tell Lily your secret", b: "Push Lily away to keep her safe" },
@@ -231,6 +239,7 @@ module.exports = {
     },
     {
       title: "Nana Is Gone",
+      recap: "Nana Rose was taken. A note said: Come alone. The old office tower. Midnight.",
       follows: "b",
       hook: "Day 9: Nana was gone. The note said *come alone*",
       choice: { question: "What would you do?", a: "Go alone like the note says", b: "Bring Jake and Lily with you" },

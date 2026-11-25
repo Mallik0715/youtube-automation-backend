@@ -28,7 +28,10 @@ const SCENE_HINTS = {
   deck: "boat deck", desert: "desert", radio: "radio station", train: "train carriage", snow: "snowy mountain",
   icecave: "ice cave", underwater: "underwater", meeting: "meeting room / bank office",
   bedroom: "teen bedroom", classroom: "school classroom", canteen: "school canteen", corridor: "school corridor with lockers",
-  shop: "phone / gadget shop", bank: "bank hall", hospital: "hospital corridor", mall: "shopping mall", lift: "elevator", island: "desert island beach",
+  shop: "phone / gadget shop", bank: "bank hall", hospital: "hospital room", mall: "shopping mall", lift: "elevator", island: "desert island beach",
+  kitchen: "kitchen with the family dining table (dinner, counting money, signing papers)",
+  controlroom: "building basement / janitor's room / control room with the lift motor",
+  cliff: "jungle cliff with a stream at the bottom", camp: "small camp on a beach: tent, radio on a crate, boat tied to rocks",
 };
 
 // Real, hand-written parts used as examples of the format and tone ("$1,000 Every Day")
@@ -83,6 +86,7 @@ Return JSON only:
  "parts": [{"title": "2-4 words",
    "beats": "3-5 sentences: exactly what happens in this part, ending on the cliffhanger",
    "hook": "on-screen headline, max 12 words, wrap the 1-3 key words in *stars*",
+   "recap": "1-2 short sentences (max 22 words) a narrator reads at the start of the NEXT part: who the hero is, what happened here, the dilemma it ended on. Use names, no stars",
    "choice": {"question": "What would you do?", "a": "option A, max 14 words, no final punctuation, e.g. Buy Arjun the phone, and risk him asking where the money came from", "b": "option B, same style"},
    "ifA": "1-2 sentences: what happens right after the hero picks option A of the PREVIOUS part's choice (null for part 1)",
    "ifB": "1-2 sentences: the same for option B (null for part 1)",
@@ -176,7 +180,7 @@ async function writePart(outline, index, heroCode, onLog = () => {}) {
     const p = outline.parts[index];
     const def = p.default === "a" || p.default === "b" ? p.default : index % 2 ? "a" : "b";
     const part = {
-      title: p.title, hook: p.hook, choice: cleanChoice(p.choice),
+      title: p.title, ...(p.recap ? { recap: String(p.recap).replace(/\*/g, "") } : {}), hook: p.hook, choice: cleanChoice(p.choice),
       ...(index > 0 ? { follows: def, ifA: normalizeSegments(res.ifA), ifB: normalizeSegments(res.ifB) } : {}),
       segments: normalizeSegments(res.segments),
     };

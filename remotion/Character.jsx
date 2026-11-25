@@ -1,25 +1,24 @@
 import React from "react";
 
-// "Hoodie Cel" style: round heads, simple dark eyes with strong brows, thick ink outlines,
-// two-tone (cel) shading and real hands with fingers.
+// "Storytime" style (#23): big round heads, big white eyes with black pupils, thin dark outlines,
+// flat bright colours and real hands with fingers.
 // Drawn facing right; the Skit flips characters that should face left.
-const INK = "#141414";
-const SHADE = "rgba(0,0,0,0.2)"; // cel shadow laid over the back half of clothes and faces
+const INK = "#262626";
 
 //   top: hoodie | shirt | shawl | overalls | jacket | suit     bottom: pants | skirt
 export const LOOKS = {
   A: { // Max - spiky dark hair, orange hoodie
-    name: "Max", skin: "#F3E4D6", hair: "#22180F", shirt: "#E9772A", shirtDark: "#B85A1A", sleeve: "#E9772A",
+    name: "Max", skin: "#F6CFAE", hair: "#22180F", shirt: "#E9772A", shirtDark: "#B85A1A", sleeve: "#E9772A",
     pants: "#2B3245", shoes: "#1a1a1a", accent: "#FFC93C", top: "hoodie", bottom: "pants", strings: "#F7D8B5",
     hairPath: "M58 196 Q44 92 128 60 L114 20 L170 46 L196 4 L226 46 L280 22 L276 66 Q348 96 344 196 Q318 128 232 116 Q196 140 150 120 Q86 132 58 196 Z",
   },
   B: { // Leo - side-swept hair, round glasses, teal shirt
-    name: "Leo", skin: "#EBD2BB", hair: "#5A341A", shirt: "#2AA597", shirtDark: "#1D7F74", sleeve: "#2AA597",
+    name: "Leo", skin: "#EDC09A", hair: "#5A341A", shirt: "#2AA597", shirtDark: "#1D7F74", sleeve: "#2AA597",
     pants: "#5B4636", shoes: "#2c2018", accent: "#4FD8FF", top: "shirt", bottom: "pants", glasses: true,
     hairPath: "M52 200 Q38 64 196 50 Q356 52 350 196 Q338 118 262 98 Q200 146 120 126 Q78 138 52 200 Z",
   },
   C: { // Mira - grey bun, shawl, long skirt
-    name: "Mira", skin: "#EED8C4", hair: "#C3C6CF", shirt: "#6D4C7D", shirtDark: "#553A62", sleeve: "#6D4C7D",
+    name: "Mira", skin: "#F0CCAE", hair: "#C3C6CF", shirt: "#6D4C7D", shirtDark: "#553A62", sleeve: "#6D4C7D",
     shawl: "#A8503A", pants: "#3F3550", shoes: "#2a2230", accent: "#D7A6FF", top: "shawl", bottom: "skirt",
     bun: true, wrinkles: true,
     hairPath: "M54 204 Q46 70 200 56 Q354 70 346 204 Q330 120 200 112 Q70 120 54 204 Z",
@@ -36,7 +35,7 @@ export const LOOKS = {
     hairPath: "M36 250 Q4 198 36 148 Q16 86 78 66 Q98 14 160 26 Q200 -6 242 26 Q304 14 324 66 Q386 86 364 148 Q396 198 364 250 Q340 160 290 128 Q200 98 110 128 Q60 160 36 250 Z",
   },
   F: { // Victor - slick side-parted hair, purple suit, red tie
-    name: "Victor", skin: "#F0D8C6", hair: "#16161d", shirt: "#4E3780", shirtDark: "#3B2862", sleeve: "#4E3780",
+    name: "Victor", skin: "#F3D2B8", hair: "#16161d", shirt: "#4E3780", shirtDark: "#3B2862", sleeve: "#4E3780",
     pants: "#3B2862", shoes: "#0f0f0f", accent: "#C9A7FF", top: "suit", bottom: "pants",
     hairPath: "M58 198 Q50 66 190 52 Q332 48 346 188 Q330 116 260 100 Q170 92 118 128 Q78 148 58 198 Z",
   },
@@ -111,7 +110,7 @@ function Hand({ x, y, angle, type, skin }) {
   const shapes = handShapes(type);
   return (
     <g transform={`translate(${x} ${y}) rotate(${angle})`}>
-      {shapes.map((p, i) => shapeEl(p, 4.5, INK, i))}
+      {shapes.map((p, i) => shapeEl(p, 3.6, INK, i))}
       {shapes.map((p, i) => shapeEl(p, 0, skin, `f${i}`))}
       {/* finger creases, knuckle line, thumb fold */}
       {(type === "open" || type === "relaxed") && [-8, 0, 8].map(cx => (
@@ -125,7 +124,7 @@ function Hand({ x, y, angle, type, skin }) {
       )}
       {type === "point" && <path d="M-14 -12 Q-2 -17 12 -14" fill="none" stroke={INK} strokeWidth="2.6" strokeLinecap="round" />}
       {/* cel shadow on the far side of the hand */}
-      <rect x="4" y="-29" width="12" height="28" rx="6" fill="#000" opacity="0.13" />
+      
     </g>
   );
 }
@@ -133,67 +132,87 @@ function Hand({ x, y, angle, type, skin }) {
 // ---------- Face ----------
 // Head space: centre 200,210, radius 150 (scaled down onto the neck). Features sit a little toward
 // the facing side so the head reads as turned.
-const EYE_L = 170, EYE_R = 252, EYE_Y = 220;
+// "Storytime" eyes: big white eyes with a thin outline and a round black pupil. Lids are made by
+// cutting the eye shape with a slanted line, so angry / sad / smug eyes keep a clean outline.
+const EYE_L = 164, EYE_R = 254, EYE_Y = 214;
 // Brow shape per emotion: [inner end, outer end] offsets (negative = higher)
 const BROW = {
   neutral: [0, 0], happy: [-6, -4], worried: [-18, 6], surprised: [-22, -18], smug: [2, 2],
   angry: [16, -12], crying: [-20, 8], scared: [-26, -12], relieved: [-4, -4],
 };
+// rx, ry, pupil radius, pupil drop, lid cut [inner, outer] as a fraction of ry from the centre (null = open)
+const EYE_SHAPES = {
+  neutral: [29, 34, 14, 3, null],
+  surprised: [32, 39, 9, 0, null],
+  scared: [32, 39, 7, 0, null],
+  angry: [29, 31, 14, 8, [0.05, -0.62]],
+  worried: [29, 34, 13, 6, [-0.78, -0.22]],
+  crying: [29, 34, 13, 7, [-0.78, -0.18]],
+  smug: [29, 31, 13, 9, [-0.12, -0.18]],
+};
 
-function Eyes({ emotion, blinking, frame, phase }) {
-  const ink = { fill: INK };
-  const arc = (d) => <path d={d} fill="none" stroke={INK} strokeWidth="10" strokeLinecap="round" />;
-  if (blinking && emotion !== "relieved" && emotion !== "happy") {
-    return <g>{[EYE_L, EYE_R].map(x => <line key={x} x1={x - 13} y1={EYE_Y + 6} x2={x + 13} y2={EYE_Y + 6} stroke={INK} strokeWidth="9" strokeLinecap="round" />)}</g>;
-  }
-  switch (emotion) {
-    case "happy": return <g>{[EYE_L, EYE_R].map(x => <g key={x}>{arc(`M${x - 17} ${EYE_Y + 10} Q${x} ${EYE_Y - 16} ${x + 17} ${EYE_Y + 10}`)}</g>)}</g>;
-    case "relieved": return <g>{[EYE_L, EYE_R].map(x => <g key={x}>{arc(`M${x - 17} ${EYE_Y} Q${x} ${EYE_Y + 18} ${x + 17} ${EYE_Y}`)}</g>)}</g>;
-    case "crying": return <g>{[EYE_L, EYE_R].map(x => <g key={x}>{arc(`M${x - 17} ${EYE_Y + 8} Q${x} ${EYE_Y - 10} ${x + 17} ${EYE_Y + 8}`)}</g>)}</g>;
-    case "angry": return (
-      <g>
-        <rect x={EYE_L - 9} y={EYE_Y - 12} width="18" height="32" rx="9" {...ink} transform={`rotate(12 ${EYE_L} ${EYE_Y})`} />
-        <rect x={EYE_R - 9} y={EYE_Y - 12} width="18" height="32" rx="9" {...ink} transform={`rotate(-12 ${EYE_R} ${EYE_Y})`} />
-      </g>
-    );
-    case "surprised": return <g>{[EYE_L, EYE_R].map(x => <circle key={x} cx={x} cy={EYE_Y} r="13" {...ink} />)}</g>;
-    case "scared": {
-      // Wide white eyes with tiny darting pupils
-      const dart = Math.sin(frame * 0.9 + phase) * 4;
-      return (
-        <g>{[EYE_L, EYE_R].map(x => (
-          <g key={x}>
-            <ellipse cx={x} cy={EYE_Y} rx="21" ry="25" fill="#fff" stroke={INK} strokeWidth="6" />
-            <circle cx={x + 4 + dart} cy={EYE_Y + 2} r="7" {...ink} />
-          </g>
-        ))}</g>
-      );
+// Eye outline as a polygon: an ellipse, optionally cut by a lid line (keeps the part below it)
+function eyeGeometry(cx, cy, rx, ry, inner, cut) {
+  const P = [];
+  for (let i = 0; i < 48; i++) { const t = (2 * Math.PI * i) / 48; P.push([cx + Math.cos(t) * rx, cy + Math.sin(t) * ry]); }
+  const fmt = (pts) => `M${pts.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L")}Z`;
+  if (!cut) return { d: fmt(P), lid: null };
+  const xi = cx + inner * rx, xo = cx - inner * rx;
+  const yi = cy + cut[0] * ry, yo = cy + cut[1] * ry;
+  const lineY = (x) => yi + (yo - yi) * ((x - xi) / (xo - xi));
+  const out = [], hits = [];
+  for (let i = 0; i < P.length; i++) {
+    const p = P[i], q = P[(i + 1) % P.length];
+    const dp = p[1] - lineY(p[0]), dq = q[1] - lineY(q[0]);
+    if (dp >= 0) out.push(p);
+    if ((dp >= 0) !== (dq >= 0)) {
+      const k = dp / (dp - dq);
+      const h = [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
+      out.push(h); hits.push(h);
     }
-    case "smug": return (
-      // Half-closed: flat top lids
-      <g>{[EYE_L, EYE_R].map(x => (
-        <g key={x}>
-          <rect x={x - 10} y={EYE_Y - 2} width="20" height="20" rx="8" {...ink} />
-          <line x1={x - 16} y1={EYE_Y - 2} x2={x + 16} y2={EYE_Y - 4} stroke={INK} strokeWidth="7" strokeLinecap="round" />
-        </g>
-      ))}</g>
-    );
-    case "worried": return <g>{[EYE_L, EYE_R].map(x => <rect key={x} x={x - 8} y={EYE_Y - 14} width="16" height="32" rx="8" {...ink} />)}</g>;
-    default: return (
-      <g>{[EYE_L, EYE_R].map(x => (
-        <g key={x}>
-          <rect x={x - 9} y={EYE_Y - 18} width="18" height="38" rx="9" {...ink} />
-          <circle cx={x + 3} cy={EYE_Y - 8} r="3.6" fill="#fff" />
-        </g>
-      ))}</g>
-    );
   }
+  return { d: fmt(out), lid: hits.length === 2 ? hits : null };
+}
+
+function Eyes({ emotion, blinking, frame, phase, who }) {
+  const arc = (d) => <path d={d} fill="none" stroke={INK} strokeWidth="9" strokeLinecap="round" />;
+  if (blinking && emotion !== "relieved" && emotion !== "happy") {
+    return <g>{[EYE_L, EYE_R].map(x => <path key={x} d={`M${x - 24} ${EYE_Y + 4} Q${x} ${EYE_Y + 14} ${x + 24} ${EYE_Y + 4}`} fill="none" stroke={INK} strokeWidth="8" strokeLinecap="round" />)}</g>;
+  }
+  if (emotion === "happy") return <g>{[EYE_L, EYE_R].map(x => <g key={x}>{arc(`M${x - 22} ${EYE_Y + 10} Q${x} ${EYE_Y - 20} ${x + 22} ${EYE_Y + 10}`)}</g>)}</g>;
+  if (emotion === "relieved") return <g>{[EYE_L, EYE_R].map(x => <g key={x}>{arc(`M${x - 22} ${EYE_Y} Q${x} ${EYE_Y + 20} ${x + 22} ${EYE_Y}`)}</g>)}</g>;
+  const [rx, ry, pr, drop, cut] = EYE_SHAPES[emotion] || EYE_SHAPES.neutral;
+  // Scared pupils dart around; otherwise they look a little toward the facing side
+  const dart = emotion === "scared" ? Math.sin(frame * 0.9 + phase) * 5 : 0;
+  return (
+    <g>
+      {[EYE_L, EYE_R].map((x, i) => {
+        const inner = i === 0 ? 1 : -1;
+        const { d, lid } = eyeGeometry(x, EYE_Y, rx, ry, inner, cut);
+        const id = `eye-${who}-${i}`;
+        const px = x + 6 + dart, py = EYE_Y + drop;
+        return (
+          <g key={x}>
+            <clipPath id={id}><path d={d} /></clipPath>
+            <path d={d} fill="#fff" />
+            <g clipPath={`url(#${id})`}>
+              <circle cx={px} cy={py} r={pr} fill={INK} />
+              <circle cx={px + pr * 0.35} cy={py - pr * 0.4} r={Math.max(3, pr * 0.3)} fill="#fff" />
+              {emotion === "crying" && <ellipse cx={x} cy={EYE_Y + ry * 0.85} rx={rx} ry={ry * 0.5} fill="#8FD3FF" opacity="0.75" />}
+            </g>
+            <path d={d} fill="none" stroke={INK} strokeWidth="5.5" strokeLinejoin="round" />
+            {lid && <path d={`M${lid[0][0]} ${lid[0][1]} L${lid[1][0]} ${lid[1][1]}`} stroke={INK} strokeWidth="8" strokeLinecap="round" />}
+          </g>
+        );
+      })}
+    </g>
+  );
 }
 
 function Brows({ emotion, lift }) {
   const [inner, outer] = BROW[emotion] || BROW.neutral;
-  const y = EYE_Y - 46 + lift;
-  const common = { stroke: INK, strokeWidth: emotion === "angry" ? 13 : 10, strokeLinecap: "round" };
+  const y = EYE_Y - 60 + lift;
+  const common = { stroke: INK, strokeWidth: emotion === "angry" ? 11 : 9, strokeLinecap: "round" };
   if (emotion === "smug") {
     return (
       <g>
@@ -212,7 +231,7 @@ function Brows({ emotion, lift }) {
 
 const MX = 214, MY = 292;
 function ClosedMouth({ emotion }) {
-  const common = { fill: "none", stroke: INK, strokeWidth: 8, strokeLinecap: "round" };
+  const common = { fill: "none", stroke: INK, strokeWidth: 7, strokeLinecap: "round" };
   switch (emotion) {
     case "happy": return <path d={`M${MX - 26} ${MY - 6} Q${MX} ${MY + 22} ${MX + 26} ${MY - 6}`} {...common} />;
     case "relieved": return <path d={`M${MX - 22} ${MY - 2} Q${MX} ${MY + 14} ${MX + 22} ${MY - 2}`} {...common} />;
@@ -252,7 +271,7 @@ function OpenMouth({ emotion, open }) {
 
 // Slim body layout (SVG units, 400 x 900, feet at ~850). The face artwork is drawn at its original
 // size (head centre 200,210, radius 150) and scaled down onto the neck.
-const HEAD_SCALE = 0.66;
+const HEAD_SCALE = 0.72;
 const HEAD_Y = 150;
 const SIT_DROP = 150; // how much lower the upper body sits when seated
 
@@ -260,7 +279,7 @@ function Limb({ points, color, width }) {
   const d = `M${points.map(p => p.join(" ")).join(" L")}`;
   return (
     <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-      <path d={d} stroke={INK} strokeWidth={width + 10} />
+      <path d={d} stroke={INK} strokeWidth={width + 7} />
       <path d={d} stroke={color} strokeWidth={width} />
     </g>
   );
@@ -274,7 +293,8 @@ function Limb({ points, color, width }) {
  *   listening: someone else is talking - occasional small nods
  */
 export function Character({ who, frame, talk, emotion, hooded = false, gesture = talk, pose = null, prevPose = null,
-  poseK = 1, voice = null, listening = false, seated = false, desk = false, lookOverride = null }) {
+  poseK = 1, voice = null, listening = false, seated = false, desk = false, lookOverride = null,
+  walk = 0, walkPhase = 0, since = 9 }) {
   // A series can tweak a character's look (skin, hair, clothes colours) without changing the design
   const look = lookOverride ? { ...LOOKS[who], ...lookOverride } : LOOKS[who];
   const phase = PHASE[who] || 0;
@@ -282,11 +302,31 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   const level = talk > 0.05 ? (voice ?? 0.5 + 0.3 * Math.sin(frame * 0.9 + phase)) : 0;
 
   // Calm, natural idle: a slow breath and a gentle weight shift - no bobbing
-  const breath = Math.sin(frame / 38 + phase) * 2;
+  let breath = Math.sin(frame / 38 + phase) * 2;
   // Fear: a small fast tremble on top of the weight shift
   const tremble = emotion === "scared" ? Math.sin(frame * 2.7 + phase) * 2.5 : 0;
   const shift = (seated ? 0 : Math.sin(frame / 90 + phase) * 5) + tremble;
   const drop = seated ? SIT_DROP : 0;
+
+  // Body language when a new line starts for this character (since = seconds into it):
+  // a hop of surprise, a step back in fear, leaning in when angry, slumping when crying or relieved
+  const ease = (k) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
+  const bump = since >= 0 && since < 0.4 ? Math.sin(Math.PI * (since / 0.4)) : 0;
+  let lean = 0, hop = 0, step = 0, sink = 0;
+  if (!seated) {
+    if (emotion === "surprised") hop = bump * 34;
+    if (emotion === "happy") hop = bump * 16;
+    if (emotion === "scared") { lean = -4 * ease(since / 0.3); step = -24 * ease(since / 0.3); }
+    if (emotion === "angry") { lean = 4 * ease(since / 0.3); step = 18 * ease(since / 0.3); }
+    if (emotion === "crying") { lean = 3; sink = 6 + Math.sin(frame * 0.45 + phase) * 3; }
+    if (emotion === "relieved") sink = 12 * Math.sin(Math.PI * Math.min(1, Math.max(0, since) / 0.9));
+    if (emotion === "worried") lean = Math.sin(frame / 20 + phase) * 1.2;
+  }
+  // Walking: legs and arms swing, the body bobs (walk = 0..1 how much, walkPhase advances with time)
+  const swing = Math.sin(walkPhase) * walk;
+  const walkBob = Math.abs(Math.cos(walkPhase)) * 8 * walk;
+  hop += walkBob;
+  breath += sink;
 
   // Head: still most of the time; small emphasis on loud words, small nods while listening
   const emphasis = talk * level * Math.sin(frame * 0.18 + phase) * 3;
@@ -306,8 +346,12 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   const poseName = pose || (emotion === "worried" ? "worried" : "neutral");
   const P = POSES[poseName] || POSES.neutral;
   const Q = POSES[prevPose] || P;
-  const backAngles = lerpArm(Q.back, P.back, poseK);
+  let backAngles = lerpArm(Q.back, P.back, poseK);
   let frontAngles = lerpArm(Q.front, P.front, poseK);
+  if (walk > 0) {
+    backAngles = lerpArm(backAngles, [-swing * 30, -swing * 30 + 14], walk);
+    frontAngles = lerpArm(frontAngles, [swing * 30, swing * 30 + 14], walk);
+  }
   let frontHand = poseK < 0.5 ? (Q.hands || P.hands)[1] : P.hands[1];
   const backHand = poseK < 0.5 ? (Q.hands || P.hands)[0] : P.hands[0];
   if (!P.noGesture) {
@@ -341,10 +385,13 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   const hips = [[180 + shift, hipY], [220 + shift, hipY]];
   const legs = seated
     ? hips.map(([x, y], i) => [[x, y], [x + 120, y + 8], [x + 110 + i * 10, 845]])
-    : [
-        [hips[0], [176 + shift * 0.5, 690], [172, 845]],
-        [hips[1], [226 + shift * 0.5, 690], [230, 845]],
-      ];
+    : [0, 1].map(i => {
+        // Standing: feet planted. Walking: one foot swings forward and lifts while the other pushes back
+        const dir = i === 0 ? 1 : -1;
+        const footX = (i === 0 ? 172 : 230) + dir * swing * 58;
+        const lift = Math.max(0, dir * Math.cos(walkPhase)) * 26 * walk;
+        return [hips[i], [(i === 0 ? 176 : 226) + shift * 0.5 + dir * swing * 30 + lift * 0.6, 690 - lift * 0.4], [footX, 845 - lift]];
+      });
 
   const torsoTop = 262 + drop + breath;
   const tY = (y) => y + drop + breath; // shift torso details with the body
@@ -352,7 +399,8 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
 
   return (
     <svg viewBox="0 0 400 900" width="100%" height="100%" style={{ overflow: "visible" }}>
-      <ellipse cx="200" cy="858" rx="110" ry="16" fill="rgba(0,0,0,0.25)" />
+      <ellipse cx={200 + step} cy="858" rx={110 - hop * 0.8} ry="16" fill="rgba(0,0,0,0.25)" />
+      <g transform={`translate(${step} ${-hop}) rotate(${lean} 200 850)`}>
       {seated && (
         <g stroke={INK} strokeWidth="6" strokeLinejoin="round">
           {/* office chair */}
@@ -367,7 +415,6 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
       {look.bottom === "skirt" && !seated ? (
         <g>
           <path d={`M${150 + shift} ${hipY - 30} L${250 + shift} ${hipY - 30} L282 840 L118 840 Z`} fill={look.pants} stroke={INK} strokeWidth="6" strokeLinejoin="round" />
-          <path d={`M${150 + shift} ${hipY - 30} L${178 + shift} ${hipY - 30} L156 840 L118 840 Z`} fill={SHADE} />
         </g>
       ) : (
         legs.map((pts, i) => <Limb key={i} points={pts} color={hooded ? CLOAK : look.pants} width={30} />)
@@ -389,7 +436,6 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
         )}
         <rect x="142" y={torsoTop} width="116" height={torsoH} rx="46" fill={look.shirt} stroke={INK} strokeWidth="6" />
         {/* cel shadow: back half of the torso */}
-        <rect x="147" y={torsoTop + 6} width="44" height={torsoH - 12} rx="22" fill={SHADE} />
         {look.top === "hoodie" && (
           <g>
             <rect x="166" y={tY(436)} width="68" height="44" rx="12" fill={look.shirtDark} stroke={INK} strokeWidth="4" />
@@ -452,19 +498,17 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
       {frontArmEl}
       {/* neck + head */}
       <rect x={188 + shift} y={HEAD_Y + 70 + drop + breath} width="24" height="56" fill={skin} stroke={INK} strokeWidth="5" />
-      <rect x={190 + shift} y={HEAD_Y + 74 + drop + breath} width="20" height="20" fill={SHADE} />
       <g transform={`translate(${200 + shift} ${HEAD_Y + drop + breath + nod}) rotate(${headTilt}) scale(${HEAD_SCALE}) translate(-200 -210)`}>
-        {look.bun && <circle cx="196" cy="54" r="52" fill={look.hair} stroke={INK} strokeWidth="9" />}
-        <circle cx="200" cy="210" r="150" fill={skin} stroke={INK} strokeWidth="10" />
+        {look.bun && <circle cx="196" cy="54" r="52" fill={look.hair} stroke={INK} strokeWidth="7" />}
+        <circle cx="200" cy="210" r="150" fill={skin} stroke={INK} strokeWidth="7.5" />
         {/* cel shadow on the back of the head */}
-        <path d="M118 84 C66 118 46 180 54 236 C62 296 104 344 158 356 C108 316 94 256 98 204 C102 152 112 112 118 84 Z" fill={SHADE} />
         {emotion === "angry" && <ellipse cx="210" cy="200" rx="120" ry="60" fill="#ff2a1a" opacity={0.2 + 0.06 * Math.sin(frame * 0.3)} />}
         {/* fear drains the colour from the lower face (lighter on darker skin so it doesn't look grey) */}
-        {emotion === "scared" && <ellipse cx="210" cy="276" rx="124" ry="70" fill="rgb(150,185,255)" opacity={parseInt(skin.slice(1, 3), 16) > 200 ? 0.28 : 0.12} />}
-        <path d={look.hairPath} fill={look.hair} stroke={INK} strokeWidth="9" strokeLinejoin="round" />
+        {emotion === "scared" && <ellipse cx="210" cy="276" rx="124" ry="70" fill="rgb(150,185,255)" opacity={parseInt(skin.slice(1, 3), 16) > 200 ? 0.14 : 0.07} />}
+        <path d={look.hairPath} fill={look.hair} stroke={INK} strokeWidth="7" strokeLinejoin="round" />
         <path d="M110 96 Q170 66 236 72" fill="none" stroke="#fff" strokeOpacity="0.18" strokeWidth="10" strokeLinecap="round" />
         {look.cap && (
-          <g stroke={INK} strokeWidth="9" strokeLinejoin="round">
+          <g stroke={INK} strokeWidth="7" strokeLinejoin="round">
             <path d="M56 170 Q62 34 200 32 Q338 34 344 170 Q200 142 56 170 Z" fill={look.cap} />
             <path d="M290 150 Q394 144 428 176 Q362 188 296 176 Z" fill={look.cap} />
             <path d="M200 34 L200 150" stroke="rgba(0,0,0,0.3)" strokeWidth="5" />
@@ -472,7 +516,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
           </g>
         )}
         <g transform={`translate(0 ${browLift})`}><Brows emotion={emotion} lift={0} /></g>
-        <Eyes emotion={emotion} blinking={blinking} frame={frame} phase={phase} />
+        <Eyes emotion={emotion} blinking={blinking} frame={frame} phase={phase} who={who} />
         {look.glasses && (
           <g fill="none" stroke={INK} strokeWidth="8">
             <circle cx={EYE_L} cy={EYE_Y} r="40" />
@@ -537,6 +581,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
         )}
       </g>
       {backPlace === "head" && backArmEl}
+      </g>
     </svg>
   );
 }

@@ -24,6 +24,7 @@ module.exports = {
   parts: [
     {
       title: "Ten Minutes",
+      recap: "Every day at 5 PM, the lift traps Ryan with Derek, the man who stole his promotion. And a voice gives them orders.",
       hook: "Day 1: Stuck in a lift with *my worst enemy*",
       choice: { question: "What would you do?", a: "Confess something first", b: "Make Derek confess" },
       segments: [
@@ -40,6 +41,7 @@ module.exports = {
     },
     {
       title: "Give Something Up",
+      recap: "Ryan tried to avoid the lift. At 5 PM he was trapped with Derek again. One of them had to give something up.",
       follows: "b",
       hook: "Day 2: 5 PM. *Same lift. Same enemy.*",
       choice: { question: "What would you do?", a: "Offer to quit your job", b: "Give Derek your big project" },
@@ -68,6 +70,7 @@ module.exports = {
     },
     {
       title: "Thirty Years",
+      recap: "Gus the janitor said the lift has trapped two enemies at a time for thirty years.",
       follows: "a",
       hook: "Day 3: That lift has stopped *for thirty years*",
       choice: { question: "What would you do?", a: "Ignore the lift's next order", b: "Find who is behind the speaker" },
@@ -85,7 +88,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("radio", false, ["A", "D"], [
+        seg("controlroom", false, ["A", "D"], [
           N("Day 3. Ryan found Gus, the old janitor, in the basement control room.", { focus: "D", emotion: "neutral" }),
           L("D", "scared", "That lift's been stopping for thirty years. Always two people. Always enemies."),
           N("And what happens if they don't do what it says?", { focus: "A", emotion: "worried" }),
@@ -95,6 +98,7 @@ module.exports = {
     },
     {
       title: "Why You Hate Him",
+      recap: "Ryan told Derek why he hates him. Then Derek said his dad is in hospital, and he works two jobs to pay for it.",
       follows: "a",
       hook: "Day 4: The lift asked *why he really hates him*",
       choice: { question: "What would you do?", a: "Help Derek", b: "Use his secret against him" },
@@ -105,7 +109,7 @@ module.exports = {
         ]),
       ],
       ifB: [
-        seg("radio", false, ["A"], [
+        seg("controlroom", false, ["A"], [
           N("Ryan searched the control room for a microphone.", { focus: "A", emotion: "worried" }),
           N("Nothing. Just dust. Nobody had touched it in years.", { focus: "A", emotion: "scared" }),
         ]),
@@ -121,6 +125,7 @@ module.exports = {
     },
     {
       title: "Who Gets Fired",
+      recap: "The voice said one of them will be fired tomorrow. And they have to choose who.",
       follows: "a",
       hook: "Day 5: The lift said *one of them gets fired*",
       choice: { question: "What would you do?", a: "Choose yourself", b: "Choose Derek" },
@@ -145,6 +150,7 @@ module.exports = {
     },
     {
       title: "1995",
+      recap: "Ryan found a newspaper from 1995. Two coworkers, a fire in this lift, and only Gus came out.",
       follows: "b",
       hook: "Day 6: An old newspaper. *Two enemies. One lift. One survivor.*",
       choice: { question: "What would you do?", a: "Ask Gus about 1995", b: "Search the old building records" },
@@ -162,7 +168,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("radio", false, ["A"], [
+        seg("controlroom", false, ["A"], [
           N("Day 6. In the janitor's room, Ryan found a yellow newspaper from 1995.", { focus: "A", emotion: "surprised" }),
           N("Two coworkers trapped in this building's lift. A fire. Only one came out.", { focus: "A", emotion: "scared" }),
           N("The survivor's photo was Gus.", { focus: "A", emotion: "scared", fx: "shake" }),
@@ -171,11 +177,12 @@ module.exports = {
     },
     {
       title: "Hello, Old Friend",
+      recap: "The lift's voice asked for Gus by name.",
       follows: "a",
       hook: "Day 7: The voice in the lift *asked for Gus*",
       choice: { question: "What would you do?", a: "Bring Gus into the lift", b: "Keep Gus away, it could be a trap" },
       ifA: [
-        seg("radio", false, ["A", "D"], [
+        seg("controlroom", false, ["A", "D"], [
           N("Gus sat down slowly. His hands were shaking.", { focus: "D", emotion: "crying" }),
           L("D", "crying", "His name was Tom. We hated each other. I got out. He didn't."),
         ]),
@@ -195,6 +202,7 @@ module.exports = {
     },
     {
       title: "Two Days Left",
+      recap: "The voice said: two days left. Then the lift stops forever.",
       follows: "a",
       hook: "Day 8: *Two days left.* Then the lift stops forever.",
       choice: { question: "What would you do?", a: "Shut the lift down for good", b: "Ride it one more time and end this" },
@@ -220,11 +228,12 @@ module.exports = {
     },
     {
       title: "Sorry",
+      recap: "Gus said sorry to the voice, his old friend Tom. Then the voice said: now it's Ryan and Derek's turn.",
       follows: "b",
       hook: "Day 9: Thirty years late, *someone finally said sorry*",
       choice: { question: "What would you do?", a: "Forgive Derek for everything", b: "Tell Derek you still can't trust him" },
       ifA: [
-        seg("radio", false, ["A", "D"], [
+        seg("controlroom", false, ["A", "D"], [
           N("Ryan went to cut the power. Gus stopped him.", { focus: "D", emotion: "worried" }),
           L("D", "worried", "If you shut it down, he never gets to finish."),
         ]),
@@ -261,7 +270,7 @@ module.exports = {
         ]),
       ],
       segments: [
-        seg("radio", false, ["A", "D"], [
+        seg("controlroom", false, ["A", "D"], [
           N("Day 10. Ryan went down to the control room one last time.", { focus: "A", emotion: "neutral" }),
           N("Behind a loose panel: a microphone. A tape player. And Gus's old jacket.", { focus: "A", emotion: "surprised", fx: "shake" }),
           L("D", "worried", "I play Tom's voice. Two enemies a year. So no one ends up like us."),
