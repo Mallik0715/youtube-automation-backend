@@ -84,3 +84,10 @@ ol.queue li::before { counter-increment: q; content: counter(q); color: var(--mu
 .choice .a { color: var(--a); }
 .choice .b { color: var(--b); }
 code { background: #252a37; padding: 1px 5px; border-radius: 4px; }
+
+.hint { color: #9aa3b5; font-size: 13px; align-self: end; padding-bottom: 10px; }
+.cast { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cast-card { background: #1b1e27; border: 1px solid #2c3140; border-radius: 10px; padding: 8px 10px; max-width: 230px; font-size: 13px; }
+.cast-card .code { color: #ffcc33; font-size: 11px; margin-left: 4px; }
+.cast-card .role { color: #c3c6d4; margin-top: 2px; }
+.cast-card .look { color: #8d95a8; margin-top: 4px; font-size: 12px; }

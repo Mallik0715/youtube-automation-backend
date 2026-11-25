@@ -417,7 +417,7 @@ function CashRain({ a }) {
  */
 export function Prop({ name, at, until, t, frame, fps, x, y, size = 330, held = false }) {
   // Animals and planes move into the scene itself instead of popping up in a bubble
-  if (MOVER_NAMES.includes(name)) return <Creature name={name} at={at} until={until} t={t} />;
+  if (MOVER_NAMES.includes(name)) return held ? null : <Creature name={name} at={at} until={until} t={t} />;
   const draw = DRAW[name];
   if (!draw || t < at || t > until + 0.25) return null;
   const pop = spring({ frame: frame - Math.round(at * fps), fps, config: { damping: 9, stiffness: 190 } });

@@ -9,6 +9,7 @@
 const chat = (...args) => require("./groqClient").chat(...args);
 const { parseLLMJson } = require("./jsonHelper");
 const { validateSeries, SCENES, CHARACTERS, EMOTIONS, SFX } = require("./seriesValidator");
+const { buildLook, SPEC_HELP } = require("./characterBuilder");
 
 // What each character looks like on screen (remotion/Character.jsx). Names can change per story - the
 // narrator says the names, the picture only knows the look.
@@ -23,7 +24,7 @@ const CAST = {
 
 const SCENE_HINTS = {
   office: "office", street: "city street", home: "living room", cafe: "cafe", park: "park", gate: "old iron gate",
-  village: "village street", room: "bedroom / guest room", well: "old well", tunnel: "tunnel", temple: "ancient temple",
+  village: "old village street at night: cottages, a bell tower, lanterns (fog and the bell show when mentioned)", room: "bedroom / guest room", well: "old well", tunnel: "tunnel", temple: "ancient temple",
   museum: "museum hall", forest: "forest", cabin: "wooden cabin", cave: "cave", shore: "beach", lighthouse: "lighthouse room",
   deck: "boat deck", desert: "desert", radio: "radio station", train: "train carriage", snow: "snowy mountain",
   icecave: "ice cave", underwater: "underwater", meeting: "meeting room / bank office",
@@ -71,16 +72,18 @@ Very short, punchy sentences - like "He counted it twice. It was real." Concrete
 Every part ends on a cliffhanger that forces a real dilemma - two options a viewer could genuinely argue about.
 VIEWERS DECIDE: the option with the most comment votes is what happens next, so both options must lead somewhere interesting.`;
 
-async function writeOutline({ mode, title, story, heroCode, parts, notes }, onLog) {
+async function writeOutline({ mode, title, story, parts, notes }, onLog) {
   const system = `You plan viral "What would you do?" story series for YouTube Shorts. A narrator tells the story while cartoon characters act it out.
 ${STYLE}
-On-screen characters (the ONLY people who can appear; use 2-4 of them):
-${Object.entries(CAST).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
-Pick names that fit the story (you may keep the default names). Match gender to the look.
+DESIGN THE CAST from the story: 2-6 people who appear on screen. Give each a code (A, B, C, D, E, F - in that order),
+a name, their role, and how they look - pick age, hair, clothes and colours that fit who they are, and make the
+characters easy to tell apart (different hair and clothes colours). A child must be "age": "child".
+Each character's ${SPEC_HELP}
 Return JSON only:
 {"title": "series title, max 40 chars",
  "description": "1-2 sentence teaser for the YouTube description",
- "characters": [{"code": "B", "name": "Leo", "role": "who they are in this story"}],
+ "hero": "the code of the main character",
+ "characters": [{"code": "A", "name": "Milo", "role": "who they are in this story", "look": {...}}],
  "hashtags": ["#shorts", "#whatwouldyoudo", 3 more],
  "tags": [5 search phrases],
  "parts": [{"title": "2-4 words",
@@ -93,7 +96,7 @@ Return JSON only:
    "default": "a or b: which option to use if nobody votes (null for part 1)"}]}
 Rules: exactly ${parts} parts. The beats must make sense whichever option won last time - the consequences of each option go in ifA / ifB, and the beats continue from there without depending on which one happened.
 ${isDaySeries(title) ? 'This is a "Day 1 of..." series: part N is Day N. Every part\'s beats start with "Day N." and every hook starts with "Day N:".' : ""}
-The hero is character ${heroCode}. The last part ends on a final twist and one last big choice.`;
+The last part ends on a final twist and one last big choice.`;
 
   const user = mode === "story"
     ? `Series title: ${title}\n\nThe creator's story is below. Keep THEIR events, characters and order - do not change what happens. You may split it into ${parts} parts, add cliffhangers, small connecting details and the A/B dilemmas. Map their people onto the on-screen characters (keep their names).\n\nSTORY:\n${story}${notes ? `\n\nExtra notes: ${notes}` : ""}`
@@ -208,13 +211,20 @@ function cleanChoice(c = {}) {
  */
 async function writeSeries(input, onLog = () => {}) {
   const parts = Math.max(1, Math.min(10, parseInt(input.parts, 10) || 10));
-  const heroCode = CHARACTERS.includes(input.hero) ? input.hero : "B";
   if (!input.title?.trim()) throw new Error("a title is needed");
   if (input.mode === "story" && (input.story || "").trim().split(/\s+/).length < 40) throw new Error("the story is too short - write at least a few sentences");
 
   onLog(`📝 Planning ${parts} parts with ${PROVIDER() === "gemini" ? "Gemini" : "Groq"}...`);
-  const outline = await writeOutline({ ...input, parts, heroCode }, onLog);
-  if (!Array.isArray(outline.characters) || !outline.characters.length) outline.characters = [{ code: heroCode, name: "the hero", role: "hero" }];
+  const outline = await writeOutline({ ...input, parts }, onLog);
+  // The AI designed the cast: keep valid, distinct codes (A-F) and turn each description into a drawable look
+  const seen = new Set();
+  outline.characters = (Array.isArray(outline.characters) ? outline.characters : [])
+    .map((c, i) => ({ ...c, code: CHARACTERS.includes(c.code) && !seen.has(c.code) ? c.code : CHARACTERS.find(k => !seen.has(k)) }))
+    .filter(c => c.code && !seen.has(c.code) && seen.add(c.code))
+    .slice(0, CHARACTERS.length);
+  if (!outline.characters.length) outline.characters = [{ code: "A", name: "the hero", role: "hero", look: {} }];
+  const heroCode = outline.characters.some(c => c.code === outline.hero) ? outline.hero
+    : CHARACTERS.includes(input.hero) && outline.characters.some(c => c.code === input.hero) ? input.hero : outline.characters[0].code;
   const hero = outline.characters.find(c => c.code === heroCode)?.name || "the hero";
   onLog(`✅ Outline: "${outline.title}" - ${outline.characters.map(c => `${c.name} (${c.code})`).join(", ")}`);
 
@@ -238,6 +248,9 @@ async function writeSeries(input, onLog = () => {}) {
     tags: (outline.tags || []).slice(0, 8),
     description: outline.description || "",
     characters: outline.characters,
+    // The story's own cast: names and looks drawn from the AI's descriptions (services/characterBuilder.js)
+    names: Object.fromEntries(outline.characters.map(c => [c.code, c.name])),
+    looks: Object.fromEntries(outline.characters.map(c => [c.code, buildLook(c.look || {}, c.name)])),
     generated: { mode: input.mode, from: input.title, at: new Date().toISOString() },
     parts: written,
   };

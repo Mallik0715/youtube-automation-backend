@@ -6,6 +6,8 @@
 
 const DETAILS = [
   ["storm", /\b(storms?|thunder|lightning|hurricane)\b/i],
+  ["fog", /\b(fog|foggy|mist|misty|haze)\b/i],
+  ["bell", /\b(bells?|rang|rings|ringing|chimed?)\b/i],
   ["rain", /\b(rain|raining|rained|downpour)\b/i],
   ["ship", /\b(ships?|coast guard|on the horizon)\b/i],
   ["boat", /\b(a boat|boat, far|far out at sea|a motor)\b/i],
@@ -33,8 +35,14 @@ const LIGHT = [
 
 const textOf = (seg) => (seg.lines || []).map(l => l.text || l.card || "").join(" ");
 
+// "the fog lifted" / "the storm passed": mentioned, but gone
+const GONE = {
+  fog: /\b(fog|mist)\s+(lifted|cleared|was gone|had gone|disappeared|faded)\b/i,
+  storm: /\bstorm\s+(passed|ended|was over|stopped)\b/i,
+};
+
 function detailsFor(text) {
-  return DETAILS.filter(([, re]) => re.test(text)).map(([k]) => k);
+  return DETAILS.filter(([k, re]) => re.test(text) && !(GONE[k] && GONE[k].test(text))).map(([k]) => k);
 }
 
 /** Details that earlier parts already established for each place, e.g. { island: ["shelter"] } */
@@ -67,8 +75,8 @@ function segmentDetails(seg, sticky, partSegments = []) {
 //   in   - walks into the shot ("walked in", "came over", "arrived")
 //   pace - walks / runs on (a tracking shot in close-up): "followed", "ran", "climbed", "walked"
 const MOVES = [
-  ["out", /\b(walked away|walked out|walked off|ran away|ran off|ran out|stormed out|turned and left|left without|he left|she left|walked back)\b/i],
-  ["in", /\b(walked in|walked into|walked over|walked up|came in|came over|came back|stepped in|stepped inside|stepped out|ran in|ran over|ran up|ran to|arrived|burst in|walked to|went back to)\b/i],
+  ["out", /\b(walked away|walked out|walked off|ran away|ran off|ran out|stormed out|turned and left|left without|he left|she left)\b/i],
+  ["in", /\b(walked back into|walked back in|walked in|walked into|walked over|walked up|came in|came over|came back|stepped in|stepped inside|stepped out|ran in|ran over|ran up|ran to|arrived|burst in|walked to|went back to)\b/i],
   ["pace", /\b(walked|walking|ran|running|followed|following|paced|climbed|hurried|rushed|raced|crept|went to|went alone)\b/i],
 ];
 const RUNNING = /\b(ran|running|rushed|raced|sprinted|hurried|ran for)\b/i;

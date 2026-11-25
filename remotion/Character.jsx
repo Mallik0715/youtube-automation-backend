@@ -41,6 +41,37 @@ export const LOOKS = {
   },
 };
 
+
+// Hair styles for characters built per story (services/characterBuilder.js). Head space: centre 200,210,
+// radius 150, facing right. "back" is drawn behind the head (long hair, ponytail, headscarf).
+const HAIR_STYLES = {
+  spiky: { front: LOOKS.A.hairPath },
+  sidepart: { front: LOOKS.B.hairPath },
+  bun: { front: LOOKS.C.hairPath },
+  short: { front: LOOKS.D.hairPath },
+  curly: { front: LOOKS.E.hairPath },
+  slick: { front: LOOKS.F.hairPath },
+  messy: { front: "M54 200 Q40 90 120 64 Q150 30 200 40 Q250 24 290 60 Q360 90 348 196 Q330 140 280 122 L262 150 L240 118 L214 146 L196 112 L170 140 L150 112 L124 146 Q80 150 54 200 Z" },
+  buzz: { front: "M56 190 Q56 60 200 56 Q344 60 344 190 Q330 120 200 110 Q70 120 56 190 Z" },
+  long: {
+    back: "M50 180 Q40 40 200 36 Q360 40 352 180 L366 430 Q330 452 296 420 L292 300 L108 300 L104 420 Q70 452 34 430 Z",
+    front: "M52 200 Q38 64 196 50 Q356 52 350 196 Q330 110 240 96 Q180 130 110 128 Q74 140 52 200 Z",
+  },
+  ponytail: {
+    back: "M86 140 Q-6 150 4 290 Q14 370 62 352 Q40 270 104 196 Z",
+    front: "M58 198 Q50 66 190 52 Q332 48 346 188 Q330 116 260 100 Q170 92 118 128 Q78 148 58 198 Z",
+  },
+  bob: {
+    back: "M40 200 Q30 40 200 36 Q370 40 360 200 L362 300 Q330 318 300 300 L100 300 Q70 318 38 300 Z",
+    front: "M50 190 Q44 56 200 48 Q356 56 350 190 Q330 140 300 134 L100 134 Q70 140 50 190 Z",
+  },
+  bald: { front: "M52 236 Q50 170 76 148 Q86 200 82 250 Z M348 236 Q350 170 324 148 Q314 200 318 250 Z" },
+  hijab: {
+    back: "M26 236 Q16 34 200 26 Q384 34 374 236 L384 430 Q200 470 16 430 Z",
+    front: "M60 214 Q52 72 200 62 Q348 72 340 214 Q330 124 200 114 Q70 124 60 214 Z",
+  },
+};
+
 const CLOAK = "#1E1E28";
 
 // Body poses as arm angles: [upper arm, forearm] in degrees from straight down, positive = toward the
@@ -378,7 +409,7 @@ export const HELD = {
 
 // The fingers that wrap round a held thing, drawn on top of it (thumb on the near side)
 function Grip({ skin, style }) {
-  if (style === "carry") {
+  if (style === "carry" || style === "hug") {
     return (
       <g>
         <rect x="-17" y="-26" width="34" height="34" rx="12" fill={INK} />
@@ -401,8 +432,29 @@ function Grip({ skin, style }) {
   );
 }
 
+// A small dog held in the arms (head toward the facing side, tail wagging)
+HELD.dog = (a) => {
+  const wag = Math.sin(a * 14) * 14;
+  return (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <path d={`M-58 -6 Q${-80 - wag * 0.3} ${-30 - wag} ${-74 - wag * 0.4} -44`} fill="none" stroke="#B47A40" strokeWidth="9" strokeLinecap="round" />
+      {[-40, -20, 18, 36].map((x, i) => <rect key={i} x={x - 7} y="8" width="14" height="34" rx="7" fill="#C98B4E" />)}
+      <ellipse cx="-10" cy="-6" rx="56" ry="28" fill="#C98B4E" />
+      <ellipse cx="-4" cy="2" rx="28" ry="14" fill="#F1D3A8" stroke="none" />
+      <g transform={`rotate(${Math.sin(a * 2.5) * 5} 40 -30)`}>
+        <ellipse cx="46" cy="-34" rx="30" ry="27" fill="#C98B4E" />
+        <path d="M30 -56 Q14 -68 14 -36 Q22 -26 32 -40" fill="#8A5A2C" />
+        <ellipse cx="72" cy="-24" rx="15" ry="11" fill="#F1D3A8" />
+        <ellipse cx="84" cy="-28" rx="6" ry="5" fill={INK} />
+        <circle cx="52" cy="-40" r="4.5" fill={INK} stroke="none" />
+      </g>
+    </g>
+  );
+};
+
 // Arm angles [upper, forearm] for each way of holding something
 const HOLD_ARMS = {
+  hug: [8, 112],    // an animal held against the chest
   look: [16, 138],  // brought up in front of the chest, to look at it
   show: [68, 84],   // held out toward the other person
   carry: [5, 2],    // hanging at the side
@@ -456,6 +508,14 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   walk = 0, walkPhase = 0, since = 9, run = false, hold = null, holdStyle = "look", holdK = 0 }) {
   // A series can tweak a character's look (skin, hair, clothes colours) without changing the design
   const look = lookOverride ? { ...LOOKS[who], ...lookOverride } : LOOKS[who];
+  // Story-built characters: body size (a child is shorter, with a bigger head), build and hair style
+  const size = look.size || 1;
+  const headK = look.headScale || 1;
+  const headScale = HEAD_SCALE * headK;
+  const headY = HEAD_Y - (headK - 1) * 70;
+  const bw = look.build === "broad" ? 12 : look.build === "slim" ? -6 : 0;
+  const hairStyle = look.hairStyle ? HAIR_STYLES[look.hairStyle] || HAIR_STYLES.short : null;
+  const hairFront = hairStyle ? hairStyle.front : look.hairPath;
   const phase = PHASE[who] || 0;
   const sleeve = hooded ? CLOAK : look.sleeve;
   const level = talk > 0.05 ? (voice ?? 0.5 + 0.3 * Math.sin(frame * 0.9 + phase)) : 0;
@@ -480,6 +540,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
     if (emotion === "crying") { lean = 3; sink = 6 + Math.sin(frame * 0.45 + phase) * 3; }
     if (emotion === "relieved") sink = 12 * Math.sin(Math.PI * Math.min(1, Math.max(0, since) / 0.9));
     if (emotion === "worried") lean = Math.sin(frame / 20 + phase) * 1.2;
+    lean += look.stoop || 0; // elderly: a slight stoop
   }
   // Walking: legs and arms swing, the body bobs (walk = 0..1 how much, walkPhase advances with time)
   const swing = Math.sin(walkPhase) * walk;
@@ -532,8 +593,8 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   }
 
   const shoulderY = 285 + drop + breath;
-  const backShoulder = [152 + shift, shoulderY];
-  const frontShoulder = [248 + shift, shoulderY];
+  const backShoulder = [152 - bw + shift, shoulderY];
+  const frontShoulder = [248 + bw + shift, shoulderY];
   const skin = look.skin;
   const arm = ([sx, sy], angles, color, handType, held = null) => {
     const { ex, ey, hx, hy } = armPoints(sx, sy, angles);
@@ -550,7 +611,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
           <Limb points={[[sx, sy], [ex, ey], [hx, hy]]} color={color} width={28} />
           {k < 1 && <Hand x={hx} y={hy} angle={angle} type="open" skin={handSkin} />}
           {k > 0 && (
-            <g transform={`translate(${hx + (holdStyle === "carry" ? 0 : 10)} ${hy + (holdStyle === "carry" ? 6 : -10)}) rotate(${tilt}) scale(${0.55 + 0.45 * k})`} opacity={Math.min(1, k * 2)}>
+            <g transform={`translate(${hx + (holdStyle === "carry" ? 0 : holdStyle === "hug" ? -6 : 10)} ${hy + (holdStyle === "carry" ? 6 : holdStyle === "hug" ? 8 : -10)}) rotate(${tilt}) scale(${0.55 + 0.45 * k})`} opacity={Math.min(1, k * 2)}>
               {HELD[held](since)}
               <Grip skin={handSkin} style={holdStyle} />
             </g>
@@ -592,6 +653,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
 
   return (
     <svg viewBox="0 0 400 900" width="100%" height="100%" style={{ overflow: "visible" }}>
+      <g transform={size !== 1 ? `translate(200 858) scale(${size}) translate(-200 -858)` : undefined}>
       <ellipse cx={200 + step} cy="858" rx={110 - hop * 0.8} ry="16" fill="rgba(0,0,0,0.25)" />
       <g transform={`translate(${step} ${-hop}) rotate(${lean} 200 850)`}>
       {seated && (
@@ -610,7 +672,12 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
           <path d={`M${150 + shift} ${hipY - 30} L${250 + shift} ${hipY - 30} L282 840 L118 840 Z`} fill={look.pants} stroke={INK} strokeWidth="6" strokeLinejoin="round" />
         </g>
       ) : (
-        legs.map((pts, i) => <Limb key={i} points={pts} color={hooded ? CLOAK : look.pants} width={30} />)
+        legs.map((pts, i) => look.bottom === "shorts" && !hooded ? (
+          <g key={i}>
+            <Limb points={pts} color={skin} width={26} />
+            <Limb points={[pts[0], [pts[0][0] + (pts[1][0] - pts[0][0]) * 0.75, pts[0][1] + (pts[1][1] - pts[0][1]) * 0.75]]} color={look.pants} width={36} />
+          </g>
+        ) : <Limb key={i} points={pts} color={hooded ? CLOAK : look.pants} width={30} />)
       )}
       {legs.map((pts, i) => {
         const [fx, fy] = pts[pts.length - 1];
@@ -623,11 +690,26 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
       })}
       {/* torso */}
       <g transform={`translate(${shift} 0)`}>
-        {look.top === "hoodie" && !hooded && (
+        {(look.top === "hoodie" || look.top === "raincoat") && !hooded && (
           // hood lying behind the neck
           <path d={`M146 ${tY(278)} Q140 ${tY(232)} 200 ${tY(228)} Q260 ${tY(232)} 254 ${tY(278)} Z`} fill={look.shirtDark} stroke={INK} strokeWidth="6" strokeLinejoin="round" />
         )}
-        <rect x="142" y={torsoTop} width="116" height={torsoH} rx="46" fill={look.shirt} stroke={INK} strokeWidth="6" />
+        <rect x={142 - bw} y={torsoTop} width={116 + 2 * bw} height={look.top === "coat" || look.top === "raincoat" ? 700 - torsoTop : torsoH} rx="46" fill={look.shirt} stroke={INK} strokeWidth="6" />
+        {(look.top === "coat" || look.top === "raincoat") && (
+          <g>
+            <line x1="200" y1={tY(268)} x2="200" y2="700" stroke={INK} strokeWidth="4" />
+            {[330, 400, 470, 540].map(y => <circle key={y} cx="212" cy={tY(y)} r="5" fill={look.shirtDark} stroke={INK} strokeWidth="2" />)}
+            <path d={`M176 ${tY(264)} L200 ${tY(300)} L224 ${tY(264)}`} fill={look.shirtDark} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+          </g>
+        )}
+        {look.top === "tee" && <path d={`M178 ${tY(264)} Q200 ${tY(292)} 222 ${tY(264)} Z`} fill={skin} stroke={INK} strokeWidth="4" strokeLinejoin="round" />}
+        {look.top === "sweater" && (
+          <g>
+            <path d={`M176 ${tY(266)} Q200 ${tY(290)} 224 ${tY(266)}`} fill={skin} stroke={look.shirtDark} strokeWidth="9" />
+            <rect x={146 - bw} y={hipY - 8} width={108 + 2 * bw} height="18" rx="8" fill={look.shirtDark} />
+          </g>
+        )}
+        {look.tie && <path d={`M195 ${tY(276)} L205 ${tY(276)} L210 ${tY(350)} L200 ${tY(366)} L190 ${tY(350)} Z`} fill="#2B3A67" stroke={INK} strokeWidth="3" strokeLinejoin="round" />}
         {/* cel shadow: back half of the torso */}
         {look.top === "hoodie" && (
           <g>
@@ -690,15 +772,20 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
       {backPlace === "body" && backArmEl}
       {frontArmEl}
       {/* neck + head */}
-      <rect x={188 + shift} y={HEAD_Y + 70 + drop + breath} width="24" height="56" fill={skin} stroke={INK} strokeWidth="5" />
-      <g transform={`translate(${200 + shift} ${HEAD_Y + drop + breath + nod}) rotate(${headTilt}) scale(${HEAD_SCALE}) translate(-200 -210)`}>
+      <rect x={188 + shift} y={headY + 70 + drop + breath} width="24" height={56 + (HEAD_Y - headY)} fill={skin} stroke={INK} strokeWidth="5" />
+      <g transform={`translate(${200 + shift} ${headY + drop + breath + nod}) rotate(${headTilt}) scale(${headScale}) translate(-200 -210)`}>
+        {hairStyle?.back && <path d={hairStyle.back} fill={look.hair} stroke={INK} strokeWidth="7" strokeLinejoin="round" />}
         {look.bun && <circle cx="196" cy="54" r="52" fill={look.hair} stroke={INK} strokeWidth="7" />}
         <circle cx="200" cy="210" r="150" fill={skin} stroke={INK} strokeWidth="7.5" />
         {/* cel shadow on the back of the head */}
         {emotion === "angry" && <ellipse cx="210" cy="200" rx="120" ry="60" fill="#ff2a1a" opacity={0.2 + 0.06 * Math.sin(frame * 0.3)} />}
         {/* fear drains the colour from the lower face (lighter on darker skin so it doesn't look grey) */}
         {emotion === "scared" && <ellipse cx="210" cy="276" rx="124" ry="70" fill="rgb(150,185,255)" opacity={parseInt(skin.slice(1, 3), 16) > 200 ? 0.14 : 0.07} />}
-        <path d={look.hairPath} fill={look.hair} stroke={INK} strokeWidth="7" strokeLinejoin="round" />
+        {hairFront && <path d={hairFront} fill={look.hair} stroke={INK} strokeWidth="7" strokeLinejoin="round" />}
+        {look.freckles && [[140, 262], [156, 274], [132, 280], [268, 262], [284, 274], [276, 284]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="4" fill="#B5653F" opacity="0.6" />)}
+        {look.beard && (
+          <path d="M66 232 Q76 392 210 394 Q344 392 352 232 Q336 292 294 318 Q210 340 128 318 Q86 292 66 232 Z" fill={look.hair} stroke={INK} strokeWidth="6" strokeLinejoin="round" />
+        )}
         <path d="M110 96 Q170 66 236 72" fill="none" stroke="#fff" strokeOpacity="0.18" strokeWidth="10" strokeLinecap="round" />
         {look.cap && (
           <g stroke={INK} strokeWidth="7" strokeLinejoin="round">
@@ -774,6 +861,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
         )}
       </g>
       {backPlace === "head" && backArmEl}
+      </g>
       </g>
     </svg>
   );

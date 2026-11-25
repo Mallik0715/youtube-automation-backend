@@ -35,14 +35,15 @@ function useJob(onDone) {
   return [job, start, () => setJob(null)];
 }
 
-const NAMES = { A: "Max", B: "Leo", C: "Mira", D: "Bruno", E: "Zara", F: "Victor" };
+const DEFAULT_NAMES = { A: "Max", B: "Leo", C: "Mira", D: "Bruno", E: "Zara", F: "Victor" };
+// Names of the series being edited (a story-built cast has its own); set by the editor as it renders
+let NAMES = { ...DEFAULT_NAMES };
 
 // ---------- New series form ----------
 function NewSeries({ meta, onCreated }) {
   const [mode, setMode] = useState("title");
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
-  const [hero, setHero] = useState("B");
   const [parts, setParts] = useState(10);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
@@ -52,7 +53,7 @@ function NewSeries({ meta, onCreated }) {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    try { await start("/api/generate", { mode, title, story, hero, parts, notes }); } catch (err) { setError(err.message); }
+    try { await start("/api/generate", { mode, title, story, parts, notes }); } catch (err) { setError(err.message); }
   };
 
   return (
@@ -78,11 +79,7 @@ function NewSeries({ meta, onCreated }) {
           </label>
         )}
         <div className="row">
-          <label>Hero
-            <select value={hero} onChange={e => setHero(e.target.value)}>
-              {Object.entries(meta?.cast || {}).map(([k, v]) => <option key={k} value={k}>{k} - {v.split(",")[0]} ({NAMES[k]})</option>)}
-            </select>
-          </label>
+          <div className="hint">The AI designs the characters from your story (age, hair, clothes...).</div>
           <label className="narrow">Parts
             <input type="number" min={1} max={10} value={parts} onChange={e => setParts(e.target.value)} />
           </label>
@@ -222,6 +219,7 @@ function Editor({ id, meta, onSaved, onDeleted }) {
     try { await api(`/api/series/${id}`, { method: "DELETE" }); onDeleted(); } catch (e) { setError(e.message); }
   };
 
+  NAMES = { ...DEFAULT_NAMES, ...(series.names || {}) };
   return (
     <section className="card editor">
       <div className="editor-head">
@@ -230,6 +228,17 @@ function Editor({ id, meta, onSaved, onDeleted }) {
             ? <input className="big" value={series.title} onChange={e => update(s => { s.title = e.target.value; })} />
             : <h2>{series.title}</h2>}
           <div className="sub">{series.id} · hero {series.hero} · {series.parts.length} parts {editable ? "" : "· hand-written (read only)"}</div>
+          {Array.isArray(series.characters) && series.characters.some(c => c.look) && (
+            <div className="cast">
+              {series.characters.map(c => (
+                <div key={c.code} className="cast-card">
+                  <b>{c.name}</b> <span className="code">{c.code}</span>
+                  <div className="role">{c.role}</div>
+                  {c.look && <div className="look">{[c.look.age, c.look.gender, c.look.hairColor && `${c.look.hairColor} ${c.look.hair || ""} hair`, c.look.topColor && `${c.look.topColor} ${c.look.top || ""}`, ...(c.look.extras || [])].filter(Boolean).join(", ")}</div>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="row">
           {editable && <button className="primary" disabled={!dirty} onClick={save}>{dirty ? "Save changes" : "Saved"}</button>}

@@ -1175,7 +1175,109 @@ function Storm({ frame, outdoor }) {
     </g>
   );
 }
-const OUTDOOR = new Set(["island", "shore", "forest", "deck", "street", "park", "cliff", "camp"]);
+const OUTDOOR = new Set(["island", "shore", "forest", "deck", "street", "park", "cliff", "camp", "village", "gate"]);
+
+// Old village street: cottages with a warning painted on the doors, a bell tower, lanterns, cobblestones
+function Cottage({ x, w, h, wall, roof, night, sign, lit, frame }) {
+  const top = 1300 - h;
+  return (
+    <g>
+      <rect x={x} y={top} width={w} height={h} fill={wall} {...O} />
+      <path d={`M${x - 30} ${top + 10} L${x + w / 2} ${top - 150} L${x + w + 30} ${top + 10} Z`} fill={roof} {...O} />
+      <rect x={x + w * 0.62} y={top - 120} width="40" height="80" fill="#7A6A5A" {...O} strokeWidth="4" />
+      {/* window, lit from inside at night */}
+      <rect x={x + 30} y={top + 60} width={w * 0.34} height="110" fill={night && lit ? "#FFD27A" : night ? "#2B3560" : "#BFE3F5"} {...O} />
+      <line x1={x + 30 + w * 0.17} y1={top + 60} x2={x + 30 + w * 0.17} y2={top + 170} stroke={INK} strokeWidth="4" />
+      {night && lit && <rect x={x + 10} y={top + 40} width={w * 0.34 + 40} height="150" fill="#FFD27A" opacity="0.15" />}
+      {/* the door with the warning painted on it */}
+      <rect x={x + w - 160} y={1300 - 240} width="130" height="240" fill="#6B4E3A" {...O} />
+      <circle cx={x + w - 50} cy={1300 - 120} r="7" fill="#E8C35A" />
+      {sign && (
+        <g transform={`rotate(-4 ${x + w - 95} ${1300 - 160})`}>
+          {["WHEN THE", "FOG COMES,", "STAY", "INSIDE"].map((t, i) => (
+            <text key={i} x={x + w - 95} y={1300 - 200 + i * 30} textAnchor="middle" fontSize="23" fontWeight="900" fill="#F2EDE2" fontFamily="Arial Black, sans-serif" opacity="0.9">{t}</text>
+          ))}
+        </g>
+      )}
+    </g>
+  );
+}
+
+function Village({ frame, night, details }) {
+  const ringing = has(details, "bell");
+  const swing = ringing ? Math.sin(frame * 0.35) * 22 : 0;
+  return (
+    <g>
+      <Sky id="village" night={night} frame={frame} h={1000} />
+      <path d="M0 900 Q200 760 420 860 Q620 700 820 840 Q960 760 1080 820 L1080 1300 L0 1300 Z" fill={night ? "#1F2B45" : "#9BB7A0"} />
+      {/* bell tower in the middle distance */}
+      <g>
+        <rect x={440} y={380} width={200} height={920} fill={night ? "#6E6A72" : "#B8AFA3"} {...O} />
+        <path d="M420 390 L540 230 L660 390 Z" fill={night ? "#4A3F4E" : "#8C4A3A"} {...O} />
+        <path d="M480 560 L480 470 Q540 410 600 470 L600 560 Z" fill="#1E1E28" {...O} />
+        <g transform={`rotate(${swing} 540 470)`}>
+          <line x1="540" y1="470" x2="540" y2="490" stroke={INK} strokeWidth="6" />
+          <path d="M510 545 Q512 492 540 488 Q568 492 570 545 Z" fill="#C9A227" {...O} />
+          <circle cx="540" cy="552" r="8" fill="#8A6A1A" {...O} strokeWidth="3" />
+        </g>
+        {ringing && [0, 1, 2].map(k => {
+          const p = ((frame * 0.03 + k / 3) % 1);
+          return <g key={k} fill="none" stroke="#F2D06B" strokeWidth="5" opacity={1 - p}>
+            <path d={`M${470 - p * 90} ${470 - p * 40} Q${450 - p * 110} 520 ${470 - p * 90} ${570 + p * 40}`} />
+            <path d={`M${610 + p * 90} ${470 - p * 40} Q${630 + p * 110} 520 ${610 + p * 90} ${570 + p * 40}`} />
+          </g>;
+        })}
+        <circle cx="540" cy="700" r="56" fill="#F4F0E6" {...O} />
+        <line x1="540" y1="700" x2="540" y2="660" stroke={INK} strokeWidth="6" strokeLinecap="round" />
+        <line x1="540" y1="700" x2="512" y2="716" stroke={INK} strokeWidth="6" strokeLinecap="round" />
+      </g>
+      {/* cottages either side */}
+      <Cottage x={-40} w={380} h={560} wall={night ? "#8C7F70" : "#E2D3B8"} roof={night ? "#3E3440" : "#9A5B3E"} night={night} sign lit frame={frame} />
+      <Cottage x={740} w={380} h={600} wall={night ? "#7F8A8C" : "#D7DCD2"} roof={night ? "#33384A" : "#5E6E8C"} night={night} sign lit={false} frame={frame} />
+      {/* the warning, painted big on the tower wall */}
+      <text x={540} y={880} textAnchor="middle" fontSize="30" fontWeight="900" fill="#B3261E" fontFamily="Arial Black, sans-serif" opacity="0.85">STAY INSIDE</text>
+      {/* cobbled street */}
+      <rect x="0" y="1300" width={W} height={H - 1300} fill={night ? "#5A5560" : "#B5ADA2"} />
+      {Array.from({ length: 6 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
+        const y = 1330 + r * (40 + r * 22);
+        const x = c * 130 + (r % 2) * 65 - 40;
+        return <ellipse key={`${r}${c}`} cx={x} cy={y} rx={50 + r * 8} ry={14 + r * 5} fill={night ? "#66616C" : "#C4BDB2"} stroke={night ? "#4A4650" : "#A39C90"} strokeWidth="3" />;
+      }))}
+      {/* lanterns */}
+      {[380, 700].map(x => (
+        <g key={x}>
+          {night && <circle cx={x} cy={1000} r="150" fill="#FFC15E" opacity={0.18 + 0.04 * Math.sin(frame * 0.3 + x)} />}
+          <rect x={x - 7} y={1010} width="14" height="300" fill="#3D3540" {...O} strokeWidth="3" />
+          <rect x={x - 26} y={960} width="52" height="60" rx="8" fill={night ? "#FFD27A" : "#E8D9A8"} {...O} strokeWidth="4" />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+// Fog: soft banks rolling across, thick at the ground. Drawn in front of the characters (it swallows their legs)
+function Fog({ frame, outdoor }) {
+  const id = "fog-blur";
+  const banks = [
+    { y: 1700, rx: 900, ry: 170, speed: 0.6, o: 0.75 },
+    { y: 1480, rx: 800, ry: 150, speed: -0.45, o: 0.55 },
+    { y: 1200, rx: 700, ry: 140, speed: 0.35, o: 0.45 },
+    { y: 900, rx: 650, ry: 130, speed: -0.25, o: 0.3 },
+  ];
+  return (
+    <g opacity={outdoor ? 1 : 0.35}>
+      <defs><filter id={id} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40" /></filter></defs>
+      <g filter={`url(#${id})`}>
+        {banks.map((b, i) => [0, 1].map(k => {
+          const span = W + b.rx * 2;
+          const cx = ((frame * b.speed * 3 + k * span / 2 + i * 300) % span + span) % span - b.rx;
+          return <ellipse key={`${i}${k}`} cx={cx} cy={b.y + Math.sin(frame * 0.02 + i) * 20} rx={b.rx} ry={b.ry} fill="#E6ECF2" opacity={b.o} />;
+        }))}
+        <rect x="-200" y="1780" width={W + 400} height="300" fill="#E6ECF2" opacity="0.8" />
+      </g>
+    </g>
+  );
+}
 
 // scene name -> [back, front]
 export const VECTOR_SCENES = {
@@ -1205,6 +1307,8 @@ export const VECTOR_SCENES = {
   basement: [ControlRoom, null],
   cliff: [Cliff, ForestFront],
   camp: [Camp, null],
+  village: [Village, null],
+  gate: [Village, null],
 };
 
 export function VectorBack({ scene, frame, night, details = [] }) {
@@ -1220,10 +1324,12 @@ export function VectorBack({ scene, frame, night, details = [] }) {
 export function VectorFront({ scene, frame, night, details = [] }) {
   const Front = VECTOR_SCENES[scene]?.[1];
   const storm = has(details, "storm") || has(details, "rain");
-  if (!Front && !storm) return null;
+  const fog = has(details, "fog");
+  if (!Front && !storm && !fog) return null;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
       {Front && <Front frame={frame} night={night} details={details} />}
+      {fog && <Fog frame={frame} outdoor={OUTDOOR.has(scene)} />}
       {storm && <Storm frame={frame} outdoor={OUTDOOR.has(scene)} />}
     </svg>
   );

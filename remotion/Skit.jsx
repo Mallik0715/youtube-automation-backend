@@ -36,7 +36,8 @@ const HOLDABLE = {
   bag: ["bag", "carry"],
 };
 const SHOW_VERBS = /\b(handed|hands|gave|give|gives|offered|held out|holds out|showed|threw|paid|slipped|put)\b/i;
-const LOOK_VERBS = /\b(read|reads|reading|counted|counting|stared at|looked at|checked|opened)\b/i;
+const CARRYING = /\b(holding|held|carrying|carried|in (his|her|their) arms|hugging|hugged|picked up|cradling)\b/i;
+const LOOK_VERBS =/\b(read|reads|reading|counted|counting|stared at|looked at|checked|opened)\b/i;
 const smooth = (k) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
 
 function layoutFor(cast) {
@@ -468,7 +469,8 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
   // about reaches for it and holds it (instead of it popping up in a bubble)
   const lineEnd = next ? next.start : line.end + 0.3;
   const holdInfo = (() => {
-    const item = line.prop && HOLDABLE[line.prop];
+    // "holding his dog" / "carried the dog": the dog is in their arms instead of running around
+    const item = line.prop === "dog" ? (CARRYING.test(line.text) ? ["dog", "hug"] : null) : line.prop && HOLDABLE[line.prop];
     const who = actorOf(line);
     if (!item || !who || !cast.includes(who) || seatedHere.includes(who) || line.recap) return null;
     const at = line.propAt ?? line.start;
@@ -476,7 +478,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
     const keeps = next && next.prop === line.prop && next.propHold && actorOf(next) === who;
     const kIn = line.propHold ? 1 : smooth((t - at) / 0.45);
     const kOut = keeps ? 1 : 1 - smooth((t - (lineEnd - 0.35)) / 0.35);
-    const style = SHOW_VERBS.test(line.text) ? (item[1] === "carry" ? "carry" : "show")
+    const style = item[1] === "hug" ? "hug" : SHOW_VERBS.test(line.text) ? (item[1] === "carry" ? "carry" : "show")
       : LOOK_VERBS.test(line.text) ? "look" : item[1];
     return { who, item: item[0], style, k: Math.min(kIn, kOut) };
   })();
@@ -550,7 +552,9 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
     }
     const charLeft = 540 - w / 2 + (left ? 70 : -70) + walkX;
     const seatedHere1 = (line.seated || []).includes(actor);
-    const charTop = 860 - 150 * S - (seatedHere1 ? 150 * S : 0);
+    // A shorter (child) character: raise them so the face stays where a close-up puts faces
+    const sizeK = looks?.[actor]?.size || 1;
+    const charTop = 860 - 150 * S - (seatedHere1 ? 150 * S : 0) - (858 - 230) * (1 - sizeK) * S;
     stage = (
       <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 45%" }}>
         <AbsoluteFill style={{ transform: `translateX(${(left ? -110 : 110) - forward * track}px) scale(1.25)`, transformOrigin: "50% 50%" }}>
