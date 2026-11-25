@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { segmentDetails, stickyBefore, lineLight } = require("./sceneDetails");
+const { segmentDetails, stickyBefore, lineLight, lineMove } = require("./sceneDetails");
 
 // Series scripts live in series/ (hand-written .js files, or .json files saved by the series writer page).
 // series/queue.json is the upload order (file names). Progress is tracked by series id, so series can be
@@ -237,7 +237,7 @@ function buildPart(series, partIndex, branch = null) {
   for (const seg of segments) {
     const details = segmentDetails(seg, sticky, segments);
     for (const line of seg.lines) {
-      const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast, seated: seg.seated || [], details, light: lineLight(line.text) };
+      const base = { scene: seg.scene, night: !!seg.night, cast: seg.cast, seated: seg.seated || [], details, light: lineLight(line.text), ...lineMove(line.text) };
       if (line.card) {
         lines.push({ ...base, speaker: "CARD", text: line.card, seconds: line.seconds || CARD_SECONDS, fx: line.fx || null, sfx: line.sfx || null });
       } else if (NARRATOR_ONLY && line.speaker !== "N") {

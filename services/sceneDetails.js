@@ -62,10 +62,28 @@ function segmentDetails(seg, sticky, partSegments = []) {
   return [...new Set([...own, ...wide, ...((sticky[seg.scene] && [...sticky[seg.scene]]) || [])])];
 }
 
+// Movement in a line, acted out by the character the line is about:
+//   out  - walks off screen ("walked away", "left", "ran out")
+//   in   - walks into the shot ("walked in", "came over", "arrived")
+//   pace - walks / runs on (a tracking shot in close-up): "followed", "ran", "climbed", "walked"
+const MOVES = [
+  ["out", /\b(walked away|walked out|walked off|ran away|ran off|ran out|stormed out|turned and left|left without|he left|she left|walked back)\b/i],
+  ["in", /\b(walked in|walked into|walked over|walked up|came in|came over|came back|stepped in|stepped inside|stepped out|ran in|ran over|ran up|ran to|arrived|burst in|walked to|went back to)\b/i],
+  ["pace", /\b(walked|walking|ran|running|followed|following|paced|climbed|hurried|rushed|raced|crept|went to|went alone)\b/i],
+];
+const RUNNING = /\b(ran|running|rushed|raced|sprinted|hurried|ran for)\b/i;
+
+/** How the line's character moves: { move: "in"|"out"|"pace"|null, run: boolean } */
+function lineMove(text) {
+  const t = text || "";
+  for (const [k, re] of MOVES) if (re.test(t)) return { move: k, run: RUNNING.test(t) };
+  return { move: null, run: false };
+}
+
 /** Lighting change for one line: "dark" | "warm" | null */
 function lineLight(text) {
   for (const [k, re] of LIGHT) if (re.test(text || "")) return k;
   return null;
 }
 
-module.exports = { segmentDetails, stickyBefore, lineLight, detailsFor };
+module.exports = { segmentDetails, stickyBefore, lineLight, lineMove, detailsFor };

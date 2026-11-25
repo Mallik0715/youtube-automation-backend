@@ -174,7 +174,7 @@ function eyeGeometry(cx, cy, rx, ry, inner, cut) {
   return { d: fmt(out), lid: hits.length === 2 ? hits : null };
 }
 
-function Eyes({ emotion, blinking, frame, phase, who }) {
+function Eyes({ emotion, blinking, frame, phase, who, lookDown = 0 }) {
   const arc = (d) => <path d={d} fill="none" stroke={INK} strokeWidth="9" strokeLinecap="round" />;
   if (blinking && emotion !== "relieved" && emotion !== "happy") {
     return <g>{[EYE_L, EYE_R].map(x => <path key={x} d={`M${x - 24} ${EYE_Y + 4} Q${x} ${EYE_Y + 14} ${x + 24} ${EYE_Y + 4}`} fill="none" stroke={INK} strokeWidth="8" strokeLinecap="round" />)}</g>;
@@ -190,7 +190,7 @@ function Eyes({ emotion, blinking, frame, phase, who }) {
         const inner = i === 0 ? 1 : -1;
         const { d, lid } = eyeGeometry(x, EYE_Y, rx, ry, inner, cut);
         const id = `eye-${who}-${i}`;
-        const px = x + 6 + dart, py = EYE_Y + drop;
+        const px = x + 6 + dart + lookDown * 6, py = EYE_Y + drop + lookDown * 9;
         return (
           <g key={x}>
             <clipPath id={id}><path d={d} /></clipPath>
@@ -269,6 +269,165 @@ function OpenMouth({ emotion, open }) {
   );
 }
 
+// ---------- Things a character can hold ----------
+// Drawn upright around the hand (0,0) in body units (a hand is ~32 wide). "carry" items hang below a fist.
+const PAPER = (head, lines = "#9AA5AA") => (
+  <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+    <rect x="-28" y="-44" width="56" height="74" rx="3" fill="#FFFDF5" />
+    {head}
+    {[-14, -4, 6, 16].map(y => <line key={y} x1="-18" x2="18" y1={y} y2={y} stroke={lines} strokeWidth="4" />)}
+  </g>
+);
+export const HELD = {
+  phone: (a) => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <rect x="-19" y="-40" width="38" height="70" rx="8" fill="#23262D" />
+      <circle cx="-8" cy="-30" r="4" fill="#3D4350" strokeWidth="2" />
+      <rect x="-15" y="-36" width="5" height="60" rx="2" fill="#fff" opacity="0.1" stroke="none" />
+      {/* screen light on the face side */}
+      <path d="M19 -36 L60 -70 L60 20 L19 24 Z" fill="#9FE3FF" opacity="0.12" stroke="none" />
+    </g>
+  ),
+  note: () => PAPER(<path d="M-28 -44 L0 -24 L28 -44" fill="none" />),
+  photo: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <rect x="-30" y="-42" width="60" height="70" rx="3" fill="#fff" />
+      <rect x="-22" y="-34" width="44" height="42" fill="#9CD3F2" strokeWidth="3" />
+      <circle cx="-8" cy="-18" r="7" fill="#F4C9A6" strokeWidth="3" /><circle cx="9" cy="-16" r="7" fill="#E8B48A" strokeWidth="3" />
+    </g>
+  ),
+  bill: () => PAPER(<rect x="-28" y="-44" width="56" height="16" fill="#E53935" />),
+  newspaper: () => PAPER(<rect x="-20" y="-38" width="40" height="12" fill="#2B2D33" strokeWidth="2" />, "#6B6B6B"),
+  exam: () => PAPER(<text x="12" y="-24" fontSize="20" fontWeight="900" fill="#E53935" stroke="none" fontFamily="Arial Black, sans-serif">A+</text>),
+  cash: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      {[10, 4, -2].map((dy, i) => <rect key={i} x="-36" y={-20 + dy} width="72" height="34" rx="4" fill={i === 2 ? "#7ED957" : "#5DBB3F"} />)}
+      <rect x="-8" y="-22" width="16" height="34" fill="#E8D9A8" strokeWidth="3" />
+    </g>
+  ),
+  bag: () => (
+    <g stroke={INK} strokeWidth="5" strokeLinejoin="round">
+      <path d="M-16 6 L-16 -4 Q-16 -12 -8 -12 L8 -12 Q16 -12 16 -4 L16 6" fill="none" strokeWidth="7" />
+      <rect x="-52" y="6" width="104" height="72" rx="8" fill="#3B2A22" />
+      <line x1="-52" y1="30" x2="52" y2="30" />
+      <rect x="-8" y="24" width="16" height="14" rx="3" fill="#C9A227" strokeWidth="3" />
+    </g>
+  ),
+  bottle: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <rect x="-8" y="-52" width="16" height="12" rx="3" fill="#3F8FD6" />
+      <path d="M-14 -40 L14 -40 L18 -26 L18 34 Q18 38 14 38 L-14 38 Q-18 38 -18 34 L-18 -26 Z" fill="#CDEBFF" />
+      <path d="M-17 -6 L17 -6 L17 34 L-17 34 Z" fill="#7FC8F2" stroke="none" />
+    </g>
+  ),
+  pills: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <rect x="-20" y="-30" width="40" height="58" rx="6" fill="#F2F2F2" />
+      <rect x="-22" y="-44" width="44" height="16" rx="4" fill="#E53935" />
+      <path d="M0 -14 L0 10 M-12 -2 L12 -2" stroke="#E53935" strokeWidth="6" />
+    </g>
+  ),
+  key: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <circle cx="0" cy="-30" r="14" fill="#F2C14E" /><circle cx="0" cy="-30" r="5" fill="#fff" strokeWidth="3" />
+      <path d="M-5 -16 L5 -16 L5 20 L14 20 L14 28 L5 28 L5 34 L-5 34 Z" fill="#F2C14E" />
+    </g>
+  ),
+  gift: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <rect x="-30" y="-36" width="60" height="56" fill="#E25B5B" />
+      <rect x="-6" y="-36" width="12" height="56" fill="#FFE27A" strokeWidth="3" />
+      <path d="M0 -36 Q-24 -60 -18 -40 Q-14 -34 0 -36 Q24 -60 18 -40 Q14 -34 0 -36" fill="#FFE27A" strokeWidth="3" />
+    </g>
+  ),
+  coconut: () => (
+    <g stroke={INK} strokeWidth="4">
+      <circle cx="0" cy="-14" r="30" fill="#7A4A2A" />
+      <circle cx="-8" cy="-22" r="4" fill={INK} /><circle cx="6" cy="-24" r="4" fill={INK} /><circle cx="-1" cy="-12" r="4" fill={INK} />
+    </g>
+  ),
+  torch: (a) => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <path d={`M30 -10 L240 ${-70 + Math.sin(a * 3) * 10} L240 ${70 + Math.sin(a * 3) * 10} L30 10 Z`} fill="#FFF3B0" opacity="0.45" stroke="none" />
+      <rect x="-30" y="-10" width="50" height="20" rx="6" fill="#3B3F45" />
+      <path d="M20 -14 L32 -18 L32 18 L20 14 Z" fill="#5E6670" />
+    </g>
+  ),
+  mic: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <rect x="-6" y="-6" width="12" height="40" rx="5" fill="#2B2D33" />
+      <circle cx="0" cy="-20" r="16" fill="#9AA5AA" />
+    </g>
+  ),
+  radio: (a) => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <line x1="18" y1="-30" x2="34" y2="-74" />
+      <rect x="-34" y="-30" width="68" height="48" rx="8" fill="#4E5A4A" />
+      <circle cx="-14" cy="-6" r="11" fill="#2B2D33" />
+      <circle cx="18" cy="6" r="4" fill={Math.floor(a * 4) % 2 ? "#FF5252" : "#552222"} strokeWidth="2" />
+    </g>
+  ),
+  trophy: () => (
+    <g stroke={INK} strokeWidth="4" strokeLinejoin="round">
+      <path d="M-24 -50 L24 -50 L20 -14 Q0 4 -20 -14 Z" fill="#F2C14E" />
+      <rect x="-6" y="-4" width="12" height="16" fill="#E0A62E" />
+      <rect x="-20" y="10" width="40" height="14" rx="3" fill="#8A5A3C" />
+    </g>
+  ),
+};
+
+// The fingers that wrap round a held thing, drawn on top of it (thumb on the near side)
+function Grip({ skin, style }) {
+  if (style === "carry") {
+    return (
+      <g>
+        <rect x="-17" y="-26" width="34" height="34" rx="12" fill={INK} />
+        <rect x="-13.5" y="-22.5" width="27" height="27" rx="9" fill={skin} />
+        {[-6, 2].map(x => <line key={x} x1={x} y1="-6" x2={x} y2="4" stroke={INK} strokeWidth="2.6" strokeLinecap="round" />)}
+      </g>
+    );
+  }
+  const fingers = [-12, -1, 10, 20];
+  return (
+    <g>
+      {/* palm behind the object's edge, fingers curled over the front, thumb up the other side */}
+      {fingers.map(y => <rect key={`o${y}`} x="-32" y={y - 7} width="30" height="14" rx="7" fill={INK} />)}
+      <rect x="-40" y="-18" width="24" height="46" rx="10" fill={INK} />
+      <rect x="-36.5" y="-14.5" width="17" height="39" rx="8" fill={skin} />
+      {fingers.map(y => <rect key={y} x="-28.5" y={y - 3.5} width="23" height="9" rx="4.5" fill={skin} />)}
+      <rect x="14" y="-12" width="13" height="30" rx="6.5" fill={INK} transform="rotate(14 20 4)" />
+      <rect x="17" y="-8.5" width="7" height="23" rx="3.5" fill={skin} transform="rotate(14 20 4)" />
+    </g>
+  );
+}
+
+// Arm angles [upper, forearm] for each way of holding something
+const HOLD_ARMS = {
+  look: [16, 138],  // brought up in front of the chest, to look at it
+  show: [68, 84],   // held out toward the other person
+  carry: [5, 2],    // hanging at the side
+};
+
+// Two-bone leg: knee position for a hip and a foot (knee bends forward, toward the facing side)
+const THIGH = 168, SHIN = 162;
+function kneeFor(hx, hy, fx, fy) {
+  const dx = fx - hx, dy = fy - hy;
+  const d = Math.min(Math.hypot(dx, dy), THIGH + SHIN - 0.5);
+  const a = Math.atan2(dy, dx);
+  const c = (THIGH * THIGH + d * d - SHIN * SHIN) / (2 * THIGH * d);
+  const off = Math.acos(Math.max(-1, Math.min(1, c)));
+  return [hx + THIGH * Math.cos(a - off), hy + THIGH * Math.sin(a - off)];
+}
+
+// Foot position in a walk / run cycle. p = 0..1 through one stride for this leg.
+// Planted for 60% of the stride (sliding back under the body), then lifted and swung forward.
+function footInStride(p, stride, liftH) {
+  if (p < 0.6) { const k = p / 0.6; return [stride * (1 - 2 * k), 0]; }
+  const k = (p - 0.6) / 0.4;
+  const e = 0.5 - 0.5 * Math.cos(Math.PI * k);
+  return [stride * (-1 + 2 * e), Math.sin(Math.PI * k) * liftH];
+}
+
 // Slim body layout (SVG units, 400 x 900, feet at ~850). The face artwork is drawn at its original
 // size (head centre 200,210, radius 150) and scaled down onto the neck.
 const HEAD_SCALE = 0.72;
@@ -294,7 +453,7 @@ function Limb({ points, color, width }) {
  */
 export function Character({ who, frame, talk, emotion, hooded = false, gesture = talk, pose = null, prevPose = null,
   poseK = 1, voice = null, listening = false, seated = false, desk = false, lookOverride = null,
-  walk = 0, walkPhase = 0, since = 9 }) {
+  walk = 0, walkPhase = 0, since = 9, run = false, hold = null, holdStyle = "look", holdK = 0 }) {
   // A series can tweak a character's look (skin, hair, clothes colours) without changing the design
   const look = lookOverride ? { ...LOOKS[who], ...lookOverride } : LOOKS[who];
   const phase = PHASE[who] || 0;
@@ -324,8 +483,9 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   }
   // Walking: legs and arms swing, the body bobs (walk = 0..1 how much, walkPhase advances with time)
   const swing = Math.sin(walkPhase) * walk;
-  const walkBob = Math.abs(Math.cos(walkPhase)) * 8 * walk;
+  const walkBob = Math.abs(Math.cos(walkPhase)) * (run ? 16 : 8) * walk;
   hop += walkBob;
+  lean += walk * (run ? 8 : 3);
   breath += sink;
 
   // Head: still most of the time; small emphasis on loud words, small nods while listening
@@ -349,8 +509,9 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   let backAngles = lerpArm(Q.back, P.back, poseK);
   let frontAngles = lerpArm(Q.front, P.front, poseK);
   if (walk > 0) {
-    backAngles = lerpArm(backAngles, [-swing * 30, -swing * 30 + 14], walk);
-    frontAngles = lerpArm(frontAngles, [swing * 30, swing * 30 + 14], walk);
+    const arc = run ? 42 : 28, bend = run ? 80 : 16;
+    backAngles = lerpArm(backAngles, [swing / Math.max(walk, 0.01) * arc, swing / Math.max(walk, 0.01) * arc + bend], walk);
+    frontAngles = lerpArm(frontAngles, [-swing / Math.max(walk, 0.01) * arc, -swing / Math.max(walk, 0.01) * arc + bend], walk);
   }
   let frontHand = poseK < 0.5 ? (Q.hands || P.hands)[1] : P.hands[1];
   const backHand = poseK < 0.5 ? (Q.hands || P.hands)[0] : P.hands[0];
@@ -360,24 +521,52 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
     frontAngles = lerpArm(frontAngles, target, k);
     if (k > 0.5 && poseName !== "point") frontHand = "open"; // explaining with an open hand
   }
+  // Holding something: the front arm reaches for it and brings it up / holds it out / carries it
+  const holding = hold && HELD[hold] && holdK > 0;
+  if (holding) {
+    const target = HOLD_ARMS[holdStyle] || HOLD_ARMS.look;
+    // a little life in the held arm: it drifts as they breathe, and while walking a carried bag swings
+    const drift = [Math.sin(frame / 30 + phase) * 2, Math.sin(frame / 24 + phase) * 3];
+    const sw = holdStyle === "carry" ? -swing * 18 : 0;
+    frontAngles = lerpArm(frontAngles, [target[0] + drift[0] + sw, target[1] + drift[1] + sw], holdK);
+  }
 
   const shoulderY = 285 + drop + breath;
   const backShoulder = [152 + shift, shoulderY];
   const frontShoulder = [248 + shift, shoulderY];
   const skin = look.skin;
-  const arm = ([sx, sy], angles, color, handType) => {
+  const arm = ([sx, sy], angles, color, handType, held = null) => {
     const { ex, ey, hx, hy } = armPoints(sx, sy, angles);
     // Hand points along the forearm
     const angle = (Math.atan2(hx - ex, -(hy - ey)) * 180) / Math.PI;
+    const handSkin = hooded ? "#c9b6a4" : skin;
+    if (held) {
+      // The object sits upright in the hand (slightly tilted toward the face when looked at),
+      // grows in as the hand closes on it, and the fingers wrap over it
+      const k = Math.min(1, Math.max(0, (holdK - 0.35) / 0.4));
+      const tilt = holdStyle === "look" ? -12 : holdStyle === "show" ? 6 : Math.sin(walkPhase) * walk * 10;
+      return (
+        <g>
+          <Limb points={[[sx, sy], [ex, ey], [hx, hy]]} color={color} width={28} />
+          {k < 1 && <Hand x={hx} y={hy} angle={angle} type="open" skin={handSkin} />}
+          {k > 0 && (
+            <g transform={`translate(${hx + (holdStyle === "carry" ? 0 : 10)} ${hy + (holdStyle === "carry" ? 6 : -10)}) rotate(${tilt}) scale(${0.55 + 0.45 * k})`} opacity={Math.min(1, k * 2)}>
+              {HELD[held](since)}
+              <Grip skin={handSkin} style={holdStyle} />
+            </g>
+          )}
+        </g>
+      );
+    }
     return (
       <g>
         <Limb points={[[sx, sy], [ex, ey], [hx, hy]]} color={color} width={28} />
-        <Hand x={hx} y={hy} angle={angle} type={handType} skin={hooded ? "#c9b6a4" : skin} />
+        <Hand x={hx} y={hy} angle={angle} type={handType} skin={handSkin} />
       </g>
     );
   };
   const backArmEl = arm(backShoulder, backAngles, hooded ? CLOAK : look.shirtDark, backHand);
-  const frontArmEl = arm(frontShoulder, frontAngles, sleeve, frontHand);
+  const frontArmEl = arm(frontShoulder, frontAngles, sleeve, frontHand, holding ? hold : null);
   const backPlace = P.headTop ? "head" : P.backOnTop ? "body" : "behind";
 
   // Legs: feet stay planted, hips carry the weight shift
@@ -386,11 +575,15 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
   const legs = seated
     ? hips.map(([x, y], i) => [[x, y], [x + 120, y + 8], [x + 110 + i * 10, 845]])
     : [0, 1].map(i => {
-        // Standing: feet planted. Walking: one foot swings forward and lifts while the other pushes back
-        const dir = i === 0 ? 1 : -1;
-        const footX = (i === 0 ? 172 : 230) + dir * swing * 58;
-        const lift = Math.max(0, dir * Math.cos(walkPhase)) * 26 * walk;
-        return [hips[i], [(i === 0 ? 176 : 226) + shift * 0.5 + dir * swing * 30 + lift * 0.6, 690 - lift * 0.4], [footX, 845 - lift]];
+        // Standing: feet planted. Walking / running: each foot plants, slides back under the body,
+        // then lifts and swings forward; the knee follows from where the hip and foot are
+        const standX = i === 0 ? 172 : 230;
+        if (walk < 0.01) return [hips[i], [(i === 0 ? 176 : 226) + shift * 0.5, 690], [standX, 845]];
+        const p = (((walkPhase / (2 * Math.PI)) + i * 0.5) % 1 + 1) % 1;
+        const [ox, oy] = footInStride(p, run ? 100 : 64, run ? 70 : 36);
+        const fx = standX * (1 - walk) + (hips[i][0] + ox) * walk;
+        const fy = 845 - oy * walk;
+        return [hips[i], kneeFor(hips[i][0], hips[i][1], fx, fy), [fx, fy]];
       });
 
   const torsoTop = 262 + drop + breath;
@@ -516,7 +709,7 @@ export function Character({ who, frame, talk, emotion, hooded = false, gesture =
           </g>
         )}
         <g transform={`translate(0 ${browLift})`}><Brows emotion={emotion} lift={0} /></g>
-        <Eyes emotion={emotion} blinking={blinking} frame={frame} phase={phase} who={who} />
+        <Eyes emotion={emotion} blinking={blinking} frame={frame} phase={phase} who={who} lookDown={holding && holdStyle === "look" ? holdK : 0} />
         {look.glasses && (
           <g fill="none" stroke={INK} strokeWidth="8">
             <circle cx={EYE_L} cy={EYE_Y} r="40" />

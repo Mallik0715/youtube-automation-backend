@@ -415,7 +415,7 @@ function CashRain({ a }) {
  * A prop popping up in a white bubble, bobbing gently while it stays on screen.
  * x, y: centre (px on the 1080x1920 canvas)
  */
-export function Prop({ name, at, until, t, frame, fps, x, y, size = 330 }) {
+export function Prop({ name, at, until, t, frame, fps, x, y, size = 330, held = false }) {
   // Animals and planes move into the scene itself instead of popping up in a bubble
   if (MOVER_NAMES.includes(name)) return <Creature name={name} at={at} until={until} t={t} />;
   const draw = DRAW[name];
@@ -426,6 +426,8 @@ export function Prop({ name, at, until, t, frame, fps, x, y, size = 330 }) {
   const bob = Math.sin((t - at) * 3) * 8;
   const tilt = (1 - pop) * -25 + Math.sin((t - at) * 2.2) * 3;
   const a = t - at;
+  // A character is holding it: no bubble (cash still rains down the first time)
+  if (held) return name === "cash" ? <CashRain a={a} /> : null;
   const flash = name === "police" ? (Math.floor(a * 4) % 2 ? "#2F6BFF" : "#FF2E2E") : null;
   return (
     <>

@@ -26,6 +26,17 @@ const { fontFamily: MONTSERRAT } = loadFont("normal", { weights: ["900"], subset
 const FONT = `${MONTSERRAT}, "Arial Black", "Segoe UI Black", sans-serif`;
 const DEFAULT_CAST = ["A", "B"];
 const PHASES = { A: 0, B: 1.6, C: 3.1, D: 0.8, E: 2.4, F: 4 };
+// Objects a person holds instead of showing in a bubble: prop name -> [drawing in Character.jsx, how it's held]
+//   look = up in front of them, looking at it · show = held out · carry = hanging at their side
+const HOLDABLE = {
+  phone: ["phone", "look"], envelope: ["note", "look"], photo: ["photo", "look"], exam: ["exam", "look"],
+  bill: ["bill", "look"], newspaper: ["newspaper", "look"], microphone: ["mic", "look"], radio: ["radio", "look"],
+  cash: ["cash", "show"], key: ["key", "show"], gift: ["gift", "show"], coconut: ["coconut", "show"],
+  water: ["bottle", "show"], medicine: ["pills", "show"], torch: ["torch", "show"], trophy: ["trophy", "show"],
+  bag: ["bag", "carry"],
+};
+const SHOW_VERBS = /\b(handed|hands|gave|give|gives|offered|held out|holds out|showed|threw|paid|slipped|put)\b/i;
+const LOOK_VERBS = /\b(read|reads|reading|counted|counting|stared at|looked at|checked|opened)\b/i;
 const smooth = (k) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
 
 function layoutFor(cast) {
@@ -452,10 +463,37 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
 
   const seatedHere = line.seated || [];
   const deskScenes = ["office", "meeting"];
+
+  // Handling things: when a line brings up an object a person would hold, the character the line is
+  // about reaches for it and holds it (instead of it popping up in a bubble)
+  const lineEnd = next ? next.start : line.end + 0.3;
+  const holdInfo = (() => {
+    const item = line.prop && HOLDABLE[line.prop];
+    const who = actorOf(line);
+    if (!item || !who || !cast.includes(who) || seatedHere.includes(who) || line.recap) return null;
+    const at = line.propAt ?? line.start;
+    if (t < at) return null;
+    const keeps = next && next.prop === line.prop && next.propHold && actorOf(next) === who;
+    const kIn = line.propHold ? 1 : smooth((t - at) / 0.45);
+    const kOut = keeps ? 1 : 1 - smooth((t - (lineEnd - 0.35)) / 0.35);
+    const style = SHOW_VERBS.test(line.text) ? (item[1] === "carry" ? "carry" : "show")
+      : LOOK_VERBS.test(line.text) ? "look" : item[1];
+    return { who, item: item[0], style, k: Math.min(kIn, kOut) };
+  })();
+
+  // Walking from the script: "walked in" / "walked away" / "followed..." (services/sceneDetails.js)
+  const mover = line.move && !line.recap && cast.includes(actorOf(line)) && !seatedHere.includes(actorOf(line)) ? actorOf(line) : null;
+  // Leaving only makes sense as their last line in this place; otherwise they just walk on
+  const moveKind = mover && line.move === "out" && idx + 1 < nextRun ? "pace" : mover ? line.move : null;
+  const moveT = t - line.start;
+  const moveDur = Math.max(0.6, lineEnd - line.start);
+  const walkRamp = (k) => (k <= 0 || k >= 1 ? 0 : Math.min(1, k * 6 + 0.4, (1 - k) * 5));
   const renderCharacter = (who, i, walk = 0) => {
     const ps = poseState(lines, who, t);
     const seated = seatedHere.includes(who);
     const own = stateLine(lines, who, t);
+    const held = holdInfo && holdInfo.who === who ? holdInfo : null;
+    const running = who === mover && line.run;
     return (
       <Character
         who={who}
@@ -473,7 +511,11 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
         seated={seated}
         since={own && own.start <= t ? t - own.start : 9}
         walk={walk}
-        walkPhase={frame * 0.42 + (PHASES[who] || 0)}
+        run={running}
+        walkPhase={frame * (running ? 0.62 : 0.4) + (PHASES[who] || 0)}
+        hold={held ? held.item : null}
+        holdStyle={held ? held.style : "look"}
+        holdK={held ? held.k : 0}
         desk={seated && deskScenes.includes(sceneName) ? (shot === "single" ? "wide" : "narrow") : false}
       />
     );
@@ -497,22 +539,31 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
     // Knees-up framing: head around 45% down the screen, legs run off the bottom (seated: same head height)
     const S = 2.0;
     const w = 400 * S;
-    const charLeft = 540 - w / 2 + (left ? 70 : -70);
+    // Walking in close-up: "in" walks into frame from behind, "out" walks off ahead,
+    // "pace" is a tracking shot - they walk while the place slides past behind them
+    const forward = left ? -1 : 1;
+    let walkX = 0, walk = 0, track = 0;
+    if (actor === mover) {
+      if (moveKind === "in") { const k = moveT / Math.min(1.4, moveDur * 0.7); walkX = -forward * 950 * (1 - smooth(k)); walk = walkRamp(k); }
+      if (moveKind === "out") { const k = (moveT - 0.3) / 1.7; walkX = forward * 1000 * smooth(k); walk = k > 0 ? walkRamp(Math.min(k, 0.99)) : 0; }
+      if (moveKind === "pace") { const k = moveT / moveDur; track = Math.min(230, moveT * (line.run ? 170 : 95)); walk = walkRamp(k); }
+    }
+    const charLeft = 540 - w / 2 + (left ? 70 : -70) + walkX;
     const seatedHere1 = (line.seated || []).includes(actor);
     const charTop = 860 - 150 * S - (seatedHere1 ? 150 * S : 0);
     stage = (
       <AbsoluteFill style={{ transform: `translate(${shake.x}px, ${shake.y}px) scale(${z})`, transformOrigin: "50% 45%" }}>
-        <AbsoluteFill style={{ transform: `translateX(${left ? -110 : 110}px) scale(1.25)`, transformOrigin: "50% 50%" }}>
+        <AbsoluteFill style={{ transform: `translateX(${(left ? -110 : 110) - forward * track}px) scale(1.25)`, transformOrigin: "50% 50%" }}>
           <Background scene={sceneName} frame={frame} night={night} images={backgrounds} details={line.details || []} />
         </AbsoluteFill>
         <div style={{
           position: "absolute", left: charLeft, top: charTop, width: w, height: 900 * S,
           transform: left ? "scaleX(-1)" : undefined,
         }}>
-          {renderCharacter(actor, i)}
+          {renderCharacter(actor, i, walk)}
         </div>
         {/* foreground moves further than the background: depth */}
-        <AbsoluteFill style={{ transform: `translateX(${left ? -230 : 230}px) scale(1.42)`, transformOrigin: "50% 60%" }}>
+        <AbsoluteFill style={{ transform: `translateX(${(left ? -230 : 230) - forward * track * 1.8}px) scale(1.42)`, transformOrigin: "50% 60%" }}>
           <VectorFront scene={sceneName} frame={frame} night={night} details={line.details || []} />
         </AbsoluteFill>
         {nightOverlay}
@@ -539,11 +590,19 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
           const moving = !!prevRun && enter < 1 && Math.abs(p.left - startLeft) > 20;
           const fromSide = i < cast.length / 2 ? -1 : 1;
           const arriveX = arrive < 1 ? fromSide * 170 * (1 - smooth(arrive)) : 0;
-          const walk = moving ? Math.min(1, (1 - enter) * 4) : arrive < 1 ? Math.min(1, (1 - arrive) * 3) : 0;
+          let walk = moving ? Math.min(1, (1 - enter) * 4) : arrive < 1 ? Math.min(1, (1 - arrive) * 3) : 0;
+          // The script moves this person: walks in from their side, walks off, or steps forward
+          let moveX = 0, flip = facesLeft(p.who, i);
+          if (p.who === mover) {
+            const side = i < cast.length / 2 ? -1 : 1;
+            if (moveKind === "in") { const k = moveT / Math.min(1.5, moveDur * 0.7); moveX = side * 800 * (1 - smooth(k)); walk = Math.max(walk, walkRamp(k)); }
+            if (moveKind === "out") { const k = (moveT - 0.3) / 1.8; moveX = side * 900 * smooth(k); if (k > 0 && k < 1) { walk = walkRamp(k); flip = side < 0; } }
+            if (moveKind === "pace") { const k = moveT / 1.1; moveX = -side * 110 * smooth(k); walk = Math.max(walk, walkRamp(k)); }
+          }
           return (
             <div key={p.who} style={{
-              position: "absolute", left: pLeft + arriveX, top: top + rise, width: w, height: h, opacity,
-              transform: facesLeft(p.who, i) ? "scaleX(-1)" : undefined,
+              position: "absolute", left: pLeft + arriveX + moveX, top: top + rise, width: w, height: h, opacity,
+              transform: flip ? "scaleX(-1)" : undefined,
             }}>
               {renderCharacter(p.who, i, walk)}
             </div>
@@ -579,7 +638,7 @@ export function Skit({ scene, lines, hook, endCard, audio, mouth = null, backgro
           const p = people.find(q => q.who === actorOf(line)) || people[1];
           x = Math.min(900, Math.max(180, p.head.x)); y = 760; size = 240;
         }
-        return <Prop name={line.prop} at={line.propAt ?? line.start} until={until} t={t} frame={frame} fps={fps} x={x} y={y} size={size} />;
+        return <Prop name={line.prop} at={line.propAt ?? line.start} until={until} t={t} frame={frame} fps={fps} x={x} y={y} size={size} held={!!holdInfo} />;
       })()}
       <Captions lines={lines} t={t} frame={frame} fps={fps} />
       {line.speaker === "CARD" && t <= line.end + 0.3 && <TitleCard line={line} t={t} frame={frame} fps={fps} />}
