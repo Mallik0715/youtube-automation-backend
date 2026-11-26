@@ -1,0 +1,139 @@
+{
+  "id": "the-boy-who-gave-away-412-cups",
+  "title": "The Boy Who Gave Away 412 Cups",
+  "interactive": true,
+  "hero": "Leo",
+  "heroCode": "B",
+  "music": "suspense",
+  "hashtags": [
+    "#shorts",
+    "#whatwouldyoudo",
+    "#lifechoices",
+    "#kindness",
+    "#drama"
+  ],
+  "tags": [
+    "what would you do story",
+    "tea seller story",
+    "inspiring acts of kindness",
+    "railway station mystery",
+    "moral dilemma shorts"
+  ],
+  "description": "Every morning, Leo gave a free cup of tea to a silent stranger at the station. When the old man vanishes, a mysterious visitor delivers news that changes Leo's life.",
+  "characters": [
+    {
+      "code": "B",
+      "name": "Leo",
+      "role": "young tea vendor on Platform 3"
+    },
+    {
+      "code": "D",
+      "name": "Bruno",
+      "role": "tough station mechanic who mocks Leo"
+    },
+    {
+      "code": "F",
+      "name": "Victor",
+      "role": "sharp attorney in a purple suit"
+    }
+  ],
+  "generated": {
+    "mode": "story",
+    "from": "The Boy Who Gave Away 412 Cups of Tea",
+    "at": "2026-11-14T10:00:17.308Z"
+  },
+  "parts": [
+    {
+      "title": "The Silent Stranger",
+      "hook": "A silent stranger leaves behind a *shocking secret* inside a box.",
+      "choice": {
+        "question": "What should Leo do with the gift?",
+        "a": "Accept the house to attend school",
+        "b": "Decline it and stay selling tea"
+      },
+      "segments": [
+        {
+          "scene": "street",
+          "night": false,
+          "cast": [
+            "B",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Every morning at dawn, Leo poured hot tea for a silent stranger on Bench Four.",
+              "emotion": "neutral",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "He never charged a single coin.",
+              "emotion": "neutral",
+              "focus": "B"
+            },
+            {
+              "speaker": "D",
+              "text": "You are wasting your hard-earned money, kid!",
+              "emotion": "angry"
+            },
+            {
+              "speaker": "N",
+              "text": "Bruno warned him daily, but Leo never stopped.",
+              "emotion": "worried",
+              "focus": "D"
+            }
+          ]
+        },
+        {
+          "scene": "street",
+          "night": false,
+          "cast": [
+            "B",
+            "F"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Then one freezing morning, Bench Four was completely empty.",
+              "emotion": "worried",
+              "focus": "B",
+              "sfx": "whoosh"
+            },
+            {
+              "speaker": "N",
+              "text": "Three days later, a lawyer in a purple suit stepped off the train.",
+              "emotion": "surprised",
+              "focus": "F",
+              "sfx": "footsteps"
+            },
+            {
+              "speaker": "N",
+              "text": "Victor set a heavy wooden box and a sealed envelope on the tea cart.",
+              "emotion": "surprised",
+              "focus": "F"
+            },
+            {
+              "speaker": "N",
+              "text": "Inside were four hundred and twelve saved cups, and the deed to a house.",
+              "emotion": "surprised",
+              "fx": "shake",
+              "focus": "B"
+            },
+            {
+              "speaker": "F",
+              "text": "The house is yours, if you leave to study.",
+              "emotion": "neutral"
+            },
+            {
+              "speaker": "N",
+              "text": "Leo looked at the house key, then back at his humble tea cart.",
+              "emotion": "worried",
+              "focus": "B"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

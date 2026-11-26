@@ -1,0 +1,127 @@
+{
+  "id": "mom-texted-don-t-open-the-door",
+  "title": "Mom Texted: Don't Open the Door",
+  "interactive": true,
+  "branching": true,
+  "choiceStyle": "wwyd",
+  "hero": "Milo",
+  "heroCode": "B",
+  "music": "suspense",
+  "hashtags": [
+    "#shorts",
+    "#whatwouldyoudo",
+    "#suspense",
+    "#thriller",
+    "#scarystory"
+  ],
+  "tags": [
+    "scary story shorts",
+    "what would you do horror",
+    "mom texted do not open the door",
+    "animated suspense story",
+    "scary mystery animated"
+  ],
+  "description": "Milo receives a chilling text from his mom warning him about an impostor inside the house. Can he survive the night?",
+  "characters": [
+    {
+      "code": "B",
+      "name": "Milo",
+      "role": "Teenager home alone"
+    },
+    {
+      "code": "C",
+      "name": "Mom",
+      "role": "Milo's mother who works night shifts"
+    }
+  ],
+  "generated": {
+    "mode": "story",
+    "from": "Mom Texted: Don't Open the Door For Me Tonight",
+    "at": "2026-11-25T18:34:37.853Z"
+  },
+  "parts": [
+    {
+      "title": "Don't Open The Door",
+      "recap": "Milo's mom texted from the hospital, but someone with her voice just unlocked the front door.",
+      "hook": "His mom sent a *terrifying text* from work.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Call Mom to check if she is really still at work",
+        "b": "Hide under the bed and stay completely silent"
+      },
+      "segments": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "B"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "At two fourteen in the morning, Milo's phone screen lit up.",
+              "emotion": "neutral",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "The text was from his mom on her hospital night shift.",
+              "emotion": "worried",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "It read: Do not open the door for me tonight.",
+              "emotion": "scared",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "A second message flashed immediately after.",
+              "emotion": "scared",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "I am still at work. Whatever is downstairs is not me.",
+              "emotion": "scared",
+              "focus": "B",
+              "sfx": "knock"
+            },
+            {
+              "speaker": "N",
+              "text": "Downstairs, heavy metal keys jingled in the front lock.",
+              "emotion": "worried",
+              "focus": "B",
+              "sfx": "footsteps"
+            },
+            {
+              "speaker": "N",
+              "text": "Then, his mother's exact voice called out his name from the hallway.",
+              "emotion": "scared",
+              "focus": "B"
+            },
+            {
+              "speaker": "B",
+              "text": "Mom? Is that really you?",
+              "emotion": "crying"
+            },
+            {
+              "speaker": "N",
+              "text": "A final text popped up on his screen.",
+              "emotion": "scared",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "The note said: Don't answer. It learns your voice.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "B"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
