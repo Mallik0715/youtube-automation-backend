@@ -43,11 +43,15 @@ function validateSeries(series) {
     const fail = (msg) => { partErrors.push(msg); errors.push(`${where}: ${msg}`); };
     if (!part.hook) fail("missing hook");
     // Branching series: parts 2+ open with ifA or ifB (whichever option won the vote) - check both
-    const branched = series.branching && pi > 0;
+    // A part where the creator picked the option ("decided") only needs that one opening (or none)
+    const decided = part.decided === "a" || part.decided === "b" ? part.decided : null;
+    const branched = series.branching && pi > 0 && !decided;
     if (branched && (!Array.isArray(part.ifA) || !part.ifA.length || !Array.isArray(part.ifB) || !part.ifB.length)) {
       fail("branching series: parts 2+ need ifA and ifB (what happens after each option)");
     }
-    const variants = branched ? [[...(part.ifA || []), ...(part.segments || [])], [...(part.ifB || []), ...(part.segments || [])]] : [part.segments || []];
+    const variants = branched ? [[...(part.ifA || []), ...(part.segments || [])], [...(part.ifB || []), ...(part.segments || [])]]
+      : decided ? [[...((decided === "a" ? part.ifA : part.ifB) || []), ...(part.segments || [])]]
+      : [part.segments || []];
     const seen = new Set();
     const once = (msg) => { if (!seen.has(msg)) { seen.add(msg); fail(msg); } };
     let seconds = END_CARD;

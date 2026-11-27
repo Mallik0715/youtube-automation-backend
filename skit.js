@@ -94,7 +94,8 @@ async function runSeries() {
     }
     // Branching series: the story goes the way most viewers voted (default from the script when too few votes)
     if (part.branching) {
-      const branch = pickBranch(votes, part.follows);
+      // ...unless the creator already picked the option for this part on the writer page
+      const branch = part.decided || pickBranch(votes, part.follows);
       if (branch !== part.follows) part = getPart(part.seriesId, part.number, branch);
       console.log(`🔀 Story continues with option ${branch.toUpperCase()}`);
     }

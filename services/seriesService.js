@@ -226,7 +226,7 @@ function buildPart(series, partIndex, branch = null) {
   const total = series.parts.length;
   const number = partIndex + 1;
   const isLast = number === total;
-  const pick = series.branching && partIndex > 0 ? (branch || part.follows || "a") : null;
+  const pick = series.branching && partIndex > 0 ? (part.decided || branch || part.follows || "a") : null;
   const segments = pick ? [...((pick === "a" ? part.ifA : part.ifB) || []), ...part.segments] : part.segments;
   // Names the story uses for each character code (captions of their lines show it)
   const names = { ...Object.fromEntries((series.characters || []).map(c => [c.code, c.name])), ...(series.names || {}) };
@@ -320,6 +320,8 @@ function buildPart(series, partIndex, branch = null) {
     hero: series.hero || "he",
     // Interactive series: which option of the previous part's choice this part continues with
     follows: series.interactive && partIndex > 0 ? pick || part.follows || null : null,
+    // The creator picked which option happened (votes are still counted for the opening line, but do not change it)
+    decided: partIndex > 0 && (part.decided === "a" || part.decided === "b") ? part.decided : null,
     branching: !!series.branching,
     choice: part.choice || null,
     hashtags: series.hashtags || [],

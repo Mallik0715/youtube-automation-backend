@@ -200,7 +200,7 @@ function Editor({ id, meta, onSaved, onDeleted }) {
 
   const [job, start, clear] = useJob(useCallback((j) => {
     if (j.type === "preview" && j.status === "done") setVideo(j.result.video);
-    if (j.type === "rewrite" && j.status === "done") load();
+    if ((j.type === "rewrite" || j.type === "next-part") && j.status === "done") { load(); onSaved(); }
   }, [load]));
 
   if (error) return <section className="card"><p className="error">{error}</p></section>;
@@ -284,7 +284,46 @@ function Editor({ id, meta, onSaved, onDeleted }) {
           )}
         </div>
       ))}
+      {editable && (
+        <NextPart series={series} busy={job?.status === "running"}
+          onWrite={(body) => (dirty ? setError("Save your changes first") : start(`/api/series/${id}/next-part`, body).catch(e => setError(e.message)))} />
+      )}
     </section>
+  );
+}
+
+// Day by day: paste the script for the next part, say which option happened, and add it to the series
+function NextPart({ series, busy, onWrite }) {
+  const [story, setStory] = useState("");
+  const [chosen, setChosen] = useState("b");
+  const [notes, setNotes] = useState("");
+  const last = series.parts[series.parts.length - 1];
+  const n = series.parts.length + 1;
+  return (
+    <div className="part next-part">
+      <div className="part-head"><b>+ Write part {n}</b> <span className="sub"> · from your script, added after part {n - 1}</span></div>
+      <div className="part-body">
+        <label>Your script for part {n}
+          <textarea rows={8} value={story} onChange={e => setStory(e.target.value)}
+            placeholder="What happens in this part, how it ends, and the A/B question - in your own words." />
+        </label>
+        <div className="row">
+          <label>Which option happened after part {n - 1}?
+            <select value={chosen} onChange={e => setChosen(e.target.value)}>
+              {last?.choice && <option value="a">A: {last.choice.a}</option>}
+              {last?.choice && <option value="b">B: {last.choice.b}</option>}
+              <option value="">Let the most votes decide</option>
+            </select>
+          </label>
+        </div>
+        <label>Notes for the AI (optional)
+          <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. first-frame hook, who appears" />
+        </label>
+        <button className="primary" disabled={busy || story.trim().split(/\s+/).length < 25}
+          onClick={() => onWrite({ story, chosen: chosen || null, notes })}>Write part {n} ⏎</button>
+        <div className="hint">Then: preview it if you like, and press "Push to GitHub" - it uploads right away.</div>
+      </div>
+    </div>
   );
 }
 

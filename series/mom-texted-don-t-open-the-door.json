@@ -5,7 +5,7 @@
   "branching": true,
   "choiceStyle": "wwyd",
   "hero": "Milo",
-  "heroCode": "B",
+  "heroCode": "A",
   "music": "suspense",
   "hashtags": [
     "#shorts",
@@ -21,17 +21,83 @@
     "animated suspense story",
     "scary mystery animated"
   ],
-  "description": "Milo receives a chilling text from his mom warning him about an impostor inside the house. Can he survive the night?",
+  "description": "Milo's mom texted: Don't open the door. Whatever is downstairs is not me. You decide what he does - the most votes in the comments decide the next part.",
   "characters": [
     {
-      "code": "B",
+      "code": "A",
       "name": "Milo",
-      "role": "Teenager home alone"
+      "role": "teenager home alone",
+      "look": {
+        "age": "teen",
+        "gender": "male",
+        "build": "slim",
+        "skin": "light",
+        "hair": "sidepart",
+        "hairColor": "brown",
+        "top": "shirt",
+        "topColor": "teal",
+        "bottom": "pants",
+        "bottomColor": "brown",
+        "extras": [
+          "glasses"
+        ]
+      }
+    },
+    {
+      "code": "B",
+      "name": "Mom",
+      "role": "Milo's real mother",
+      "look": {
+        "age": "adult",
+        "gender": "female",
+        "build": "average",
+        "skin": "light",
+        "hair": "ponytail",
+        "hairColor": "brown",
+        "top": "coat",
+        "topColor": "yellow",
+        "bottom": "pants",
+        "bottomColor": "black",
+        "extras": []
+      }
     },
     {
       "code": "C",
-      "name": "Mom",
-      "role": "Milo's mother who works night shifts"
+      "name": "The Mimic",
+      "role": "shapeshifting entity",
+      "look": {
+        "age": "adult",
+        "gender": "female",
+        "build": "slim",
+        "skin": "pale",
+        "hair": "messy",
+        "hairColor": "black",
+        "top": "sweater",
+        "topColor": "grey",
+        "bottom": "pants",
+        "bottomColor": "grey",
+        "extras": []
+      }
+    },
+    {
+      "code": "D",
+      "name": "Leo",
+      "role": "tech-savvy neighbor",
+      "look": {
+        "age": "teen",
+        "gender": "male",
+        "build": "slim",
+        "skin": "tan",
+        "hair": "slick",
+        "hairColor": "black",
+        "top": "jacket",
+        "topColor": "blue",
+        "bottom": "pants",
+        "bottomColor": "grey",
+        "extras": [
+          "glasses"
+        ]
+      }
     }
   ],
   "generated": {
@@ -42,7 +108,7 @@
   "parts": [
     {
       "title": "Don't Open The Door",
-      "recap": "Milo's mom texted from the hospital, but someone with her voice just unlocked the front door.",
+      "recap": "Milo's mom texted from her night shift: Don't open the door. Whatever is downstairs is not me. Then her voice called his name from the hallway.",
       "hook": "His mom sent a *terrifying text* from work.",
       "choice": {
         "question": "What would you do?",
@@ -54,55 +120,55 @@
           "scene": "bedroom",
           "night": true,
           "cast": [
-            "B"
+            "A"
           ],
           "lines": [
             {
               "speaker": "N",
               "text": "At two fourteen in the morning, Milo's phone screen lit up.",
               "emotion": "neutral",
-              "focus": "B"
+              "focus": "A"
             },
             {
               "speaker": "N",
               "text": "The text was from his mom on her hospital night shift.",
               "emotion": "worried",
-              "focus": "B"
+              "focus": "A"
             },
             {
               "speaker": "N",
               "text": "It read: Do not open the door for me tonight.",
               "emotion": "scared",
-              "focus": "B"
+              "focus": "A"
             },
             {
               "speaker": "N",
               "text": "A second message flashed immediately after.",
               "emotion": "scared",
-              "focus": "B"
+              "focus": "A"
             },
             {
               "speaker": "N",
               "text": "I am still at work. Whatever is downstairs is not me.",
               "emotion": "scared",
-              "focus": "B",
+              "focus": "A",
               "sfx": "knock"
             },
             {
               "speaker": "N",
               "text": "Downstairs, heavy metal keys jingled in the front lock.",
               "emotion": "worried",
-              "focus": "B",
+              "focus": "A",
               "sfx": "footsteps"
             },
             {
               "speaker": "N",
               "text": "Then, his mother's exact voice called out his name from the hallway.",
               "emotion": "scared",
-              "focus": "B"
+              "focus": "A"
             },
             {
-              "speaker": "B",
+              "speaker": "A",
               "text": "Mom? Is that really you?",
               "emotion": "crying"
             },
@@ -110,18 +176,261 @@
               "speaker": "N",
               "text": "A final text popped up on his screen.",
               "emotion": "scared",
-              "focus": "B"
+              "focus": "A"
             },
             {
               "speaker": "N",
               "text": "The note said: Don't answer. It learns your voice.",
               "emotion": "scared",
               "fx": "shake",
-              "focus": "B"
+              "focus": "A"
             }
           ]
         }
       ]
+    },
+    {
+      "title": "Backwards Feet",
+      "recap": "Milo hid under his bed, saw backwards feet, received conflicting texts, and heard a horn outside.",
+      "hook": "Those aren't *Mom's feet*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Jump out the window and run to the car",
+        "b": "Stay frozen and trust the unknown number"
+      },
+      "follows": "b",
+      "ifB": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo slid under the bed without a sound.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "He pressed his chest to the rug and held his breath.",
+              "emotion": "scared",
+              "focus": "A"
+            }
+          ],
+          "seated": []
+        }
+      ],
+      "segments": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A",
+            "C"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Slow steps entered the room. The wooden door creaked.",
+              "emotion": "scared",
+              "focus": "C",
+              "sfx": "knock"
+            },
+            {
+              "speaker": "N",
+              "text": "Two feet stopped beside the bed in Mom's blue slippers.",
+              "emotion": "worried",
+              "focus": "C"
+            },
+            {
+              "speaker": "N",
+              "text": "The heels faced forward. The toes pointed backward.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "C"
+            },
+            {
+              "speaker": "C",
+              "text": "Milo... I know you're here.",
+              "emotion": "scared"
+            }
+          ]
+        },
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo's phone glowed on the rug. A text from Mom.",
+              "emotion": "surprised",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The text said: Run to the window. Jump.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "A second text arrived from a hidden number: Don't. It learned her phone.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Outside the glass, a car horn blared into the night.",
+              "emotion": "surprised",
+              "focus": "A",
+              "sfx": "stinger"
+            }
+          ]
+        }
+      ],
+      "decided": "b"
     }
-  ]
+  ],
+  "names": {
+    "A": "Milo",
+    "B": "Mom",
+    "C": "The Mimic",
+    "D": "Leo"
+  },
+  "looks": {
+    "A": {
+      "name": "Milo",
+      "custom": true,
+      "size": 0.9,
+      "headScale": 1.07,
+      "stoop": 0,
+      "build": "slim",
+      "skin": "#EDC09A",
+      "hair": "#5A341A",
+      "hairStyle": "sidepart",
+      "hairPath": null,
+      "shirt": "#2AA597",
+      "shirtDark": "#218176",
+      "sleeve": "#2AA597",
+      "pants": "#5A341A",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#1b6b62",
+      "overalls": "#5A341A",
+      "accent": "#2AA597",
+      "top": "shirt",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": true,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    },
+    "B": {
+      "name": "Mom",
+      "custom": true,
+      "size": 1,
+      "headScale": 1,
+      "stoop": 0,
+      "build": "average",
+      "skin": "#EDC09A",
+      "hair": "#5A341A",
+      "hairStyle": "ponytail",
+      "hairPath": null,
+      "shirt": "#F2B83E",
+      "shirtDark": "#bd9030",
+      "sleeve": "#F2B83E",
+      "pants": "#1E1E22",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#9d7828",
+      "overalls": "#1E1E22",
+      "accent": "#F2B83E",
+      "top": "coat",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": false,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    },
+    "C": {
+      "name": "The Mimic",
+      "custom": true,
+      "size": 1,
+      "headScale": 1,
+      "stoop": 0,
+      "build": "slim",
+      "skin": "#F8DCC8",
+      "hair": "#1F1A17",
+      "hairStyle": "messy",
+      "hairPath": null,
+      "shirt": "#8A9099",
+      "shirtDark": "#6c7077",
+      "sleeve": "#8A9099",
+      "pants": "#8A9099",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#5a5e63",
+      "overalls": "#8A9099",
+      "accent": "#8A9099",
+      "top": "sweater",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": false,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    },
+    "D": {
+      "name": "Leo",
+      "custom": true,
+      "size": 0.9,
+      "headScale": 1.07,
+      "stoop": 0,
+      "build": "slim",
+      "skin": "#D9A27A",
+      "hair": "#1F1A17",
+      "hairStyle": "slick",
+      "hairPath": null,
+      "shirt": "#3E6FB0",
+      "shirtDark": "#305789",
+      "sleeve": "#3E6FB0",
+      "pants": "#8A9099",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#284872",
+      "overalls": "#8A9099",
+      "accent": "#3E6FB0",
+      "top": "jacket",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": true,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    }
+  }
 }

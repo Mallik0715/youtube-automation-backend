@@ -1279,6 +1279,103 @@ function Fog({ frame, outdoor }) {
   );
 }
 
+// Tech lab / basement workshop: a wall of signal monitors, server racks, a workbench, red alarm lights
+function Lab({ frame, night, details }) {
+  const alarm = has(details, "alarm") || has(details, "storm");
+  const wave = (x0, y0, w, h, k, color) => {
+    let d = `M${x0} ${y0 + h / 2}`;
+    for (let i = 1; i <= 24; i++) {
+      const x = x0 + (w * i) / 24;
+      const y = y0 + h / 2 + Math.sin(i * 0.9 + frame * 0.25 + k) * h * 0.32 * (i % 5 === 0 ? 1.6 : 1);
+      d += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+    return <path d={d} fill="none" stroke={color} strokeWidth="3" />;
+  };
+  return (
+    <g>
+      <Room wall="#3E4550" side="#343A44" floor="#2E3238" plank="#3A3F46" base="#343A44" />
+      {/* pipes and cables */}
+      <rect x={60} y={70} width={980} height={24} rx="12" fill="#5E6670" {...O} strokeWidth="4" />
+      <path d="M120 94 Q140 300 110 500 M960 94 Q930 260 970 480" fill="none" stroke="#1E1E22" strokeWidth="10" />
+      {/* wall of monitors */}
+      {[0, 1, 2].map(c => [0, 1].map(r => {
+        const x = 230 + c * 210, y = 300 + r * 170;
+        const red = (c + r + Math.floor(frame / 20)) % 4 === 0;
+        return (
+          <g key={`${c}${r}`}>
+            <rect x={x} y={y} width="190" height="150" rx="10" fill="#1E2328" {...O} />
+            <rect x={x + 12} y={y + 12} width="166" height="110" rx="4" fill={red ? "#2A0E10" : "#0B2420"} />
+            {wave(x + 16, y + 20, 158, 90, c * 2 + r, red ? "#FF5252" : "#5CFF9D")}
+          </g>
+        );
+      }))}
+      {/* server racks with blinking lights */}
+      {[100, 870].map((x, k) => (
+        <g key={x}>
+          <rect x={x} y={560} width={110} height={800} rx="6" fill="#262A31" {...O} />
+          {Array.from({ length: 12 }).map((_, i) => (
+            <g key={i}>
+              <rect x={x + 12} y={590 + i * 62} width="86" height="44" rx="4" fill="#33383F" stroke="#1A1D22" strokeWidth="3" />
+              <circle cx={x + 26} cy={612 + i * 62} r="5" fill={(i + k + Math.floor(frame / 6)) % 3 === 0 ? "#5CFF9D" : "#1F4D33"} />
+              <circle cx={x + 42} cy={612 + i * 62} r="5" fill={(i * 2 + k + Math.floor(frame / 9)) % 4 === 0 ? "#FFB43F" : "#4D3A1F"} />
+            </g>
+          ))}
+        </g>
+      ))}
+      {/* workbench with a router, antenna and tools */}
+      <rect x={250} y={1110} width={580} height={34} fill="#6B5038" {...O} />
+      <rect x={270} y={1144} width={540} height={210} fill="#57412E" {...O} />
+      <rect x={300} y={1060} width={130} height={52} rx="10" fill="#1E2328" {...O} strokeWidth="4" />
+      {[320, 360, 400].map(x => <line key={x} x1={x} y1="1062" x2={x - 10} y2="1000" stroke={INK} strokeWidth="5" strokeLinecap="round" />)}
+      {[330, 350, 370, 390].map((x, i) => <circle key={x} cx={x} cy="1092" r="5" fill={(i + Math.floor(frame / 5)) % 2 ? "#5CFF9D" : "#1F4D33"} />)}
+      <line x1="700" y1="1110" x2="740" y2="900" stroke="#9AA5AA" strokeWidth="8" />
+      <circle cx="740" cy="900" r="16" fill="#E25B5B" {...O} strokeWidth="4" />
+      {[0, 1, 2].map(k => { const p = ((frame * 0.03 + k / 3) % 1); return <circle key={k} cx="740" cy="900" r={20 + p * 80} fill="none" stroke="#E25B5B" strokeWidth="3" opacity={1 - p} />; })}
+      <rect x={520} y={1080} width={120} height={30} rx="6" fill="#C9A227" {...O} strokeWidth="3" />
+      {/* red alarm light sweeping */}
+      {alarm && (
+        <g>
+          <rect width={W} height={H} fill="#FF1E1E" opacity={0.1 + 0.1 * Math.max(0, Math.sin(frame * 0.4))} />
+          <circle cx={540} cy={150} r="26" fill="#FF3B3B" {...O} strokeWidth="4" />
+        </g>
+      )}
+      <rect width={W} height={H} fill="#05070C" opacity={night ? 0.15 : 0.05} />
+    </g>
+  );
+}
+
+// Concrete storm drain: a round tunnel going away, shallow water flowing, a ladder up to a grate
+function Drain({ frame, night, details }) {
+  const flow = (frame * 3) % 60;
+  const rings = [0, 1, 2, 3, 4, 5];
+  return (
+    <g>
+      <rect width={W} height={H} fill="#1B1F24" />
+      {/* rings of the pipe getting smaller into the distance */}
+      {rings.map(i => {
+        const k = i / rings.length;
+        const r = 760 * (1 - k * 0.82);
+        return <ellipse key={i} cx={540} cy={900 - k * 40} rx={r} ry={r * 1.05} fill={i % 2 ? "#4A5058" : "#545A62"} stroke="#3A4047" strokeWidth="6" />;
+      })}
+      <ellipse cx={540} cy={858} rx={110} ry={115} fill="#0A0C10" />
+      {/* light falling through a grate above */}
+      <path d="M440 0 L640 0 L760 1500 L320 1500 Z" fill="#DDEBFF" opacity={night ? 0.08 : 0.14} />
+      {[460, 500, 540, 580, 620].map(x => <rect key={x} x={x} y={0} width="14" height="40" fill="#2B2F35" />)}
+      {/* ladder on the side */}
+      <g>
+        {[0, 1].map(k => <rect key={k} x={850 + k * 80} y={300} width="14" height="1100" fill="#7A6A5A" {...O} strokeWidth="3" />)}
+        {Array.from({ length: 12 }).map((_, i) => <rect key={i} x={850} y={340 + i * 90} width="94" height="12" fill="#8A7A6A" stroke={INK} strokeWidth="3" />)}
+      </g>
+      {/* water on the floor */}
+      <path d={`M0 1500 Q540 1420 1080 1500 L1080 ${H} L0 ${H} Z`} fill="#3F5A6E" />
+      {[0, 1, 2, 3].map(r => <path key={r} d={`M${-60 + ((flow + r * 30) % 60)} ${1560 + r * 90} q60 -12 120 0 t120 0 t120 0 t120 0 t120 0 t120 0 t120 0 t120 0 t120 0 t120 0`} fill="none" stroke="#8FB3C9" strokeWidth="4" opacity={0.6 - r * 0.1} />)}
+      {/* drips */}
+      {[0, 1, 2].map(i => { const p = ((frame * 0.02 + i / 3) % 1); return <ellipse key={i} cx={300 + i * 230} cy={300 + p * 1200} rx="4" ry="8" fill="#8FB3C9" opacity={1 - p} />; })}
+      <rect width={W} height={H} fill="#000" opacity="0.2" />
+    </g>
+  );
+}
+
 // scene name -> [back, front]
 export const VECTOR_SCENES = {
   home: [Home, HomeFront],
@@ -1308,6 +1405,10 @@ export const VECTOR_SCENES = {
   cliff: [Cliff, ForestFront],
   camp: [Camp, null],
   village: [Village, null],
+  lab: [Lab, null],
+  workshop: [Lab, null],
+  drain: [Drain, null],
+  tunnel: [Drain, null],
   gate: [Village, null],
 };
 

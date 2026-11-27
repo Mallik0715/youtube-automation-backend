@@ -905,6 +905,7 @@ const SCENES = {
   bank: Museum, hospital: Office, mall: Street, lift: Office, island: Shore,
   // Drawn in remotion/Scenes.jsx (these older drawings are only fallbacks)
   kitchen: Home, controlroom: RadioStation, basement: RadioStation, cliff: Forest, camp: Shore,
+  lab: RadioStation, workshop: RadioStation, drain: Tunnel,
 };
 export const SCENE_NAMES = Object.keys(SCENES);
 // Scenes that bring their own darkness and light get a lighter night overlay

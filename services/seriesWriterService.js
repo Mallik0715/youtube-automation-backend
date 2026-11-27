@@ -31,7 +31,8 @@ const SCENE_HINTS = {
   bedroom: "teen bedroom", classroom: "school classroom", canteen: "school canteen", corridor: "school corridor with lockers",
   shop: "phone / gadget shop", bank: "bank hall", hospital: "hospital room", mall: "shopping mall", lift: "elevator", island: "desert island beach",
   kitchen: "kitchen with the family dining table (dinner, counting money, signing papers)",
-  controlroom: "building basement / janitor's room / control room with the lift motor",
+  controlroom: "building basement / janitor's room with the LIFT motor (only for lift stories)",
+  lab: "tech lab / hacker workshop / secret underground lab: monitors, servers, workbench", drain: "storm drain / sewer tunnel",
   cliff: "jungle cliff with a stream at the bottom", camp: "small camp on a beach: tent, radio on a crate, boat tied to rocks",
 };
 
@@ -259,10 +260,85 @@ async function writeSeries(input, onLog = () => {}) {
   return { series, outline, check };
 }
 
+/**
+ * Writes ONE new part from the creator's script for it and adds it to the end of a series - the
+ * day-by-day way: post Part 1, see the comments, write Part 2, push, it uploads.
+ * @param {object} series   the existing series (its parts so far are already posted / queued)
+ * @param {{story: string, chosen?: "a"|"b"|null, notes?: string}} input
+ *   chosen: the option of the previous part's A/B question this part continues with. Set = the creator
+ *   decided (votes don't change it); null = most votes decide (both openings are written)
+ * @returns {Promise<{part: object, newCharacters: object[]}>}
+ */
+async function writeNextPart(series, { story, chosen = null, notes = "" }, onLog = () => {}) {
+  if ((story || "").trim().split(/\s+/).length < 25) throw new Error("the script is too short - write what happens in this part");
+  const index = series.parts.length;
+  const prev = series.parts[index - 1] || null;
+  const chars = (series.characters || []).filter(c => c.code);
+  const used = new Set(chars.map(c => c.code));
+  const free = CHARACTERS.filter(k => !used.has(k));
+  const pick = chosen === "a" || chosen === "b" ? chosen : null;
+  const sofar = series.parts.map((p, i) => `Part ${i + 1}: ${p.recap || (p.hook || p.title || "").replace(/\*/g, "")}`).join(" ");
+
+  // 1) plan: title, hook, recap, the A/B question, and anyone new who appears
+  onLog(`📝 Planning part ${index + 1} with ${PROVIDER() === "gemini" ? "Gemini" : "Groq"}...`);
+  const plan = await ask(
+    `You plan the next part of a narrated "What would you do?" YouTube Shorts series. ${STYLE}
+Keep the creator's events exactly. Return JSON only:
+{"title": "2-4 words", "hook": "on-screen headline, max 12 words, wrap 1-3 key words in *stars*",
+ "recap": "1-2 short sentences (max 22 words) read at the start of the NEXT part: what happened here and the dilemma it ends on",
+ "beats": "3-5 sentences: exactly what happens in this part, ending on the cliffhanger",
+ "choice": {"question": "What would you do?", "a": "option A, max 14 words, no final punctuation", "b": "option B, same style"},
+ "newCharacters": [only people who appear on screen for the first time, max ${free.length}: {"code": one of ${free.join(", ") || "(none left)"}, "name": "...", "role": "...", ${SPEC_HELP}}]}
+If the creator wrote the A/B options or a first-frame hook, use theirs.`,
+    `Series: ${series.title}
+Characters so far: ${chars.map(c => `${c.code} = ${c.name} (${c.role || ""})`).join("; ") || "(none listed)"}
+Story so far: ${sofar}
+${prev?.choice ? `Last part asked: ${prev.choice.question} A: ${prev.choice.a} / B: ${prev.choice.b}.${pick ? ` What happened: option ${pick.toUpperCase()} (${prev.choice[pick]}).` : ""}` : ""}
+The creator's script for part ${index + 1}:
+${story}${notes ? `\nNotes: ${notes}` : ""}`,
+    3000, onLog);
+
+  const newCharacters = (Array.isArray(plan.newCharacters) ? plan.newCharacters : [])
+    .filter(c => c && free.includes(c.code)).slice(0, free.length);
+  const cast = [...chars, ...newCharacters];
+  const p = { title: plan.title || `Part ${index + 1}`, beats: plan.beats || story, hook: plan.hook || plan.title, choice: plan.choice || {}, recap: plan.recap };
+
+  // 2) write the scenes. With the option decided there is one opening; otherwise one per option.
+  const outline = { title: series.title, characters: cast, parts: [...series.parts.map(q => ({ title: q.title, beats: q.recap || q.hook, choice: q.choice || {} })), p] };
+  const heroCode = series.heroCode || cast[0]?.code || "A";
+  let { system, user } = partPrompt(outline, index, heroCode);
+  if (pick || !prev) {
+    system = system.replace(/Format - JSON only: \{"ifA"[\s\S]*?- segments: the rest of the part\. It is played after ifA OR ifB, so it must make sense after either one\./,
+      `Format - JSON only: {"segments": [{"scene": "...", "night": false, "cast": ["A"], "lines": [ ... ]}]}`);
+    system = system.replace(EXAMPLE_NEXT, EXAMPLE_FIRST);
+    user += pick ? `\nOption ${pick.toUpperCase()} is what happened last time - start right after it (no other version).` : "";
+  }
+  user += `\nThe creator's own script (keep their events and details): ${story}`;
+  onLog(`✍️  Writing part ${index + 1}: ${p.title}`);
+  let feedback = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const res = await ask(system, user + feedback, 5000, onLog);
+    const part = {
+      title: p.title, ...(p.recap ? { recap: String(p.recap).replace(/\*/g, "") } : {}), hook: p.hook, choice: cleanChoice(p.choice),
+      ...(index > 0 && pick ? { follows: pick, decided: pick } : {}),
+      ...(index > 0 && !pick ? { follows: "a", ifA: normalizeSegments(res.ifA), ifB: normalizeSegments(res.ifB) } : {}),
+      segments: normalizeSegments(res.segments),
+    };
+    const probe = { ...series, id: "probe", characters: cast, parts: [...series.parts, part] };
+    const r = validateSeries(probe);
+    const mine = r.parts[r.parts.length - 1];
+    if (!mine.errors.length && mine.seconds <= 66) return { part, newCharacters };
+    const problems = [...mine.errors, ...(mine.seconds > 66 ? [`too long (~${mine.seconds}s) - cut to about 100 words`] : [])];
+    onLog(`   part ${index + 1}: ${problems.join("; ")}${attempt === 1 ? " - asking the AI to fix it" : ""}`);
+    if (attempt === 2) return { part, newCharacters };
+    feedback = `\n\nYour previous answer had these problems, fix them: ${problems.join("; ")}`;
+  }
+}
+
 /** Rewrites one part of an existing draft (same outline beats) */
 async function rewritePart(series, outline, index, onLog = () => {}) {
   onLog(`✍️  Rewriting part ${index + 1}...`);
   return writePart(outline, index, series.heroCode || "B", onLog);
 }
 
-module.exports = { writeSeries, rewritePart, slugify, CAST };
+module.exports = { writeSeries, writeNextPart, rewritePart, slugify, CAST };

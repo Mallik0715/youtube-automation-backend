@@ -141,6 +141,32 @@ router.post("/api/series/:id/parts/:n/rewrite", wrap((req, res) => {
   res.json({ job: job.id });
 }));
 
+// Day by day: write the next part from the creator's script and add it to the end of the series.
+// body: { story, chosen: "a" | "b" | null (null = most votes decide), notes }
+router.post("/api/series/:id/next-part", wrap((req, res) => {
+  const s = readSeries(req.params.id);
+  if (!fs.existsSync(jsonFile(s.file))) return res.status(400).json({ error: "hand-written series (.js) are extended in code, not here" });
+  if (busy("next-part")) return res.status(409).json({ error: "a part is already being written" });
+  const { story = "", chosen = null, notes = "" } = req.body || {};
+  const job = startJob("next-part", async (log) => {
+    const { writeNextPart } = require("../services/seriesWriterService");
+    const { buildLook } = require("../services/characterBuilder");
+    const { part, newCharacters } = await writeNextPart(s, { story, chosen, notes }, log);
+    const fresh = readSeries(s.id);
+    for (const c of newCharacters) {
+      fresh.characters = [...(fresh.characters || []), c];
+      fresh.names = { ...(fresh.names || {}), [c.code]: c.name };
+      fresh.looks = { ...(fresh.looks || {}), [c.code]: buildLook(c.look || {}, c.name) };
+      log(`👤 New character: ${c.name} (${c.code})`);
+    }
+    fresh.parts.push(part);
+    saveSeries(fresh);
+    log(`💾 Added as part ${fresh.parts.length}${part.decided ? ` (continues with option ${part.decided.toUpperCase()})` : " (the most votes pick the opening)"}`);
+    return { check: validateSeries(fresh), number: fresh.parts.length };
+  });
+  res.json({ job: job.id });
+}));
+
 router.post("/api/series/:id/preview", wrap((req, res) => {
   if (busy("preview")) return res.status(409).json({ error: "a preview is already rendering" });
   const s = readSeries(req.params.id);
