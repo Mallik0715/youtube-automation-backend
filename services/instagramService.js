@@ -46,7 +46,25 @@ async function checkAccount() {
  * wait while Instagram processes it, then publish.
  * @returns {Promise<{id: string, permalink: string|null}>}
  */
-async function uploadReel(videoPath, caption, { publish = true } = {}) {
+async function uploadReel(videoPath, caption, opts = {}) {
+  // Meta's upload server now and then fails a file ("Request processing failed"), and that container
+  // can't be used again ("not in the status to upload") - so each try starts with a fresh container
+  let lastErr;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await uploadReelOnce(videoPath, caption, opts);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < 3) {
+        console.warn(`⚠️ Instagram try ${attempt} failed (${err.message}) - starting again with a new upload in 30s`);
+        await sleep(30000);
+      }
+    }
+  }
+  throw lastErr;
+}
+
+async function uploadReelOnce(videoPath, caption, { publish = true } = {}) {
   const c = config();
   if (!c) throw new Error("Instagram is not configured");
   const size = fs.statSync(videoPath).size;
@@ -64,13 +82,8 @@ async function uploadReel(videoPath, caption, { publish = true } = {}) {
       headers: { Authorization: `OAuth ${c.token}`, offset: "0", file_size: String(size), "Content-Type": "application/octet-stream" },
       maxBodyLength: Infinity, maxContentLength: Infinity, timeout: 300000,
     });
-    // Meta's docs show the upload address both with and without the API version - try both
-    try {
-      await send(`https://rupload.facebook.com/ig-api-upload/${VERSION}/${containerId}`);
-    } catch (err) {
-      console.warn(`   upload server said: ${explain(err)} - retrying the other address`);
-      await send(`https://rupload.facebook.com/ig-api-upload/${containerId}`);
-    }
+    // One send per container: a failed send leaves the container unusable, so a retry needs a new one
+    await send(`https://rupload.facebook.com/ig-api-upload/${VERSION}/${containerId}`);
 
     // Processing usually takes 20-90 seconds
     step = "waiting for Instagram to process the video";

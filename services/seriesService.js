@@ -170,7 +170,14 @@ function pickBranch(votes, fallback) {
 
 /** YouTube id of an uploaded part, or null */
 function uploadedVideoId(seriesId, number) {
-  return loadProgress().videos[`${seriesId}:${number}`] || null;
+  const id = loadProgress().videos[`${seriesId}:${number}`] || null;
+  // placeholders for parts posted before ids were saved are not real video ids
+  return id && /^[\w-]{11}$/.test(id) ? id : null;
+}
+
+/** Which option a posted part continued with ("a" / "b"), so a re-post tells the same story */
+function uploadedBranch(seriesId, number) {
+  return loadProgress().branches[`${seriesId}:${number}`] || null;
 }
 
 const LETTER_WORD = { a: "A", b: "B" };
@@ -376,6 +383,6 @@ function buildPart(series, partIndex, branch = null) {
 }
 
 module.exports = {
-  getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch, SERIES,
+  getNextPart, getPart, recordUpload, uploadedVideoId, uploadedBranch, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch, SERIES,
   queueSeries, allSeries, readQueue, writeQueue, queueStatus, loadSeriesFile, buildPart, SERIES_DIR,
 };

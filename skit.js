@@ -65,10 +65,14 @@ function freshWorkDir() {
 }
 
 async function runSeries() {
-  const { getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch } = require("./services/seriesService");
+  const { getNextPart, getPart, recordUpload, uploadedVideoId, uploadedBranch, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch } = require("./services/seriesService");
+  // --instagram-only --series X --part N: re-make a part that is already on YouTube and post it only as a
+  // Reel (e.g. when its Instagram upload failed). Same story branch as the YouTube video.
+  const IG_ONLY = argv.includes("--instagram-only");
+  if (IG_ONLY && (!SERIES_ID || !PART)) throw new Error("--instagram-only needs --series <id> --part <number>");
   const instagram = require("./services/instagramService");
   // --daily-only (runs started by a push): only the creator's own day-by-day parts, never the queue
-  let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD, dailyOnly: argv.includes("--daily-only") });
+  let part = PART ? getPart(SERIES_ID, PART, IG_ONLY ? uploadedBranch(SERIES_ID, PART) : null) : getNextPart({ advance: UPLOAD, dailyOnly: argv.includes("--daily-only") });
   if (!part) {
     console.log("🏁 Every part of every series is already uploaded. Add a new series in series/ to continue.");
     return;
@@ -79,7 +83,9 @@ async function runSeries() {
   if (part.follows) {
     let votes = null;
     const fake = flagValue("--votes");
-    if (fake) {
+    if (IG_ONLY) {
+      // keep the opening the YouTube video had: no new vote count, no branch change
+    } else if (fake) {
       const [a, b] = fake.split(",").map(n => parseInt(n, 10) || 0);
       votes = { a, b };
     } else {
@@ -94,7 +100,7 @@ async function runSeries() {
       if (votes) console.log(`🗳️  Total votes: A ${votes.a} · B ${votes.b}`);
     }
     // Branching series: the story goes the way most viewers voted (default from the script when too few votes)
-    if (part.branching) {
+    if (part.branching && !IG_ONLY) {
       // ...unless the creator already picked the option for this part on the writer page
       const branch = part.decided || pickBranch(votes, part.follows);
       if (branch !== part.follows) part = getPart(part.seriesId, part.number, branch);
@@ -118,6 +124,13 @@ async function runSeries() {
     outputName, hook: part.hook, endCard: part.endCard, music: part.music, looks: part.looks,
   });
 
+  if (IG_ONLY) {
+    if (!instagram.isConfigured()) throw new Error("INSTAGRAM_USER_ID / INSTAGRAM_ACCESS_TOKEN are not set");
+    const reel = await instagram.uploadReel(video, instagram.captionFor(part));
+    recordInstagram(part.seriesId, part.number, reel.id);
+    console.log("🎉 Posted to Instagram only:", reel.permalink || reel.id);
+    return;
+  }
   if (!UPLOAD) {
     console.log("📝 Title would be:", part.seo.title);
     console.log("🧪 Test run - not uploaded. Watch it here:", video);

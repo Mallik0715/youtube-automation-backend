@@ -1,0 +1,80 @@
+name: Instagram Only (re-post a part)
+
+# Posts a part that is already on YouTube as an Instagram Reel - nothing goes to YouTube.
+# Use it when a part's Instagram upload failed. Actions -> "Instagram Only" -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      series:
+        description: "Series id (e.g. mom-texted-don-t-open-the-door, stranded-stranger, hearing-thoughts, lift-enemy)"
+        required: true
+        default: "mom-texted-don-t-open-the-door"
+      part:
+        description: "Part number"
+        required: true
+        default: "2"
+
+# Shares the upload lock with the YouTube workflow so they never write progress at the same time
+concurrency:
+  group: youtube-upload
+  cancel-in-progress: false
+
+jobs:
+  instagram:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install edge-tts==7.3.1
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg espeak-ng
+
+      - name: Install Remotion browser
+        run: npx remotion browser ensure
+
+      - name: Render the part and post it to Instagram only
+        env:
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: npm run series -- "${{ inputs.series }}" --part "${{ inputs.part }}" --instagram-only
+
+      - name: Save the Reel in the progress
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp services/series_progress.json "$RUNNER_TEMP/progress.json"
+          for try in 1 2 3 4 5; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            node scripts/mergeProgress.js "$RUNNER_TEMP/progress.json" services/series_progress.json
+            git add services/series_progress.json
+            git diff --staged --quiet && exit 0
+            git commit -q -m "Record Instagram re-post [skip ci]"
+            git push -q origin HEAD:main && exit 0
+            sleep 5
+          done
+          exit 1
