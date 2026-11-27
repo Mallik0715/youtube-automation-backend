@@ -1,0 +1,1396 @@
+{
+  "id": "it-learned-her-phone",
+  "title": "It Learned Her Phone",
+  "interactive": true,
+  "branching": true,
+  "choiceStyle": "wwyd",
+  "hero": "Milo",
+  "heroCode": "A",
+  "music": "suspense",
+  "hashtags": [
+    "#shorts",
+    "#whatwouldyoudo",
+    "#horror",
+    "#thriller",
+    "#scarystory"
+  ],
+  "tags": [
+    "what would you do horror",
+    "scary stories shorts",
+    "mimic story shorts",
+    "interactive thriller short",
+    "scary text story"
+  ],
+  "description": "Milo hears footsteps in his house while his mom is away. A text changes everything.",
+  "characters": [
+    {
+      "code": "A",
+      "name": "Milo",
+      "role": "terrified teenager",
+      "look": {
+        "age": "teen",
+        "gender": "male",
+        "build": "average",
+        "skin": "light",
+        "hair": "short",
+        "hairColor": "brown",
+        "top": "hoodie",
+        "topColor": "green",
+        "bottom": "pants",
+        "bottomColor": "blue",
+        "extras": []
+      }
+    },
+    {
+      "code": "B",
+      "name": "Mom",
+      "role": "Milo's real mother",
+      "look": {
+        "age": "adult",
+        "gender": "female",
+        "build": "average",
+        "skin": "light",
+        "hair": "ponytail",
+        "hairColor": "brown",
+        "top": "coat",
+        "topColor": "yellow",
+        "bottom": "pants",
+        "bottomColor": "black",
+        "extras": []
+      }
+    },
+    {
+      "code": "C",
+      "name": "The Mimic",
+      "role": "shapeshifting entity",
+      "look": {
+        "age": "adult",
+        "gender": "female",
+        "build": "slim",
+        "skin": "pale",
+        "hair": "messy",
+        "hairColor": "black",
+        "top": "sweater",
+        "topColor": "grey",
+        "bottom": "pants",
+        "bottomColor": "grey",
+        "extras": []
+      }
+    },
+    {
+      "code": "D",
+      "name": "Leo",
+      "role": "tech-savvy neighbor",
+      "look": {
+        "age": "teen",
+        "gender": "male",
+        "build": "slim",
+        "skin": "tan",
+        "hair": "slick",
+        "hairColor": "black",
+        "top": "jacket",
+        "topColor": "blue",
+        "bottom": "pants",
+        "bottomColor": "grey",
+        "extras": [
+          "glasses"
+        ]
+      }
+    }
+  ],
+  "names": {
+    "A": "Milo",
+    "B": "Mom",
+    "C": "The Mimic",
+    "D": "Leo"
+  },
+  "looks": {
+    "A": {
+      "name": "Milo",
+      "custom": true,
+      "size": 0.9,
+      "headScale": 1.07,
+      "stoop": 0,
+      "build": "average",
+      "skin": "#EDC09A",
+      "hair": "#5A341A",
+      "hairStyle": "short",
+      "hairPath": null,
+      "shirt": "#3F8F5F",
+      "shirtDark": "#31704a",
+      "sleeve": "#3F8F5F",
+      "pants": "#3E6FB0",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#295d3e",
+      "overalls": "#3E6FB0",
+      "accent": "#3F8F5F",
+      "top": "hoodie",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": false,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    },
+    "B": {
+      "name": "Mom",
+      "custom": true,
+      "size": 1,
+      "headScale": 1,
+      "stoop": 0,
+      "build": "average",
+      "skin": "#EDC09A",
+      "hair": "#5A341A",
+      "hairStyle": "ponytail",
+      "hairPath": null,
+      "shirt": "#F2B83E",
+      "shirtDark": "#bd9030",
+      "sleeve": "#F2B83E",
+      "pants": "#1E1E22",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#9d7828",
+      "overalls": "#1E1E22",
+      "accent": "#F2B83E",
+      "top": "coat",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": false,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    },
+    "C": {
+      "name": "The Mimic",
+      "custom": true,
+      "size": 1,
+      "headScale": 1,
+      "stoop": 0,
+      "build": "slim",
+      "skin": "#F8DCC8",
+      "hair": "#1F1A17",
+      "hairStyle": "messy",
+      "hairPath": null,
+      "shirt": "#8A9099",
+      "shirtDark": "#6c7077",
+      "sleeve": "#8A9099",
+      "pants": "#8A9099",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#5a5e63",
+      "overalls": "#8A9099",
+      "accent": "#8A9099",
+      "top": "sweater",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": false,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    },
+    "D": {
+      "name": "Leo",
+      "custom": true,
+      "size": 0.9,
+      "headScale": 1.07,
+      "stoop": 0,
+      "build": "slim",
+      "skin": "#D9A27A",
+      "hair": "#1F1A17",
+      "hairStyle": "slick",
+      "hairPath": null,
+      "shirt": "#3E6FB0",
+      "shirtDark": "#305789",
+      "sleeve": "#3E6FB0",
+      "pants": "#8A9099",
+      "shoes": "#1E1E22",
+      "strings": "#F2F2F2",
+      "shawl": "#284872",
+      "overalls": "#8A9099",
+      "accent": "#3E6FB0",
+      "top": "jacket",
+      "bottom": "pants",
+      "tie": false,
+      "glasses": true,
+      "beard": false,
+      "mustache": false,
+      "cap": null,
+      "earrings": false,
+      "freckles": false,
+      "wrinkles": false,
+      "bun": false
+    }
+  },
+  "generated": {
+    "mode": "story",
+    "from": "📱 Part 2: \"It Learned Her Phone Too\"",
+    "at": "2026-11-27T18:36:37.619Z"
+  },
+  "parts": [
+    {
+      "title": "Footsteps Upstairs",
+      "recap": "Milo heard footsteps inside his house while his mom texted that she was at work.",
+      "hook": "Mom texted she was late, but *footsteps were approaching*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Lock the bedroom door and hide behind the desk",
+        "b": "Slide quietly under the bed and hold your breath"
+      },
+      "segments": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "It was past midnight. Milo sat alone in his dark bedroom.",
+              "emotion": "surprised",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "His phone vibrated loudly against the wooden desk.",
+              "emotion": "worried",
+              "focus": "A",
+              "sfx": "pop"
+            },
+            {
+              "speaker": "N",
+              "text": "A text from his mother popped up on the glowing screen.",
+              "emotion": "neutral",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The message said: Stuck at work late tonight. Lock the front door.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo typed a fast reply and set the phone down.",
+              "emotion": "neutral",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Suddenly, heavy boots thudded on the wooden staircase.",
+              "emotion": "scared",
+              "focus": "A",
+              "sfx": "footsteps"
+            },
+            {
+              "speaker": "N",
+              "text": "Slow, heavy footsteps were climbing up toward his room.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Someone was inside the dark house.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The brass door handle slowly began to turn.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "A",
+              "text": "Mom? Is that you?",
+              "emotion": "scared"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Backwards Feet",
+      "recap": "Milo hid under his bed, saw backwards feet, received conflicting texts, and heard a horn outside.",
+      "hook": "Those aren't *Mom's feet*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Jump out the window and run to the car",
+        "b": "Stay frozen and trust the unknown number"
+      },
+      "follows": "b",
+      "ifA": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo twisted the lock, but the brass handle jammed shut.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "With no choice left, he dove under the bed frame.",
+              "emotion": "scared",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo slid quietly beneath the wooden frame.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "He pressed his chest to the rug and held his breath.",
+              "emotion": "scared",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A",
+            "C"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Slow steps entered the room. The wooden door creaked.",
+              "emotion": "scared",
+              "focus": "C",
+              "sfx": "knock"
+            },
+            {
+              "speaker": "N",
+              "text": "Two feet stopped beside the bed in Mom's blue slippers.",
+              "emotion": "worried",
+              "focus": "C"
+            },
+            {
+              "speaker": "N",
+              "text": "The heels faced forward. The toes pointed backward.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "C"
+            },
+            {
+              "speaker": "C",
+              "text": "Milo... I know you're here.",
+              "emotion": "scared"
+            }
+          ]
+        },
+        {
+          "scene": "bedroom",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo's phone glowed on the rug. A text from Mom.",
+              "emotion": "surprised",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The text said: Run to the window. Jump.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "A second text arrived from a hidden number: Don't. It learned her phone.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Outside the glass, a car horn blared into the night.",
+              "emotion": "surprised",
+              "focus": "A",
+              "sfx": "stinger"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Dark Lawn",
+      "recap": "Milo escaped his room and reached the car, but received a text warning about Mom's reflection.",
+      "hook": "Check her reflection in the *side mirror*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Open the door and jump inside the idling car",
+        "b": "Sprint past the car toward neighbor Leo's house"
+      },
+      "follows": "a",
+      "ifA": [
+        {
+          "scene": "street",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo leaped through the window, sliding down the porch roof.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "He hit the wet grass running, not looking back.",
+              "emotion": "worried",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "street",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "The car horn distracted the creature long enough.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo crawled from under the bed and dropped into the yard.",
+              "emotion": "scared",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "street",
+          "night": true,
+          "cast": [
+            "A",
+            "B"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Across the dark lawn, the car sat idling in the fog.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "B",
+              "text": "Milo! Get in the car right now!",
+              "emotion": "crying"
+            },
+            {
+              "speaker": "N",
+              "text": "Mom gestured wildly through the glass, her face pale with terror.",
+              "emotion": "scared",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo ran to the vehicle and reached for the door handle.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "His phone vibrated in his hand.",
+              "emotion": "surprised",
+              "focus": "A",
+              "sfx": "stinger"
+            },
+            {
+              "speaker": "N",
+              "text": "The note read: Check her reflection in the side mirror.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "He looked at the glass. In the reflection, her face was completely blank.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Safehouse",
+      "recap": "Milo fled into Leo's basement workshop and learned the creature was hijacking local phone networks.",
+      "hook": "The monster is *hijacking the network*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Smash Leo's router to block all incoming signals",
+        "b": "Use Leo's radio transmitter to trace the fake phone"
+      },
+      "follows": "b",
+      "ifA": [],
+      "ifB": [],
+      "segments": [
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A",
+            "D",
+            "B"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo burst into Leo's workshop and slammed the steel door shut.",
+              "emotion": "scared",
+              "focus": "A",
+              "sfx": "boom"
+            },
+            {
+              "speaker": "D",
+              "text": "Leo rapidly threw three heavy deadbolts into place.",
+              "emotion": "worried",
+              "sfx": "knock"
+            },
+            {
+              "speaker": "N",
+              "text": "On the back wall, six custom signal monitors blinked red.",
+              "emotion": "worried",
+              "focus": "D"
+            },
+            {
+              "speaker": "N",
+              "text": "A waveform on the main screen matched Mom's exact phone number.",
+              "emotion": "surprised",
+              "focus": "D"
+            },
+            {
+              "speaker": "D",
+              "text": "It's not a person. It's a cellular frequency parasite.",
+              "emotion": "neutral"
+            },
+            {
+              "speaker": "N",
+              "text": "The speaker on the desk crackled to life with Mom's voice.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "B",
+              "text": "Let me in, Milo. Open the door.",
+              "emotion": "neutral"
+            },
+            {
+              "speaker": "N",
+              "text": "The monitors spiked. The signal was trying to override the door lock.",
+              "emotion": "worried",
+              "fx": "shake",
+              "focus": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Broadcast Terror",
+      "recap": "Mom's voice hijacked the radio while a woman looking like Mom appeared outside in the yard.",
+      "hook": "Her voice came through *every speaker at once*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Go outside and confront the woman in the yard",
+        "b": "Seal the cellar hatch and drop into the storm drain"
+      },
+      "follows": "b",
+      "ifA": [
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A",
+            "B"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo smashed the router. Complete silence filled the dark room.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The signal monitors flatlined instantly.",
+              "emotion": "surprised",
+              "focus": "B"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Leo calibrated the antenna. A coordinates map locked onto the water tower.",
+              "emotion": "worried",
+              "focus": "D"
+            },
+            {
+              "speaker": "N",
+              "text": "The radar beeped rapidly. The signal source was moving closer.",
+              "emotion": "surprised",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A",
+            "D",
+            "B"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "The basement lights flickered wildly. Loud static blare erupted from every speaker.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "A",
+              "sfx": "boom"
+            },
+            {
+              "speaker": "N",
+              "text": "Mom's voice echoed through the metal vents.",
+              "emotion": "worried",
+              "focus": "D"
+            },
+            {
+              "speaker": "B",
+              "text": "Milo, please! Open this door! Let me in!",
+              "emotion": "crying"
+            }
+          ]
+        },
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo looked up at the high cellar window.",
+              "emotion": "surprised",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "A flashlight beam cut through the dark yard.",
+              "emotion": "scared",
+              "focus": "D",
+              "sfx": "thunder"
+            },
+            {
+              "speaker": "N",
+              "text": "A woman in Mom's exact coat stood staring right through the glass.",
+              "emotion": "worried",
+              "focus": "A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Storm Drain",
+      "recap": "Milo and Leo escaped into the underground storm drains and found fresh tracks on the floor.",
+      "hook": "Wet footprints led *deeper into the dark*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Examine the glowing red junction box on the wall",
+        "b": "Follow the wet slippers tracks deeper into the tunnel"
+      },
+      "follows": "b",
+      "ifA": [
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo confronted the pixelated woman.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Her jaw unhinged like a plastic hinge.",
+              "emotion": "scared",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "basement",
+          "night": true,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Leo slammed the iron hatch shut.",
+              "emotion": "scared",
+              "focus": "D"
+            },
+            {
+              "speaker": "N",
+              "text": "They dropped down into the cold dark.",
+              "emotion": "worried",
+              "focus": "A",
+              "sfx": "whoosh"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "tunnel",
+          "night": true,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "The heavy rust-covered hatch slammed shut above them.",
+              "emotion": "worried",
+              "focus": "A",
+              "sfx": "boom"
+            },
+            {
+              "speaker": "N",
+              "text": "Concrete walls echoed with heavy dripping water.",
+              "emotion": "scared",
+              "focus": "D"
+            },
+            {
+              "speaker": "D",
+              "text": "Keep your flashlight beam low.",
+              "emotion": "scared"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo swept his beam across the damp floor.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Fresh, wet tracks gleamed in the white light.",
+              "emotion": "surprised",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Small fabric slippers left the soaked footprints.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "A",
+              "text": "They're walking right toward the main sewer.",
+              "emotion": "crying"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Signal Core",
+      "recap": "Milo discovered an underground laboratory beneath the cell tower where human clones were being created.",
+      "hook": "The tower was *building a copy* of Milo.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Overload the main generator to fry the laboratory",
+        "b": "Hack the terminal screen to erase the clone data"
+      },
+      "follows": "a",
+      "ifA": [
+        {
+          "scene": "tunnel",
+          "night": false,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo tapped the glowing red junction box on the concrete wall.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "His phone screen instantly ignited with a ten-second countdown timer.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "D",
+              "text": "Run now! It's an alarm!",
+              "emotion": "scared"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "tunnel",
+          "night": false,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo tracked the muddy slipper prints around the damp bend.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The wet tracks stopped cold before a heavy reinforced blast door.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "D",
+              "text": "Step back, Milo. It's opening from inside.",
+              "emotion": "scared"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "The heavy blast door slid back into the control room.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Rows of glowing monitors flickered with thousands of stolen text messages.",
+              "emotion": "surprised",
+              "focus": "D"
+            },
+            {
+              "speaker": "N",
+              "text": "In the center, an amber glass pod bubbled with synthetic tissue.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "D",
+              "text": "It's growing a replica of your mother.",
+              "emotion": "scared"
+            },
+            {
+              "speaker": "N",
+              "text": "A mainframe terminal flashed with raw cloning code beside a high-voltage generator.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "An alarm siren blared as the pod began to hatch.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "A",
+              "sfx": "boom"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "System Meltdown",
+      "recap": "The facility went into lockdown as the mimic attacked Milo to prevent the system purge.",
+      "hook": "The creature began *unraveling into static*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Throw the phone into the exposed electrical arc",
+        "b": "Use the phone as bait and sprint for the ladder"
+      },
+      "follows": "a",
+      "ifA": [
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo slammed the generator lever down hard.",
+              "emotion": "scared",
+              "focus": "A",
+              "sfx": "boom"
+            },
+            {
+              "speaker": "N",
+              "text": "Bright white sparks rained down over the steel floor.",
+              "emotion": "worried",
+              "focus": "D"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Leo typed the final bypass sequence into the panel.",
+              "emotion": "worried",
+              "focus": "D"
+            },
+            {
+              "speaker": "N",
+              "text": "The central database crashed, corrupting the mimic core.",
+              "emotion": "scared",
+              "focus": "A",
+              "sfx": "stinger"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A",
+            "C",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Red sirens blared across the subterranean lab.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The heavy steel door buckled inward.",
+              "emotion": "surprised",
+              "focus": "C",
+              "sfx": "whoosh"
+            },
+            {
+              "speaker": "N",
+              "text": "The Mimic charged in, its skin morphing continuously.",
+              "emotion": "scared",
+              "focus": "C"
+            },
+            {
+              "speaker": "C",
+              "text": "Milo, hand over that phone now!",
+              "emotion": "angry"
+            },
+            {
+              "speaker": "N",
+              "text": "Leo spotted a rust-covered escape ladder on the far wall.",
+              "emotion": "worried",
+              "focus": "D"
+            }
+          ]
+        },
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A",
+            "C",
+            "D"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "High-voltage electrical arcs burst from the open server panel.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The monster reached straight for Milo's phone to stop the meltdown.",
+              "emotion": "scared",
+              "focus": "C"
+            },
+            {
+              "speaker": "D",
+              "text": "We only have five seconds left!",
+              "emotion": "scared"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo clutched the buzzing phone tight against his chest.",
+              "emotion": "worried",
+              "focus": "A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Double Vision",
+      "recap": "Milo reached the surface and was confronted by two identical mothers claiming to be real.",
+      "hook": "Two mothers were *waiting in the park*.",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Walk toward the mother holding your childhood photo",
+        "b": "Walk toward the mother who recites your private memory"
+      },
+      "follows": "a",
+      "ifA": [
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo threw his phone straight into the arc.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Sparks exploded, frying the mimic's audio frequency.",
+              "emotion": "surprised",
+              "fx": "shake",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "He scrambled up the emergency ladder into daylight.",
+              "emotion": "relieved",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "controlroom",
+          "night": false,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo flung his phone across the room.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "The creature lunged after the glowing screen.",
+              "emotion": "scared",
+              "focus": "A",
+              "sfx": "whoosh"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo grabbed the metal ladder and sprinted upward.",
+              "emotion": "relieved",
+              "focus": "A"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "park",
+          "night": false,
+          "cast": [
+            "A"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo pushed open the heavy iron storm drain cover.",
+              "emotion": "surprised",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Bright morning sunlight flooded the park lawn.",
+              "emotion": "relieved",
+              "focus": "A"
+            }
+          ]
+        },
+        {
+          "scene": "park",
+          "night": false,
+          "cast": [
+            "A",
+            "B",
+            "C"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Fifty feet apart, two identical women stood on the grass.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Both wore the exact same bright yellow coat.",
+              "emotion": "worried",
+              "focus": "B"
+            },
+            {
+              "speaker": "B",
+              "text": "Milo! Please, come to me!",
+              "emotion": "crying"
+            },
+            {
+              "speaker": "C",
+              "text": "Don't touch her, Milo! I'm real!",
+              "emotion": "crying"
+            },
+            {
+              "speaker": "N",
+              "text": "The mother on the left held up a faded childhood photo.",
+              "emotion": "worried",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "The mother on the right whispered his secret childhood memory.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Final Signal",
+      "recap": "Milo found the real Mom, but the creature held her hostage near an EMP device.",
+      "hook": "Destroy the monster or *save Mom's life*?",
+      "choice": {
+        "question": "What would you do?",
+        "a": "Press the EMP button to destroy the mimic permanently",
+        "b": "Tackle the mimic off the cliff without using the EMP"
+      },
+      "follows": "b",
+      "ifA": [
+        {
+          "scene": "park",
+          "night": false,
+          "cast": [
+            "A",
+            "B",
+            "C"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo backed away from the twitching digital hands.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "A",
+              "text": "You aren't my mother!",
+              "emotion": "angry"
+            },
+            {
+              "speaker": "N",
+              "text": "The fake Mom screeched and dragged the real Mom toward the reservoir cliff.",
+              "emotion": "worried",
+              "focus": "C"
+            }
+          ]
+        }
+      ],
+      "ifB": [
+        {
+          "scene": "park",
+          "night": false,
+          "cast": [
+            "A",
+            "B",
+            "C"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "Milo spotted the backwards shadow on the grass.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "A",
+              "text": "Stay away from her!",
+              "emotion": "angry"
+            },
+            {
+              "speaker": "N",
+              "text": "The creature snarled and grabbed the real Mom toward the reservoir cliff.",
+              "emotion": "worried",
+              "focus": "C"
+            }
+          ]
+        }
+      ],
+      "segments": [
+        {
+          "scene": "cliff",
+          "night": false,
+          "cast": [
+            "A",
+            "B",
+            "C"
+          ],
+          "lines": [
+            {
+              "speaker": "N",
+              "text": "The mimic locked its arm around Mom's neck at the edge of the rocky cliff.",
+              "emotion": "worried",
+              "focus": "C"
+            },
+            {
+              "speaker": "B",
+              "text": "Milo, use the device!",
+              "emotion": "crying"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo raised the black EMP detonator in his trembling hands.",
+              "emotion": "scared",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "Triggering the pulse would dissolve the parasite's signal forever.",
+              "emotion": "worried",
+              "focus": "A"
+            },
+            {
+              "speaker": "N",
+              "text": "But the electromagnetic wave would instantly shut off Mom's electronic heart pacemaker.",
+              "emotion": "scared",
+              "fx": "shake",
+              "focus": "B"
+            },
+            {
+              "speaker": "N",
+              "text": "The creature tightened its grip, pulling her over the edge.",
+              "emotion": "worried",
+              "focus": "C"
+            },
+            {
+              "speaker": "N",
+              "text": "Milo stared at the glowing red button.",
+              "emotion": "scared",
+              "focus": "A"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
