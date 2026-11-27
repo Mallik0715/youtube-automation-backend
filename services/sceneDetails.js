@@ -21,6 +21,7 @@ const DETAILS = [
   ["coins", /\bcoins?\b/i],
   ["dinner", /\b(dinner|breakfast|lunch|ate|eating)\b/i],
   ["flooded", /\bflood(ed|ing)?\b/i],
+  ["stolen", /\b(was stolen|been stolen|stole the|empty case|case was empty|the diamond was gone)\b/i],
   ["newspaper", /\bnewspapers?\b/i],
   ["panel", /\b(loose panel|behind a panel|hidden panel)\b/i],
   ["microphone", /\b(microphone|tape player)\b/i],

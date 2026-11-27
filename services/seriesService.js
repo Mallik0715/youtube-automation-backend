@@ -25,7 +25,8 @@ function writeQueue(names) {
 
 /** The series in upload order */
 function queueSeries() {
-  return readQueue().map(loadSeriesFile);
+  // Daily series are posted when the creator pushes a part, never by the queue
+  return readQueue().map(loadSeriesFile).filter(s => !s.daily);
 }
 
 /** Every series script in series/, queued or not (helpers and non-series files are skipped) */
@@ -38,7 +39,8 @@ function allSeries() {
     .filter(s => s && Array.isArray(s.parts));
 }
 
-const SERIES = queueSeries();
+// Everything that can upload: the queue plus the creator's daily series
+const SERIES = [...queueSeries(), ...allSeries().filter(s => s.daily)];
 
 // Committed back by the workflow, like topic_progress.json
 const PROGRESS_FILE = path.join(__dirname, "series_progress.json");
@@ -70,6 +72,19 @@ function findSeries(id) {
   return { series };
 }
 
+/**
+ * "Daily" series (series.daily = true): the creator writes each part on the writer page and pushes it;
+ * it uploads as soon as it arrives, outside the queue. Returns the first part with no upload yet.
+ */
+function nextDailyPart(progress) {
+  for (const s of allSeries().filter(x => x.daily)) {
+    for (let i = 0; i < s.parts.length; i++) {
+      if (!progress.videos[`${s.id}:${i + 1}`]) return { series: s, part: i };
+    }
+  }
+  return null;
+}
+
 /** Which series uploads now, and from which part (0-based). null once the whole queue is done. */
 function currentPosition(progressJson = null) {
   const progress = loadProgress(progressJson);
@@ -89,8 +104,17 @@ function currentPosition(progressJson = null) {
  * The part to make next. With advance=true, progress moves on (use only for real uploads).
  * Returns null once every part of every queued series is done - never re-uploads old parts.
  */
-function getNextPart({ advance = false } = {}) {
-  const { progress, done, series, part } = currentPosition();
+function getNextPart({ advance = false, dailyOnly = false } = {}) {
+  // 1) The creator's own day-by-day series go first: a part they pushed uploads straight away
+  const daily = nextDailyPart(loadProgress());
+  if (daily) return buildPart(daily.series, daily.part); // recorded by recordUpload once it's up
+  if (dailyOnly) return null;
+  // 2) Otherwise the queue, top to bottom - skipping parts that are already on the channel
+  let pos = currentPosition();
+  while (pos.series && pos.progress.videos[`${pos.series.id}:${pos.part + 1}`]) {
+    pos = currentPosition(JSON.stringify({ ...pos.progress, seriesId: pos.series.id, part: pos.part + 1, done: [...pos.done] }));
+  }
+  const { progress, done, series, part } = pos;
   if (!series) return null;
   if (advance) saveProgress({ ...progress, seriesId: series.id, part: part + 1, done: [...done] });
   return buildPart(series, part);

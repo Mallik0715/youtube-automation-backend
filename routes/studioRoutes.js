@@ -83,6 +83,7 @@ router.get("/api/queue", wrap(async (req, res) => {
   const drafts = svc.allSeries().filter(s => !queued.has(s.id)).map(s => ({
     id: s.id, file: s.file, title: s.title, parts: s.parts.length, editable: fs.existsSync(jsonFile(s.file)),
     generated: s.generated || null,
+    daily: !!s.daily,
   }));
   res.json({ queue, drafts });
 }));
@@ -160,6 +161,7 @@ router.post("/api/series/:id/next-part", wrap((req, res) => {
       log(`👤 New character: ${c.name} (${c.code})`);
     }
     fresh.parts.push(part);
+    fresh.daily = true; // written part by part: uploads when pushed, outside the queue
     saveSeries(fresh);
     log(`💾 Added as part ${fresh.parts.length}${part.decided ? ` (continues with option ${part.decided.toUpperCase()})` : " (the most votes pick the opening)"}`);
     return { check: validateSeries(fresh), number: fresh.parts.length };

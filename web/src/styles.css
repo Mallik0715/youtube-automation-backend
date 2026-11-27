@@ -91,3 +91,5 @@ code { background: #252a37; padding: 1px 5px; border-radius: 4px; }
 .cast-card .code { color: #ffcc33; font-size: 11px; margin-left: 4px; }
 .cast-card .role { color: #c3c6d4; margin-top: 2px; }
 .cast-card .look { color: #8d95a8; margin-top: 4px; font-size: 12px; }
+
+.badge.daily { background: #2f4f2f; color: #b9f5b9; }

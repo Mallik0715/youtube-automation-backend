@@ -164,7 +164,9 @@ function Queue({ data, onOpen, onChanged }) {
               <li key={d.id}>
                 <button className="link title" onClick={() => onOpen(d.id)}>{d.title}</button>
                 <span className="badge">{d.generated ? "AI" : "script"} · {d.parts} parts</span>
-                <span className="tools"><button onClick={() => add(d)} title="Add to the end of the queue">+ queue</button></span>
+                {d.daily
+                  ? <span className="badge daily" title="Your day-by-day series: each new part uploads when you push it">yours · posts on push</span>
+                  : <span className="tools"><button onClick={() => add(d)} title="Add to the end of the queue">+ queue</button></span>}
               </li>
             ))}
           </ul>

@@ -7,8 +7,8 @@ on:
     - cron: '30 14 * * *'  # 14:30 UTC = 8:00 PM India, 3:30 PM UK, 10:30 AM New York
     - cron: '0 23 * * *'   # 23:00 UTC = 7:00 PM New York, 4:30 AM India (next day), 12:00 AM UK
   workflow_dispatch:
-  # Day-by-day stories: pushing a new part from the writer page uploads it straight away
-  # (if nothing new is waiting in the queue, the run just finds nothing to upload)
+  # Day-by-day stories: pushing a new part from the writer page uploads it straight away.
+  # Push runs only post the creator's own (daily) parts - the queue keeps to its schedule.
   push:
     branches: [main]
     paths:
@@ -26,8 +26,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Always the newest main (not the commit that started the run): a run that waited for another
+      # upload to finish must see that upload's progress, or it could post the same part twice
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -82,7 +86,7 @@ jobs:
         # retry so a failed try never skips a part.
         run: |
           for try in 1 2 3; do
-            npm run series -- --upload && exit 0
+            npm run series -- --upload ${{ github.event_name == 'push' && '--daily-only' || '' }} && exit 0
             echo "Attempt $try failed - waiting 3 minutes before retrying"
             git checkout -- services/series_progress.json
             sleep 180

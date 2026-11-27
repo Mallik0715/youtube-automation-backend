@@ -432,5 +432,6 @@
       "wrinkles": false,
       "bun": false
     }
-  }
+  },
+  "daily": true
 }

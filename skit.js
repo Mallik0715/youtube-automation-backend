@@ -67,7 +67,8 @@ function freshWorkDir() {
 async function runSeries() {
   const { getNextPart, getPart, recordUpload, uploadedVideoId, recordInstagram, instagramMediaId, addVoteIntro, addPreviously, pickBranch } = require("./services/seriesService");
   const instagram = require("./services/instagramService");
-  let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD });
+  // --daily-only (runs started by a push): only the creator's own day-by-day parts, never the queue
+  let part = PART ? getPart(SERIES_ID, PART) : getNextPart({ advance: UPLOAD, dailyOnly: argv.includes("--daily-only") });
   if (!part) {
     console.log("🏁 Every part of every series is already uploaded. Add a new series in series/ to continue.");
     return;
